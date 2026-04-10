@@ -29,6 +29,11 @@ CCDC2026-LightScan/
 ├── LICENSE                             # Apache 2.0 许可证
 ├── requirements.txt                    # 全局运行环境依赖清单
 ├── docs/                               # 说明文档与技术积淀
+│   ├── research/                       # 调研文档
+│   ├── requirements/                   # 作品要求
+│   ├── technical/                      # 技术文档
+│   ├── notices/                        # 通知文档
+│   └── resources/                      # 参考资料
 ├── models/                             # 核心算法模型及权重
 ├── assets/                             # 开发素材
 │
