@@ -23,7 +23,7 @@
 本项目采用“**产物与源码分离**”的工程化管理逻辑。根目录下的四个数字文件夹严格遵循大赛交付规范。
 
 ```text
-CCDC2026/ 
+CCDC2026-LightScan/ 
 ├── .gitignore                          # Git 忽略配置
 ├── README.md                           # 项目主说明文档
 ├── LICENSE                             # Apache 2.0 许可证
