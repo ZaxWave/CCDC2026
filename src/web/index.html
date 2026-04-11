@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LightScan · 轻巡智维</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue:    #3E6AE1;
+      --dark:    #171A20;
+      --body:    #393C41;
+      --muted:   #5C5E62;
+      --ash:     #F4F4F4;
+      --border:  #EEEEEE;
+      --white:   #FFFFFF;
+    }
+
+    body {
+      font-family: -apple-system, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+      background: var(--white);
+      color: var(--body);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* ── Nav ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 40px;
+      height: 56px;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-brand {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      color: var(--dark);
+      text-decoration: none;
+    }
+    .nav-links {
+      display: flex;
+      gap: 4px;
+    }
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 6px 14px;
+      border-radius: 4px;
+      transition: color 0.2s, background 0.2s;
+    }
+    .nav-links a:hover { color: var(--dark); background: var(--ash); }
+    .nav-links a.active { color: var(--dark); }
+
+    /* ── Hero ── */
+    .hero {
+      height: 60vh;
+      min-height: 380px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      background: var(--dark);
+      padding: 40px 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% 120%, rgba(62,106,225,0.25) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-tag {
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.15em;
+      color: var(--blue);
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .hero h1 {
+      font-size: 40px;
+      font-weight: 500;
+      color: var(--white);
+      line-height: 1.2;
+      margin-bottom: 12px;
+    }
+    .hero p {
+      font-size: 15px;
+      color: rgba(255,255,255,0.5);
+      max-width: 460px;
+      margin-bottom: 36px;
+    }
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+    }
+    .btn-primary {
+      background: var(--blue);
+      color: var(--white);
+      border: none;
+      padding: 0 28px;
+      height: 40px;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+    }
+    .btn-primary:hover { background: #3260d0; }
+    .btn-secondary {
+      background: transparent;
+      color: rgba(255,255,255,0.8);
+      border: 1px solid rgba(255,255,255,0.25);
+      padding: 0 28px;
+      height: 40px;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+    }
+    .btn-secondary:hover { border-color: rgba(255,255,255,0.6); color: var(--white); }
+
+    /* ── Main Layout ── */
+    .main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 64px 32px;
+    }
+    .section-title {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+
+    /* ── Upload Area ── */
+    .upload-area {
+      border: 2px dashed var(--border);
+      border-radius: 8px;
+      padding: 60px 40px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      background: var(--ash);
+      margin-bottom: 48px;
+    }
+    .upload-area:hover, .upload-area.drag-over {
+      border-color: var(--blue);
+      background: #f0f4ff;
+    }
+    .upload-icon {
+      width: 44px;
+      height: 44px;
+      margin: 0 auto 16px;
+      opacity: 0.35;
+    }
+    .upload-area h3 {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--dark);
+      margin-bottom: 6px;
+    }
+    .upload-area p {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+    #file-input { display: none; }
+
+    /* ── Stats Row ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 48px;
+    }
+    .stat-card {
+      background: var(--ash);
+      border-radius: 8px;
+      padding: 24px;
+    }
+    .stat-card .val {
+      font-size: 28px;
+      font-weight: 500;
+      color: var(--dark);
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .stat-card .label {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .stat-card .val.blue { color: var(--blue); }
+
+    /* ── Results ── */
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    .result-card {
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--ash);
+    }
+    .result-thumb {
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .result-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .result-info {
+      padding: 14px 16px;
+    }
+    .result-info .filename {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--dark);
+      margin-bottom: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .tags {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .tag {
+      font-size: 11px;
+      font-weight: 500;
+      padding: 2px 8px;
+      border-radius: 3px;
+    }
+    .tag-crack    { background: #fff0e6; color: #c0570a; }
+    .tag-pothole  { background: #ffeaea; color: #c01a1a; }
+    .tag-repair   { background: #e8f4ff; color: #1a5fc0; }
+    .tag-ok       { background: #e6f9ee; color: #1a8045; }
+    .result-meta {
+      margin-top: 8px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    /* ── Empty State ── */
+    .empty-state {
+      text-align: center;
+      padding: 60px 0;
+      color: var(--muted);
+    }
+    .empty-state svg { opacity: 0.2; margin-bottom: 16px; }
+    .empty-state p { font-size: 14px; }
+
+    /* ── Progress Bar ── */
+    .progress-bar-wrap {
+      display: none;
+      margin-bottom: 48px;
+    }
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .progress-bar {
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--blue);
+      border-radius: 2px;
+      width: 0%;
+      transition: width 0.3s;
+    }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav>
+    <a class="nav-brand" href="#">LIGHTSCAN</a>
+    <div class="nav-links">
+      <a href="#" class="active">检测</a>
+      <a href="#">历史记录</a>
+      <a href="#">关于</a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-tag">道路病害智能巡检系统</div>
+    <h1>轻巡智维 LightScan</h1>
+    <p>基于轻量化 YOLO 模型，一键识别路面裂缝、坑槽、修补等病害类型</p>
+    <div class="hero-actions">
+      <button class="btn-primary" onclick="document.getElementById('file-input').click()">上传图像检测</button>
+      <a class="btn-secondary" href="#">查看演示</a>
+    </div>
+  </section>
+
+  <!-- Main -->
+  <main class="main">
+
+    <!-- Upload -->
+    <div class="section-title">上传文件</div>
+    <div class="upload-area" id="drop-zone">
+      <svg class="upload-icon" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M22 28V16M22 16L17 21M22 16L27 21" stroke="#393C41" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M12 32H32M8 24C8 17.373 13.373 12 20 12H24C30.627 12 36 17.373 36 24" stroke="#393C41" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <h3>拖拽图片或视频到此处</h3>
+      <p>支持 JPG、PNG、MP4 格式，单次最多 20 张</p>
+      <button class="btn-primary" onclick="document.getElementById('file-input').click()">选择文件</button>
+      <input type="file" id="file-input" multiple accept="image/*,video/mp4" />
+    </div>
+
+    <!-- Progress -->
+    <div class="progress-bar-wrap" id="progress-wrap">
+      <div class="progress-label">
+        <span id="progress-text">正在推理…</span>
+        <span id="progress-pct">0%</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row" id="stats-row" style="display:none">
+      <div class="stat-card"><div class="val" id="stat-total">0</div><div class="label">已检测图像</div></div>
+      <div class="stat-card"><div class="val blue" id="stat-defects">0</div><div class="label">检出病害</div></div>
+      <div class="stat-card"><div class="val" id="stat-crack">0</div><div class="label">裂缝</div></div>
+      <div class="stat-card"><div class="val" id="stat-pothole">0</div><div class="label">坑槽</div></div>
+    </div>
+
+    <!-- Results -->
+    <div class="section-title">检测结果</div>
+    <div id="results-container">
+      <div class="empty-state">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+          <rect x="6" y="6" width="36" height="36" rx="4" stroke="#393C41" stroke-width="2"/>
+          <path d="M6 18H42M18 18V42" stroke="#393C41" stroke-width="2"/>
+        </svg>
+        <p>暂无结果，上传图像后自动展示检测结果</p>
+      </div>
+    </div>
+
+  </main>
+
+  <footer>© 2026 LightScan Team · 第19届中国大学生计算机设计大赛</footer>
+
+  <script>
+    const dropZone   = document.getElementById('drop-zone');
+    const fileInput  = document.getElementById('file-input');
+    const container  = document.getElementById('results-container');
+    const statsRow   = document.getElementById('stats-row');
+    const progressWrap = document.getElementById('progress-wrap');
+    const progressFill = document.getElementById('progress-fill');
+    const progressPct  = document.getElementById('progress-pct');
+    const progressText = document.getElementById('progress-text');
+
+    // Drag-and-drop
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.classList.remove('drag-over');
+      handleFiles([...e.dataTransfer.files]);
+    });
+    fileInput.addEventListener('change', () => handleFiles([...fileInput.files]));
+
+    const MOCK_TAGS = [
+      [{ t: 'tag-crack',   l: '裂缝' }, { t: 'tag-crack', l: '网裂' }],
+      [{ t: 'tag-pothole', l: '坑槽' }],
+      [{ t: 'tag-repair',  l: '修补' }, { t: 'tag-crack', l: '裂缝' }],
+      [{ t: 'tag-ok',      l: '正常' }],
+      [{ t: 'tag-pothole', l: '坑槽' }, { t: 'tag-repair', l: '修补' }],
+    ];
+
+    let totalCount = 0, defectCount = 0, crackCount = 0, potholeCount = 0;
+
+    function handleFiles(files) {
+      const images = files.filter(f => f.type.startsWith('image/'));
+      if (!images.length) { alert('请上传图片文件（JPG / PNG）'); return; }
+
+      // Show progress
+      progressWrap.style.display = 'block';
+      let done = 0;
+      const step = () => {
+        done++;
+        const pct = Math.round(done / images.length * 100);
+        progressFill.style.width = pct + '%';
+        progressPct.textContent = pct + '%';
+        progressText.textContent = `正在推理 (${done}/${images.length})…`;
+        if (done === images.length) {
+          setTimeout(() => { progressWrap.style.display = 'none'; }, 600);
+        }
+      };
+
+      // Clear empty state
+      if (container.querySelector('.empty-state')) container.innerHTML = '';
+      if (statsRow.style.display === 'none') {
+        statsRow.style.display = 'grid';
+        const grid = document.createElement('div');
+        grid.className = 'results-grid';
+        grid.id = 'results-grid';
+        container.appendChild(grid);
+      }
+      const grid = document.getElementById('results-grid');
+
+      images.forEach((file, i) => {
+        const mockResult = MOCK_TAGS[i % MOCK_TAGS.length];
+        const url = URL.createObjectURL(file);
+        const conf = (0.72 + Math.random() * 0.25).toFixed(2);
+
+        const card = document.createElement('div');
+        card.className = 'result-card';
+        card.innerHTML = `
+          <div class="result-thumb"><img src="${url}" alt="${file.name}" /></div>
+          <div class="result-info">
+            <div class="filename">${file.name}</div>
+            <div class="tags">${mockResult.map(t => `<span class="tag ${t.t}">${t.l}</span>`).join('')}</div>
+            <div class="result-meta">置信度 ${conf} · ${(file.size / 1024).toFixed(0)} KB</div>
+          </div>`;
+        grid.appendChild(card);
+
+        // Update stats
+        totalCount++;
+        const hasCrack   = mockResult.some(t => t.t === 'tag-crack');
+        const hasPothole = mockResult.some(t => t.t === 'tag-pothole');
+        const isOk       = mockResult.every(t => t.t === 'tag-ok');
+        if (!isOk) defectCount++;
+        if (hasCrack)   crackCount++;
+        if (hasPothole) potholeCount++;
+
+        document.getElementById('stat-total').textContent   = totalCount;
+        document.getElementById('stat-defects').textContent = defectCount;
+        document.getElementById('stat-crack').textContent   = crackCount;
+        document.getElementById('stat-pothole').textContent = potholeCount;
+
+        setTimeout(step, (i + 1) * 80);
+      });
+    }
+  </script>
+
+</body>
+</html>

@@ -8,8 +8,6 @@ extract_frames.py
   每隔 --ocr-interval 帧对速度区域做一次 OCR，识别当前速度（km/h）。
   两次 OCR 之间的帧用最近一次识别到的速度做前向填充。
   每帧将速度积分换算成行驶距离，累计距离达到阈值时抽出该帧。
-
-依赖会在首次运行时自动安装，无需手动 pip install。
 """
 
 import argparse
@@ -23,7 +21,6 @@ import sys
 
 
 def _install_if_missing():
-    """首次运行时自动安装缺失的依赖，无需手动 pip install。"""
     packages = [
         ("cv2",       "opencv-python"),
         ("paddleocr", "paddleocr"),
