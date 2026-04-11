@@ -14,3 +14,7 @@
 1. **Git 忽略**：由于视频和图片体积较大，本目录下的所有大文件已通过 `.gitignore` 忽略，请勿强制上传至 GitHub。
 2. **数据清理**：建议定期清理 `temp/` 目录以释放磁盘空间。
 3. **命名规范**：原始视频建议以 `YYYYMMDD_地点_编号.mp4` 命名。
+
+---
+
+© 2026 LightScan Team. Licensed under Apache 2.0.
