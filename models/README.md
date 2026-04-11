@@ -17,3 +17,7 @@
 2. **手动下载**：
    从 Ultralytics GitHub Releases：https://github.com/ultralytics/assets/releases 获取。
    下载后将 `.pt` 文件放置于 `models/` 目录下。
+
+---
+
+© 2026 LightScan Team. Licensed under Apache 2.0.
