@@ -4,11 +4,14 @@
 /2026017676-03设计与开发文档/*
 /2026017676-04作品展示视频/*
 
-# 2. 保持根目录 README 始终可见
+# 2. 保持 README 始终可见
 !README.md
+!datasets\README.md
 
-# 3. 排除 dashcam-sampler 数据目录
+# 3. 排除数据目录
 data/dashcam-sampler/data/
+# 忽略数据集
+dataset/
 
 # 4. 排除本地开发环境垃圾
 venv/
@@ -21,8 +24,6 @@ __pycache__/
 Thumbs.db
 # 忽略 YOLO 的运行输出
 runs/
-# 忽略数据集
-dataset/
 
 # 5. 排除深度学习模型大文件与推理产物
 *.pt

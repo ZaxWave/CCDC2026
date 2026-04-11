@@ -25,7 +25,7 @@ import sys
 def _install_if_missing():
     """首次运行时自动安装缺失的依赖，无需手动 pip install。"""
     packages = [
-        ("cv2",       "opencv-python-headless"),
+        ("cv2",       "opencv-python"),
         ("paddleocr", "paddleocr"),
         ("paddle",    "paddlepaddle"),
     ]
@@ -207,7 +207,7 @@ def main():
     print(f"输出目录：{output_dir}")
 
     print("正在初始化 PaddleOCR……")
-    ocr_engine = PaddleOCR(use_textline_orientation=False, lang="en")
+    ocr_engine = PaddleOCR(use_textline_orientation=False, lang="en", enable_mkldnn=False)
 
     cap = cv2.VideoCapture(args.input)
     if not cap.isOpened():

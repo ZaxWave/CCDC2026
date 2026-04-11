@@ -1,0 +1,15 @@
+# --- 核心算法 ---
+ultralytics>=8.3.0
+torch>=2.0.0
+torchvision>=0.15.0
+
+# --- 数据处理与抽帧工具 ---
+opencv-python>=4.8.0
+numpy>=1.23.0
+pandas>=2.0.0
+matplotlib>=3.7.0
+tqdm>=4.65.0
+
+# --- OCR 抽帧脚本专用 ---
+paddlepaddle>=2.5.0
+paddleocr>=2.7.0

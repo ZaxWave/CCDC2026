@@ -30,6 +30,7 @@ CCDC2026-LightScan/
 ├── requirements.txt                    # 全局运行环境依赖清单
 ├── assets/                             # 开发素材
 ├── data/                               # 数据处理脚本
+├── datasets/                           # 数据集
 │
 ├── docs/                               # 说明文档与技术积淀
 │   ├── research/                       # 调研文档
