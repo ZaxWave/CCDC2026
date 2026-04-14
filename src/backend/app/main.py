@@ -1,21 +1,32 @@
-﻿from fastapi import FastAPI
+from pathlib import Path
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-import os
 
-app = FastAPI(title="LightScan API")
+from app.api.v1.detect import router as detect_router
+from app.api.v1.detect_video import router as detect_video_router
 
-# 获取前端目录的绝对路径
-frontend_path = os.path.join(os.getcwd(), "../../frontend/public")
+ROOT = Path(__file__).resolve().parents[3]  # → CCDC2026-LightScan/
+FRONTEND_PUBLIC = ROOT / "src" / "frontend" / "public"
 
-# 1. 静态文件挂载（如果以后有 css/js 文件）
-# app.mount("/static", StaticFiles(directory=frontend_path), name="static")
+app = FastAPI(title="LightScan API", version="0.1.0")
 
-# 2. 访问根目录直接返回 index.html
-@app.get("/")
-async def read_index():
-    return FileResponse(os.path.join(frontend_path, "index.html"))
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
+# API 路由
+app.include_router(detect_router)
+app.include_router(detect_video_router)
+
+# 健康检查
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
+# 前端静态文件（最后注册，避免拦截 /api/*）
+app.mount("/", StaticFiles(directory=str(FRONTEND_PUBLIC), html=True), name="frontend")

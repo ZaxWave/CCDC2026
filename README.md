@@ -21,7 +21,7 @@
 本项目采用主流的深度学习感知与全栈 Web 开发架构：
 * **算法核心**：采用 **YOLOv11** 目标检测框架，兼顾实时检测速率与复杂环境下的识别精度。
 * **后端支撑**：选用 **FastAPI** 异步框架，通过高并发处理能力确保推理接口的响应速度。
-* **前端展示**：基于 **React** 组件化开发，实现响应式布局与检测结果的实时数据渲染。
+* **前端展示**：原生 HTML + CSS + JavaScript 单页应用，实现响应式布局与检测结果的实时渲染。（当前版本使用原生 JS 以简化部署；后续计划迁移至 React 组件化架构）
 
 ---
 
@@ -70,17 +70,16 @@ CCDC2026-LightScan/
 ├── src/                                # 🛠️ 研发源代码主体
 │   ├── backend/                        # 后端：FastAPI
 │   │   └── app/                        # 应用主逻辑
-│   │       ├── main.py                 # 服务入口
-│   │       ├── api/                    # 路由分层
-│   │       ├── models/                 # 模型定义
-│   │       ├── services/               # 核心逻辑
-│   │       └── core/                   # 全局配置
-│   └── frontend/                       # 前端：React
-│       ├── public/                     # 公共静态资源
-│       └── src/
-│           ├── css/                    # 全局样式
-│           ├── components/             # UI 组件化
-│           └── assets/                 # Logo、图标等
+│   │       ├── main.py                 # 服务入口（路由注册、CORS、静态文件挂载）
+│   │       ├── api/v1/
+│   │       │   ├── detect.py           # POST /api/v1/detect（图片推理）
+│   │       │   └── detect_video.py     # POST /api/v1/detect-video（视频推理）
+│   │       └── services/
+│   │           ├── inference_service.py # YOLO 推理单例封装
+│   │           └── video_service.py    # 视频抽帧服务（OCR 距离 / 时间估算）
+│   └── frontend/                       # 前端：原生 HTML + JS
+│       └── public/
+│           └── index.html              # 单页应用（图片/视频检测、配置 Modal、结果展示）
 │
 ├── tools/                              # 🛠️ 独立工具链
 │   └── dashcam_sampler/                # 行车记录仪按距离抽帧工具
@@ -108,7 +107,7 @@ conda activate lightscan
 
 ### 2) 安装 PyTorch（根据显卡选择）
 
-> ⚠️ **RTX 5070 Ti / Blackwell 架构用户必读**
+> ⚠️ **Blackwell 架构用户必读**
 > RTX 50 系列（Blackwell，sm_120）不在 PyTorch stable 支持范围内（最高 sm_90），
 > **必须使用 Nightly 版本**，否则 GPU 加速无法正常启用。
 
@@ -137,14 +136,43 @@ python -c "import torch; print(torch.cuda.get_device_name(0))"
 
 -----
 
-## 📑 4. 研发规范 (Development Standards)
+## 🚀 4. 启动 Web 服务 (Run Server)
+
+模型训练完成、权重就位后，执行以下命令启动推理服务：
+
+```powershell
+conda activate lightscan
+cd src/backend
+uvicorn app.main:app --reload --port 8000
+```
+
+服务启动后访问 `http://localhost:8000`，支持：
+- **图片检测**：上传 JPG / PNG，返回标注图与病害类型
+- **视频检测（OCR 模式）**：行车记录仪视频，自动识别速度字幕，按行驶距离均匀抽帧
+- **视频检测（估算模式）**：无速度字幕视频，手动输入大致车速与抽帧间隔
+
+**API 接口一览：**
+
+| 方法 | 路径 | 说明 |
+| :--- | :--- | :--- |
+| `GET`  | `/health` | 健康检查 |
+| `POST` | `/api/v1/detect` | 图片推理（multipart，最多 20 张） |
+| `POST` | `/api/v1/detect-video/first-frame` | 获取视频第一帧（用于手动框选速度区域） |
+| `POST` | `/api/v1/detect-video` | 视频推理（ocr / timed 两种模式） |
+
+> **注意**：首次使用视频 OCR 模式时，PaddleOCR 会从 HuggingFace 下载模型文件（约 130 MB），之后缓存复用。
+> 如遇网络问题，可设置 `$env:PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK = "True"` 跳过来源校验。
+
+-----
+
+## 📑 6. 研发规范 (Development Standards)
 
   * **版本管理**：使用 Git 进行版本控制。大型二进制资产（模型权重、超清视频、数据集）不计入版本库，通过 **Release** 附件或官方指定网盘分发。
   * **架构原则**：采用前后端解耦架构。`src/` 目录仅保留纯粹逻辑实现，确保代码符合 PEP 8 风格指南。
 
 -----
 
-## ⚖️ 5. 法律与合规声明 (Compliance)
+## ⚖️ 7. 法律与合规声明 (Compliance)
 
 > [\!IMPORTANT]
 > **原创性声明**：本项目除引用必要开源组件外，系统架构、核心算法逻辑及相关文档均为团队成员原创。
