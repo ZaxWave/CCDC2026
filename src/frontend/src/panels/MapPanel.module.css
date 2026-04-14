@@ -1,0 +1,86 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  height: calc(100vh - 260px); 
+  min-height: 500px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--ash, #f8f9fa);
+  padding: 16px 24px;
+  border-radius: 8px;
+  border: 1px solid var(--border, #e5e7eb);
+}
+
+.title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--dark, #111827);
+}
+
+.stats {
+  font-size: 14px;
+  color: var(--muted, #6b7280);
+}
+
+.stats strong {
+  color: #ef4444; /* 红色醒目 */
+  font-size: 20px;
+  margin: 0 4px;
+}
+
+.mapWrapper {
+  flex: 1;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border, #e5e7eb);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  position: relative;
+  z-index: 1; /* 防止层级遮挡 */
+}
+
+.map {
+  width: 100%;
+  height: 100%;
+}
+
+.loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--muted, #6b7280);
+  font-weight: 500;
+}
+
+/* --- 气泡样式优化 --- */
+.popupContent h4 {
+  margin: 0 0 10px 0;
+  color: var(--dark, #111827);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tag {
+  background: #f3f4f6;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  color: #4b5563;
+}
+
+.meta p {
+  margin: 4px 0;
+  font-size: 12px;
+  color: var(--muted, #6b7280);
+}
+
+.meta strong {
+  color: #374151;
+}

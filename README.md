@@ -33,6 +33,7 @@
 CCDC2026-LightScan/
 ├── train.py                            # 🚀 核心训练入口
 ├── inference.py                        # 🚀 核心推理引擎
+├── args.yaml                           # 训练/推理参数配置
 ├── .gitignore                          # Git 忽略配置
 ├── README.md                           # 项目主说明文档
 ├── LICENSE                             # Apache 2.0 许可证
@@ -73,19 +74,22 @@ CCDC2026-LightScan/
 │   │       ├── main.py                 # 服务入口（路由注册、CORS、静态文件挂载）
 │   │       ├── api/v1/
 │   │       │   ├── detect.py           # POST /api/v1/detect（图片推理）
-│   │       │   └── detect_video.py     # POST /api/v1/detect-video（视频推理）
+│   │       │   ├── detect_video.py     # POST /api/v1/detect-video（视频推理）
+│   │       │   └── gis.py              # POST /api/v1/gis（位置服务）
 │   │       └── services/
 │   │           ├── inference_service.py # YOLO 推理单例封装
-│   │           └── video_service.py    # 视频抽帧服务（OCR 距离 / 时间估算）
+│   │           ├── video_service.py    # 视频抽帧服务（OCR 距离 / 时间估算）
+│   │           └── geo_service.py      # 位置分析服务
 │   └── frontend/                       # 前端：React 18 + Vite
 │       ├── src/                        # React 源码
 │       │   ├── main.jsx                # 入口
 │       │   ├── App.jsx                 # 根组件
+│       │   ├── App.css                 # 根组件布局样式
 │       │   ├── api/client.js           # API 封装（detectImages / detectVideo）
 │       │   ├── components/             # 通用组件（Nav、Hero、TabBar、UploadArea 等）
 │       │   │   └── video/              # 视频检测 Modal 与 Canvas 框选组件
 │       │   ├── panels/                 # 页面面板（ImagePanel / VideoPanel）
-│       │   └── styles/variables.css   # 全局 CSS 变量（设计系统）
+│       │   └── styles/variables.css    # 全局 CSS 变量（设计系统）
 │       ├── public/                     # 构建产物（FastAPI 托管目录）
 │       ├── index.html                  # Vite 开发模板
 │       ├── vite.config.js              # Vite 配置（outDir → public，代理 /api → 8000）
@@ -148,25 +152,43 @@ python -c "import torch; print(torch.cuda.get_device_name(0))"
 
 ## 🖥️ 4. 前端开发 (Frontend Dev)
 
-前端基于 Node.js，首次使用需安装依赖：
+前端基于 React 18 + Vite 构建，包含图像检测、视频分析与空间态势大屏三大模块。首次拉取项目后，请严格按以下步骤初始化：
+
+### 1) 环境变量配置 (地图密钥)
+本项目深度集成了高德地图 JS API 2.0。为了保证安全，密钥不会提交到代码库中。
+请在 `src/frontend/` 目录下新建 `.env` 文件，并填入你在高德开放平台申请的 Web 端密钥：
+
+```text
+VITE_AMAP_KEY=你的高德地图Key
+VITE_AMAP_SECURITY_CODE=你的高德安全密钥
+```
+
+### 2) 安装前端依赖
+进入前端目录并执行安装命令：
 
 ```powershell
 cd src/frontend
-npm install
+# 安装基础依赖 + 高德地图加载器 
+npm install @amap/amap-jsapi-loader
+# 如果遇到版本冲突（React 18 vs 19），请使用强制模式
+npm install --legacy-peer-deps
 ```
 
-**开发模式**（热更新，API 自动代理到后端 8000 端口）：
+### 3) 开发模式运行
+支持热更新，并在 `vite.config.js` 中自动将 `/api` 请求代理至后端 8000 端口：
 
 ```powershell
 npm run dev
-# → http://localhost:5173
+# 运行成功后访问 → http://localhost:5173
 ```
 
-**生产构建**（产物输出到 `src/frontend/public/`，供 FastAPI 托管）：
+### 4) 生产环境构建
+当开发完成准备最终交付时，执行以下命令：
 
 ```powershell
 npm run build
 ```
+> 编译产物将自动输出到 `src/frontend/public/` 目录，由后端的 FastAPI 框架作为静态资源统一托管。
 
 -----
 

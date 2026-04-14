@@ -10,6 +10,8 @@ ROOT = Path(__file__).resolve().parents[4]  # -> CCDC2026-LightScan/
 sys.path.insert(0, str(ROOT))
 
 from inference import LightScanInference
+from .geo_service import extract_gps_from_image
+from datetime import datetime
 
 # RDD2022 类别中文映射字典
 LABEL_CN = {
@@ -64,6 +66,9 @@ def run_detect(img_bytes: bytes, conf: float = 0.25) -> dict:
     结构化结果解析及目标框的可视化绘制。
     """
     engine = get_engine()
+
+    lat, lng = extract_gps_from_image(img_bytes)
+    current_time = datetime.now().isoformat()
 
     # 图像解码为 numpy 数组，默认 BGR 通道顺序
     arr = np.frombuffer(img_bytes, dtype=np.uint8)
@@ -124,4 +129,6 @@ def run_detect(img_bytes: bytes, conf: float = 0.25) -> dict:
         "detections":   detections,
         "image_b64":    image_b64,
         "inference_ms": inference_ms,
+        "location": {"lat": lat, "lng": lng}, 
+        "timestamp": current_time             
     }

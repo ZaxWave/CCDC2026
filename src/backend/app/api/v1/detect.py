@@ -1,31 +1,24 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException, Query
+from fastapi import APIRouter, UploadFile, File, HTTPException, Query, Depends
 from fastapi.responses import JSONResponse
+from sqlalchemy.orm import Session
 
 from app.services.inference_service import run_detect
+from app.db.database import get_db
+from app.db.models import DiseaseRecord
 
 router = APIRouter(prefix="/api/v1", tags=["detect"])
 
 ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp", "image/bmp"}
 MAX_FILES = 20
 
-
 @router.post("/detect")
 async def detect(
-    files: list[UploadFile] = File(...),conf: float = Query(0.25, ge=0.0, le=1.0, description="置信度阈值") 
+    files: list[UploadFile] = File(...),
+    conf: float = Query(0.25, ge=0.0, le=1.0, description="置信度阈值"),
+    db: Session = Depends(get_db)  # 在请求生命周期内自动获取/释放数据库连接
 ):
     """
-    接收 1–20 张图片，返回每张的检测结果与标注图。
-
-    Response body (JSON array):
-    [
-      {
-        "filename":     "road.jpg",
-        "detections":   [{"label","label_cn","tag","conf","bbox":[x1,y1,x2,y2]}, ...],
-        "image_b64":    "data:image/jpeg;base64,...",
-        "inference_ms": 42.5
-      },
-      ...
-    ]
+    接收 1–20 张图片，返回每张的检测结果与标注图，并将时空病害数据写入 PostgreSQL 数据库。
     """
     if len(files) > MAX_FILES:
         raise HTTPException(400, detail=f"单次最多上传 {MAX_FILES} 张图片")
@@ -39,6 +32,7 @@ async def detect(
             )
         img_bytes = await upload.read()
         try:
+            # 调用核心推理逻辑 (它现在应该会返回 location 和 timestamp)
             res = run_detect(img_bytes, conf=conf)
         except FileNotFoundError:
             raise HTTPException(
@@ -48,11 +42,36 @@ async def detect(
         except ValueError as e:
             raise HTTPException(422, detail=str(e))
 
+        # ==========================================
+        # 将检测结果持久化到 PostgreSQL
+        # ==========================================
+        # 安全提取位置信息（防御空值）
+        location = res.get("location", {})
+        lat = location.get("lat", 0.0)
+        lng = location.get("lng", 0.0)
+
+        for det in res.get("detections", []):
+            db_record = DiseaseRecord(
+                filename=upload.filename,
+                lat=lat,
+                lng=lng,
+                label=det.get("label"),           # 例: "D40"
+                label_cn=det.get("label_cn"),     # 例: "坑槽"
+                confidence=det.get("conf"),       # 置信度数值
+                color_hex=det.get("color"),       # 例: "#ff4444"
+                bbox=det.get("bbox")              # [x1, y1, x2, y2]
+            )
+            db.add(db_record)
+        
+        db.commit()
+
         results.append({
             "filename":     upload.filename,
-            "detections":   res["detections"],
-            "image_b64":    res["image_b64"],
-            "inference_ms": res["inference_ms"],
+            "detections":   res.get("detections", []),
+            "image_b64":    res.get("image_b64", ""),
+            "inference_ms": res.get("inference_ms", 0),
+            "location":     location,
+            "timestamp":    res.get("timestamp")
         })
 
     return JSONResponse(content=results)
