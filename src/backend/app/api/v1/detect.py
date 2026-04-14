@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, Query
 from fastapi.responses import JSONResponse
 
 from app.services.inference_service import run_detect
@@ -10,7 +10,9 @@ MAX_FILES = 20
 
 
 @router.post("/detect")
-async def detect(files: list[UploadFile] = File(...)):
+async def detect(
+    files: list[UploadFile] = File(...),conf: float = Query(0.25, ge=0.0, le=1.0, description="置信度阈值") 
+):
     """
     接收 1–20 张图片，返回每张的检测结果与标注图。
 
@@ -37,7 +39,7 @@ async def detect(files: list[UploadFile] = File(...)):
             )
         img_bytes = await upload.read()
         try:
-            res = run_detect(img_bytes)
+            res = run_detect(img_bytes, conf=conf)
         except FileNotFoundError:
             raise HTTPException(
                 503,
