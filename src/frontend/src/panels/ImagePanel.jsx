@@ -32,9 +32,20 @@ export default function ImagePanel() {
       setProgress({ visible: true, text: `渲染结果 (${i + 1}/${results.length})…`, pct: Math.round((i + 1) / results.length * 100) })
       setItems(prev => [...prev, item])
       newStats.total++
-      if (item.detections.length > 0) newStats.defects++
-      if (item.detections.some(d => d.tag === 'tag-crack'))   newStats.crack++
-      if (item.detections.some(d => d.tag === 'tag-pothole')) newStats.pothole++
+
+      newStats.defects += item.detections.length
+      
+      item.detections.forEach(d => {
+        // 纵裂(D00)、横裂(D10)、龟裂(D20) 全部归类为“裂缝”
+        if (['D00', 'D10', 'D20'].includes(d.label)) {
+          newStats.crack++
+        } 
+        // D40 独立计算为“坑槽”
+        else if (d.label === 'D40') {
+          newStats.pothole++
+        }
+      })
+
       setStats({ ...newStats })
       await new Promise(r => setTimeout(r, 40))
     }
