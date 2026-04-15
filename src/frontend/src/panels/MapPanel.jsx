@@ -3,8 +3,8 @@ import AMapLoader from '@amap/amap-jsapi-loader';
 import s from './MapPanel.module.css';
 import ReactECharts from 'echarts-for-react';
 
-const AMAP_KEY           = import.meta.env.VITE_AMAP_KEY           ;
-const AMAP_SECURITY_CODE = import.meta.env.VITE_AMAP_SECURITY_CODE ;
+const AMAP_KEY           = import.meta.env.VITE_AMAP_KEY;
+const AMAP_SECURITY_CODE = import.meta.env.VITE_AMAP_SECURITY_CODE;
 
 window._AMapSecurityConfig = {
   securityJsCode: AMAP_SECURITY_CODE,
