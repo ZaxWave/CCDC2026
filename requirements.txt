@@ -34,7 +34,8 @@ pyyaml>=6.0.1
 sqlalchemy>=2.0.0
 psycopg2-binary>=2.9.9
 
-# --- 密码加密 (Passlib) ---
-passlib[bcrypt]
-python-jose[cryptography]
-python-multipart
+# --- 密码加密与 JWT 鉴权 ---
+passlib[bcrypt]==1.7.4
+python-jose[cryptography]==3.3.0
+python-multipart==0.0.9
+bcrypt==3.2.2

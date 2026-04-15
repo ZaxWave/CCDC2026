@@ -1,10 +1,33 @@
-async function request(path, body) {
-  const res = await fetch(path, { method: 'POST', body })
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ detail: res.statusText }))
-    throw new Error(err.detail || res.statusText)
+async function request(path, body, method = 'POST') {
+  const headers = {};
+  
+  // 1. 自动注入 Token
+  const token = localStorage.getItem('token');
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
   }
-  return res.json()
+
+  if (body && !(body instanceof FormData) && typeof body === 'object') {
+    headers['Content-Type'] = 'application/json';
+    body = JSON.stringify(body);
+  }
+
+  const res = await fetch(path, { method, headers, body });
+
+  // 2. 401 拦截：Token 过期或未登录
+  if (res.status === 401) {
+    localStorage.removeItem('token');
+    localStorage.removeItem('username');
+    window.location.reload(); // 强制刷新，触发 App.jsx 回到登录页
+    return;
+  }
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || res.statusText);
+  }
+  
+  return res.json();
 }
 
 export function detectImages(files) {
@@ -32,4 +55,11 @@ export function detectVideo(file, config) {
     form.append('approx_speed_kmh', config.speedKmh)
   }
   return request('/api/v1/detect-video', form)
+}
+
+export function getGisRecords() {
+  return request('/api/v1/gis/records', null, 'GET');
+}
+export function getMyGisRecords() {
+  return request('/api/v1/gis/my-records', null, 'GET');
 }

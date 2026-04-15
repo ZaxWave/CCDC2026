@@ -1,0 +1,241 @@
+/* src/panels/LoginPanel.module.css */
+
+.container {
+  display: flex;
+  min-height: 100vh;
+  width: 100vw;
+  background-color: #020202;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+/* ================= 左侧视觉区 ================= */
+.brandPanel {
+  flex: 1.1; 
+  position: relative;
+  background: radial-gradient(circle at 100% 50%, #0d0d12 0%, #020202 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-left: 12%;
+}
+
+.gridOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse at left, black, transparent);
+  z-index: 1;
+}
+
+.meta {
+  font-family: 'Courier New', monospace;
+  color: #00d2ff;
+  font-size: 0.7rem;
+  letter-spacing: 4px;
+  margin-bottom: 20px;
+  opacity: 0.6;
+}
+
+.hugeTitle {
+  font-size: 10rem; 
+  font-weight: 900;
+  line-height: 0.85;
+  color: #ffffff;
+  margin: 0;
+  letter-spacing: -0.05em;
+  font-style: italic; 
+  background: linear-gradient(180deg, #fff 40%, rgba(255,255,255,0.02) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  transform: translateX(-15px);
+  z-index: 2;
+  user-select: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.hugeTitle .indent {
+  margin-left: 120px;
+}
+
+.divider {
+  width: 140px;
+  height: 2px;
+  background: #00d2ff;
+  margin: 40px 0;
+  box-shadow: 0 0 30px rgba(0, 210, 255, 0.5);
+}
+
+.slogan {
+  color: #4a4a5a;
+  font-size: 1.1rem;
+  letter-spacing: 4px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+/* ================= 右侧表单区 ================= */
+.formPanel {
+  flex: 0.9;
+  background: #050507;
+  /* border-left: 1px solid rgba(255, 255, 255, 0.02); */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.glowDivider {
+  position: absolute;
+  left: 0;
+  top: 12%; 
+  bottom: 12%;
+  width: 2px;
+  background: linear-gradient(to bottom, transparent 0%, #00d2ff 50%, transparent 100%);
+  box-shadow: 0 0 15px 1px rgba(0, 210, 255, 0.4),
+              0 0 30px 3px rgba(0, 210, 255, 0.15);
+  z-index: 10;
+  opacity: 0.8;
+}
+
+.formWrapper {
+  max-width: 330px;
+  margin-left: 20px;
+}
+
+.header {
+  margin-bottom: 50px;
+}
+
+.title {
+  color: #ffffff;
+  font-size: 2.4rem;
+  margin: 0 0 12px 0;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.dot {
+  color: #00d2ff;
+  animation: blink 1.5s step-end infinite;
+}
+
+@keyframes blink { 50% { opacity: 0; } }
+
+.subtitle {
+  color: #3f3f4e;
+  font-size: 0.8rem;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 1px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.label {
+  font-size: 0.65rem;
+  color: #3f3f4e;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 1.5px;
+  font-weight: bold;
+}
+
+.input {
+  background: transparent;
+  border: none;
+  /* 仅保留左和下边框 */
+  border-bottom: 2px solid rgba(255, 255, 255, 0.06);
+  border-left: 2px solid rgba(255, 255, 255, 0.06);
+  padding: 14px 20px;
+  color: #ffffff;
+  font-size: 1.1rem;
+  font-family: 'Courier New', monospace;
+  transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+  outline: none;
+}
+
+.input:focus {
+  border-bottom: 2px solid #00d2ff;
+  border-left: 2px solid #00d2ff;
+  background: linear-gradient(135deg, rgba(0, 210, 255, 0.04) 0%, transparent 100%);
+  box-shadow: -15px 15px 30px -10px rgba(0, 210, 255, 0.2);
+}
+
+.input::placeholder {
+  color: #1a1a22;
+}
+
+.error {
+  color: #ff3e3e;
+  font-size: 0.75rem;
+  font-family: 'Courier New', monospace;
+  padding: 12px;
+  border-left: 3px solid #ff3e3e;
+  background: rgba(255, 62, 62, 0.03);
+}
+
+.submitBtn {
+  background: #ffffff;
+  color: #000;
+  border: none;
+  padding: 20px;
+  font-size: 0.9rem;
+  font-weight: 900;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 10px;
+  /* 锐利的非对称切角按钮 */
+  clip-path: polygon(0 0, 100% 0, 100% 70%, 92% 100%, 0 100%);
+}
+
+.submitBtn:hover {
+  background: #00d2ff;
+  transform: translateX(10px); /* 悬浮时横向位移，极具动感 */
+  box-shadow: -10px 10px 0px rgba(0, 210, 255, 0.1);
+}
+
+.toggleText {
+  margin-top: 40px;
+  color: #2a2a35;
+  font-size: 0.75rem;
+  font-family: 'Courier New', monospace;
+}
+
+.toggleText span {
+  color: #4a4a5a;
+  cursor: pointer;
+  margin-left: 12px;
+  transition: color 0.2s;
+  text-decoration: underline;
+}
+
+.toggleText span:hover {
+  color: #00d2ff;
+}
+
+@media (max-width: 1280px) {
+  .hugeTitle { font-size: 8rem; }
+  .formPanel { padding-left: 60px; }
+}
