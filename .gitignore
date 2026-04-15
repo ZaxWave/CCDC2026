@@ -1,43 +1,148 @@
-# 1. 忽略四个正式提交文件夹下的所有实际内容
+# ============================================
+# SECURITY - CRITICAL: Never commit secrets!
+# ============================================
+.env
+.env.local
+.env.*.local
+.env.production
+.env.production.local
+.secrets/
+secrets.yaml
+secrets.json
+
+# ============================================
+# Submission Folders (Project Specific)
+# ============================================
 submission/2026017676-01作品与答辩材料/
 submission/2026017676-02素材与源码/
 submission/2026017676-03设计与开发文档/
 submission/2026017676-04作品展示视频/
 
-# 2. 排除数据目录下的所有内容
+# ============================================
+# Data & Datasets (Large Files)
+# ============================================
 data/*
 datasets/*
-# 保持 README 始终可见
+# Keep README files
 !README.md
 !datasets/README.md
 !data/README.md
-!**/ .gitkeep
+!**/.gitkeep
+data/raw/
+data/temp/
+data/cache/
+data/processed/
 
-# 3. 排除前端依赖与缓存
+# ============================================
+# Frontend - Node.js & Vite
+# ============================================
 src/frontend/node_modules/
 src/frontend/.vite/
+src/frontend/dist/
+src/frontend/build/
 src/frontend/public/assets/
+src/frontend/.next/
+src/frontend/out/
+src/frontend/coverage/
 
-# 4. 排除 AI 工具生成文件
-.claude/
-DESIGN.md
+# Node package manager lock files (optional - uncomment if using monorepo)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
 
-# 排除本地开发环境垃圾
+# ============================================
+# Backend - Python Virtual Environments
+# ============================================
 venv/
 env/
-.env
+ENV/
+env.bak/
+venv.bak/
+.venv/
+miniconda3/
+anaconda3/
+.conda/
+
+# ============================================
+# Backend - Python Cache & Build
+# ============================================
 __pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ============================================
+# Backend - SQLite & Local Databases
+# ============================================
+*.db
+*.sqlite
+*.sqlite3
+.db.sqlite3
+test.db
+app.db
+*.pg_dump
+*.sqlite-journal
+
+# ============================================
+# IDE & Editor (VS Code, PyCharm, Sublime)
+# ============================================
 .vscode/
 .idea/
-.DS_Store
-Thumbs.db
+*.sublime-project
+*.sublime-workspace
+.vs/
+*.user
+*.userprefs
+*.swp
+*.swo
+*~
+.project
+.pydevproject
 
-# 忽略训练产生的权重和日志
-runs/
-*.pt
+# ============================================
+# AI Tool Generated Files
+# ============================================
+.claude/
+DESIGN.md
+.copilot/
+
+# ============================================
+# Logs & Debug Output
+# ============================================
 *.log
+logs/
+*.pot
+debug.log
+npm-debug.log
+npm-error.log
+yarn-debug.log
+yarn-error.log
+lerna-debug.log
+.pnpm-debug.log
+pnpm-debug.log
 
-# 5. 排除深度学习模型大文件与推理产物
+# ============================================
+# ML Models & Weights (Large Files)
+# ============================================
+runs/
 *.pt
 *.pth
 *.weights
@@ -46,15 +151,74 @@ runs/
 *.trt
 *.tflite
 *.bin
+models/weights/
+models/archive/
 
-# 6. 排除 Office/PPT 产生的临时锁定文件
+# ============================================
+# Test & Coverage
+# ============================================
+.pytest_cache/
+.coverage
+htmlcov/
+.nose*
+.tox/
+.hypothesis/
+*.cover
+
+# ============================================
+# OS Files
+# ============================================
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# ============================================
+# Office Temporary/Lock Files
+# ============================================
 ~$*.doc*
 ~$*.ppt*
 *~$*.docx
 *~$*.pptx
+.~lock.*#
 
-# 7. 排除所有压缩包
+# ============================================
+# Compression Archives
+# ============================================
 *.zip
 *.tar.gz
+*.tar.bz2
 *.rar
 *.7z
+*.iso
+*.dmg
+
+# ============================================
+# Temporary Files
+# ============================================
+*.tmp
+*.temp
+*.bak
+.#*
+#*#
+*~
+*.swp
+*.swo
+.classpath
+*.scala#
+*.jinja2#
+
+# ============================================
+# Development Environment
+# ============================================
+.vscode-server/
+.devcontainers/
+.env.development
+.env.test
+
