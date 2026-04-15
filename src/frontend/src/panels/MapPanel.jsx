@@ -10,6 +10,9 @@ window._AMapSecurityConfig = {
   securityJsCode: AMAP_SECURITY_CODE,
 };
 
+// 病害严重程度 → 热力图权重（坑槽最重，横向裂缝最轻）
+const HEAT_WEIGHT = { D40: 1.0, D20: 0.7, D10: 0.5, D00: 0.3 };
+
 // 注入脉冲动画（只注入一次）
 if (!document.getElementById('ls-map-style')) {
   const el = document.createElement('style');
@@ -29,11 +32,13 @@ export default function MapPanel() {
   const mapRef = useRef(null);
   const mapObjRef = useRef(null);
   const markersDataRef = useRef([]);    // 存 {marker, item} 供样式更新 effect 使用
+  const heatmapRef = useRef(null);      // AMap.HeatMap 实例
   const [mapInstance, setMapInstance] = useState(null);
   const [records, setRecords] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedType, setSelectedType] = useState(null); // 饼图点击筛选的病害类型
+  const [heatMode, setHeatMode] = useState(false);        // false=散点, true=热力图
 
   // 初始化地图
   // cleanup 使用 mapObjRef（ref 不受闭包旧值影响），确保 StrictMode 双执行时
@@ -42,7 +47,7 @@ export default function MapPanel() {
     AMapLoader.load({
       key: AMAP_KEY,
       version: "2.0",
-      plugins: ['AMap.Scale', 'AMap.ToolBar'],
+      plugins: ['AMap.Scale', 'AMap.ToolBar', 'AMap.HeatMap'],
     }).then((AMap) => {
       const map = new AMap.Map(mapRef.current, {
         viewMode: '3D',
@@ -58,6 +63,7 @@ export default function MapPanel() {
       if (mapObjRef.current) {
         mapObjRef.current.destroy();
         mapObjRef.current = null;
+        heatmapRef.current = null;   // 热力图随地图销毁
         setMapInstance(null);
       }
     };
@@ -225,6 +231,48 @@ export default function MapPanel() {
     });
   }, [selectedType]);
 
+  // 热力图 / 散点模式切换
+  useEffect(() => {
+    if (!mapInstance) return;
+
+    if (heatMode) {
+      // ── 热力图模式：隐藏所有 marker ──
+      markersDataRef.current.forEach(({ marker }) => marker.hide());
+
+      if (records.length === 0) return;
+
+      // 构造热力图数据集，权重来自 HEAT_WEIGHT
+      const heatData = records
+        .filter(r => !isNaN(parseFloat(r?.lng)) && !isNaN(parseFloat(r?.lat)))
+        .map(r => ({
+          lng: parseFloat(r.lng),
+          lat: parseFloat(r.lat),
+          count: HEAT_WEIGHT[r.label] ?? 0.3,
+        }));
+
+      if (!heatmapRef.current) {
+        heatmapRef.current = new window.AMap.HeatMap(mapInstance, {
+          radius: 30,
+          opacity: [0, 0.85],
+          gradient: {
+            0.3: '#4ade80',   // 低风险：绿
+            0.55: '#facc15',  // 中风险：黄
+            0.75: '#f97316',  // 较高：橙
+            1.0: '#ef4444',   // 高风险：红
+          },
+          zooms: [3, 18],
+        });
+      }
+
+      heatmapRef.current.setDataSet({ data: heatData, max: 1.0 });
+      heatmapRef.current.show();
+    } else {
+      // ── 散点模式：隐藏热力图，显示 marker ──
+      if (heatmapRef.current) heatmapRef.current.hide();
+      markersDataRef.current.forEach(({ marker }) => marker.show());
+    }
+  }, [heatMode, mapInstance, records]);
+
   // [图表 1] 病害类型占比环形图
   const pieOption = useMemo(() => {
     const counts = {};
@@ -330,6 +378,47 @@ export default function MapPanel() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
               <span style={{ color: '#9ca3af', fontSize: '14px' }}>累计检出病害</span>
               <strong style={{ fontSize: '32px', color: '#fff', lineHeight: '1' }}>{totalCount}</strong>
+            </div>
+
+            {/* 散点 / 热力图切换 */}
+            <div style={{ marginTop: '14px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ fontSize: '12px', color: '#9ca3af', flexShrink: 0 }}>视图模式</span>
+              <div
+                onClick={() => setHeatMode(prev => !prev)}
+                style={{
+                  display: 'flex', alignItems: 'center',
+                  background: 'rgba(255,255,255,0.06)',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  borderRadius: '20px',
+                  padding: '2px',
+                  cursor: 'pointer',
+                  gap: '2px',
+                  userSelect: 'none',
+                }}
+              >
+                {[
+                  { label: '散点', val: false, icon: '⬤' },
+                  { label: '热力', val: true,  icon: '◈' },
+                ].map(({ label, val, icon }) => (
+                  <span
+                    key={label}
+                    style={{
+                      padding: '4px 12px',
+                      borderRadius: '16px',
+                      fontSize: '12px',
+                      fontWeight: heatMode === val ? '600' : '400',
+                      color: heatMode === val ? '#fff' : '#6b7280',
+                      background: heatMode === val
+                        ? (val ? 'linear-gradient(135deg,#ef4444,#f97316)' : '#3b82f6')
+                        : 'transparent',
+                      transition: 'all 0.25s ease',
+                      display: 'flex', alignItems: 'center', gap: '4px',
+                    }}
+                  >
+                    <span style={{ fontSize: '9px' }}>{icon}</span>{label}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
 

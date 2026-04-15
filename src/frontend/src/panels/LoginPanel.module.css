@@ -47,22 +47,35 @@
 }
 
 .hugeTitle {
-  font-size: 10rem; 
+  font-size: 10rem;
   font-weight: 900;
   line-height: 0.85;
   color: #ffffff;
   margin: 0;
   letter-spacing: -0.05em;
-  font-style: italic; 
+  font-style: italic;
+  
   background: linear-gradient(180deg, #fff 40%, rgba(255,255,255,0.02) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  
+  -webkit-background-clip: text; /* 兼容 Chrome/Safari */
+  background-clip: text;         
+  
+  -webkit-text-fill-color: transparent; 
+  color: transparent;                  
+
   transform: translateX(-15px);
   z-index: 2;
   user-select: none;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+}
+
+/* 针对 Flex 布局下 clip 可能失效的特殊处理 */
+.hugeTitle span {
+  display: block;
+  -webkit-background-clip: text;
+  background-clip: text;
 }
 
 .hugeTitle .indent {
