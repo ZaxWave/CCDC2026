@@ -1,4 +1,5 @@
 import os
+import warnings
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
@@ -10,8 +11,18 @@ from app.schemas.user import TokenData
 # 告诉 FastAPI 登录接口在哪里（用于自动生成 Swagger 文档）
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
-SECRET_KEY = os.getenv("SECRET_KEY", "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7")
+# Load from environment variables with development fallbacks
+SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
+
+# Development mode handling
+if not SECRET_KEY:
+    SECRET_KEY = "dev-key-change-in-production-09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
+    warnings.warn(
+        "⚠️ SECURITY WARNING: Using default development SECRET_KEY. "
+        "Set SECRET_KEY environment variable for production.",
+        RuntimeWarning
+    )
 
 def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
