@@ -84,3 +84,16 @@
 .meta strong {
   color: #374151;
 }
+
+.sidebar {
+  transform: translateX(0);
+}
+
+.sidebarClosed {
+  transform: translateX(-340px); 
+}
+
+.sidebar button:hover {
+  color: #fff !important;
+  background: rgba(59, 130, 246, 0.5) !important;
+}

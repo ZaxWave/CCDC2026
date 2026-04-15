@@ -8,6 +8,7 @@ window._AMapSecurityConfig = {
 };
 
 export default function MapPanel() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const mapRef = useRef(null);
   const [mapInstance, setMapInstance] = useState(null);
   const [records, setRecords] = useState([]);
@@ -117,7 +118,7 @@ export default function MapPanel() {
   // [图表 2] 近期巡检趋势折线图
   const lineOption = useMemo(() => {
     const total = records.length;
-    // 模拟联动趋势（这里为了让演示更炫酷，生成一组带有真实末尾数据点的趋势）
+    // 模拟联动趋势
     const mockTrend = [
       Math.floor(total * 0.1), Math.floor(total * 0.2), Math.floor(total * 0.15),
       Math.floor(total * 0.3), Math.floor(total * 0.1), Math.floor(total * 0.05), total
@@ -147,41 +148,86 @@ export default function MapPanel() {
   // ==========================================
 
   return (
-    <div className={s.container} style={{ position: 'relative', width: '100%', height: 'calc(100vh - 60px)' }}>
+    <div className={s.container} style={{ position: 'relative', width: '100%', height: 'calc(100vh - 60px)', overflow: 'hidden' }}>
+      {/* 1. 地图底层 */}
       <div ref={mapRef} style={{ width: '100%', height: '100%', background: '#090a0f' }}></div>
       
-      {/* 数据仪表盘 */}
-      <div style={{
-        position: 'absolute', top: '20px', left: '20px', bottom: '20px', width: '320px',
-        background: 'rgba(10, 15, 30, 0.85)', backdropFilter: 'blur(10px)',
-        border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px',
-        display: 'flex', flexDirection: 'column', overflow: 'hidden', zIndex: 999
-      }}>
-        
-        {/* 头部：总数统计 */}
-        <div style={{ padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-          <h3 style={{ margin: '0 0 15px 0', fontSize: '18px', color: '#60a5fa', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ width: '8px', height: '18px', background: '#3b82f6', borderRadius: '4px' }}></span>
-            态势感知面板
-          </h3>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-            <span style={{ color: '#9ca3af', fontSize: '14px' }}>累计检出病害</span>
-            <strong style={{ fontSize: '32px', color: '#fff', lineHeight: '1' }}>{loading ? '-' : records.length}</strong>
+      {/* 2. 可收起的数据仪表盘 */}
+      <div 
+        style={{
+          position: 'absolute', 
+          top: '20px', 
+          bottom: '20px', 
+          left: isSidebarOpen ? '20px' : '-340px', 
+          width: '320px',
+          background: 'rgba(10, 15, 30, 0.85)', 
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255,255,255,0.1)', 
+          borderRadius: '12px',
+          display: 'flex', 
+          flexDirection: 'column', 
+          zIndex: 999,
+          transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)', 
+        }}
+      >
+        <div 
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          style={{
+            position: 'absolute',
+            right: '-35px',
+            top: '20px',
+            width: '35px',
+            height: '60px',
+            background: 'rgba(10, 15, 30, 0.85)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderLeft: 'none',
+            borderRadius: '0 8px 8px 0',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            color: '#60a5fa',
+            fontSize: '12px',
+            boxShadow: '4px 0 10px rgba(0,0,0,0.3)'
+          }}
+        >
+          {isSidebarOpen ? '◀' : '▶'}
+        </div>
+
+        <div style={{ 
+          opacity: isSidebarOpen ? 1 : 0, 
+          transition: 'opacity 0.2s', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          height: '100%',
+          pointerEvents: isSidebarOpen ? 'auto' : 'none'
+        }}>
+          {/* 头部：总数统计 */}
+          <div style={{ padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+            <h3 style={{ margin: '0 0 15px 0', fontSize: '18px', color: '#60a5fa', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ width: '8px', height: '18px', background: '#3b82f6', borderRadius: '4px' }}></span>
+              态势感知面板
+            </h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+              <span style={{ color: '#9ca3af', fontSize: '14px' }}>累计检出病害</span>
+              <strong style={{ fontSize: '32px', color: '#fff', lineHeight: '1' }}>{loading ? '-' : records.length}</strong>
+            </div>
+          </div>
+
+          {/* 渲染图表 1：ECharts 环形图 */}
+          <div style={{ padding: '20px', flex: 1, borderBottom: '1px solid rgba(255,255,255,0.1)', minHeight: '240px' }}>
+            <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#d1d5db', fontWeight: 'normal' }}>分布占比</h4>
+            <ReactECharts option={pieOption} style={{ height: '100%', width: '100%' }} />
+          </div>
+
+          {/* 渲染图表 2：ECharts 折线图 */}
+          <div style={{ padding: '20px', flex: 1, minHeight: '240px' }}>
+            <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#d1d5db', fontWeight: 'normal' }}>近七日检出趋势</h4>
+            <ReactECharts option={lineOption} style={{ height: '100%', width: '100%' }} />
           </div>
         </div>
 
-        {/* 渲染图表 1：ECharts 环形图 */}
-        <div style={{ padding: '20px', flex: 1, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-          <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#d1d5db', fontWeight: 'normal' }}>分布占比</h4>
-          <ReactECharts option={pieOption} style={{ height: '180px', width: '100%' }} />
-        </div>
-
-        {/* 渲染图表 2：ECharts 折线图 */}
-        <div style={{ padding: '20px', flex: 1 }}>
-          <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#d1d5db', fontWeight: 'normal' }}>近七日检出趋势</h4>
-          <ReactECharts option={lineOption} style={{ height: '180px', width: '100%' }} />
-        </div>
-        
       </div>
     </div>
   );
