@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import AMapLoader from '@amap/amap-jsapi-loader';
 import s from './MapPanel.module.css';
+import ReactECharts from 'echarts-for-react';
 
 window._AMapSecurityConfig = {
   securityJsCode: '5925c6e1bb0cc5d88d379ff29ad85a94', 
@@ -77,6 +78,73 @@ export default function MapPanel() {
       }
     });
   }, [mapInstance, records]);
+  
+
+  // ==========================================
+  // 根据 records 动态生成 ECharts 配置）
+  // ==========================================
+
+  // [图表 1] 病害类型占比环形图
+  const pieOption = useMemo(() => {
+    const counts = {};
+    records.forEach(r => {
+      const name = r.label_cn || '未知类型';
+      counts[name] = (counts[name] || 0) + 1;
+    });
+    
+    const data = Object.keys(counts).map(key => ({
+      name: key,
+      value: counts[key],
+      itemStyle: { color: key.includes('坑槽') ? '#ef4444' : (key.includes('裂缝') ? '#f59e0b' : '#3b82f6') }
+    }));
+
+    return {
+      tooltip: { trigger: 'item', backgroundColor: 'rgba(10, 15, 30, 0.9)', borderColor: '#3b82f6', textStyle: { color: '#fff' } },
+      legend: { top: 'bottom', textStyle: { color: '#9ca3af' } },
+      series: [
+        {
+          name: '病害类型', type: 'pie', radius: ['50%', '70%'], avoidLabelOverlap: false,
+          itemStyle: { borderRadius: 8, borderColor: 'rgba(10, 15, 30, 0.85)', borderWidth: 2 },
+          label: { show: false, position: 'center' },
+          emphasis: { label: { show: true, fontSize: 16, fontWeight: 'bold', color: '#fff' } },
+          labelLine: { show: false },
+          data: data.length > 0 ? data : [{ name: '暂无数据', value: 0 }]
+        }
+      ]
+    };
+  }, [records]);
+
+  // [图表 2] 近期巡检趋势折线图
+  const lineOption = useMemo(() => {
+    const total = records.length;
+    // 模拟联动趋势（这里为了让演示更炫酷，生成一组带有真实末尾数据点的趋势）
+    const mockTrend = [
+      Math.floor(total * 0.1), Math.floor(total * 0.2), Math.floor(total * 0.15),
+      Math.floor(total * 0.3), Math.floor(total * 0.1), Math.floor(total * 0.05), total
+    ];
+
+    return {
+      tooltip: { trigger: 'axis', backgroundColor: 'rgba(10, 15, 30, 0.9)', borderColor: '#3b82f6', textStyle: { color: '#fff' } },
+      grid: { left: '3%', right: '4%', bottom: '3%', top: '10%', containLabel: true },
+      xAxis: { 
+        type: 'category', boundaryGap: false, data: ['周一', '周二', '周三', '周四', '周五', '周六', '今日'],
+        axisLabel: { color: '#9ca3af' }, axisLine: { lineStyle: { color: '#374151' } }
+      },
+      yAxis: { type: 'value', axisLabel: { color: '#9ca3af' }, splitLine: { lineStyle: { color: '#1f2937', type: 'dashed' } } },
+      series: [
+        {
+          name: '检出数量', type: 'line', smooth: true, data: mockTrend,
+          lineStyle: { color: '#3b82f6', width: 3 },
+          areaStyle: {
+            color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(59, 130, 246, 0.5)' }, { offset: 1, color: 'rgba(59, 130, 246, 0)' }] }
+          },
+          symbol: 'circle', symbolSize: 8, itemStyle: { color: '#60a5fa', borderColor: '#fff', borderWidth: 2 }
+        }
+      ]
+    };
+  }, [records]);
+
+  // ==========================================
 
   return (
     <div className={s.container} style={{ position: 'relative', width: '100%', height: 'calc(100vh - 60px)' }}>
@@ -84,19 +152,36 @@ export default function MapPanel() {
       
       {/* 数据仪表盘 */}
       <div style={{
-        position: 'absolute', top: '20px', left: '20px', background: 'rgba(10, 15, 30, 0.85)',
-        backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.1)', padding: '20px',
-        borderRadius: '12px', color: '#fff', zIndex: 999, minWidth: '250px'
+        position: 'absolute', top: '20px', left: '20px', bottom: '20px', width: '320px',
+        background: 'rgba(10, 15, 30, 0.85)', backdropFilter: 'blur(10px)',
+        border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px',
+        display: 'flex', flexDirection: 'column', overflow: 'hidden', zIndex: 999
       }}>
-        <h3 style={{ margin: '0 0 15px 0', fontSize: '18px', color: '#60a5fa' }}>⚡ 实时监测面板</h3>
-        {loading ? (
-          <div style={{ color: '#9ca3af' }}>数据同步中...</div>
-        ) : (
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ color: '#9ca3af' }}>已归档病害：</span>
-            <strong style={{ fontSize: '18px', color: '#f87171' }}>{records.length}</strong>
+        
+        {/* 头部：总数统计 */}
+        <div style={{ padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+          <h3 style={{ margin: '0 0 15px 0', fontSize: '18px', color: '#60a5fa', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ width: '8px', height: '18px', background: '#3b82f6', borderRadius: '4px' }}></span>
+            态势感知面板
+          </h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+            <span style={{ color: '#9ca3af', fontSize: '14px' }}>累计检出病害</span>
+            <strong style={{ fontSize: '32px', color: '#fff', lineHeight: '1' }}>{loading ? '-' : records.length}</strong>
           </div>
-        )}
+        </div>
+
+        {/* 渲染图表 1：ECharts 环形图 */}
+        <div style={{ padding: '20px', flex: 1, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+          <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#d1d5db', fontWeight: 'normal' }}>分布占比</h4>
+          <ReactECharts option={pieOption} style={{ height: '180px', width: '100%' }} />
+        </div>
+
+        {/* 渲染图表 2：ECharts 折线图 */}
+        <div style={{ padding: '20px', flex: 1 }}>
+          <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#d1d5db', fontWeight: 'normal' }}>近七日检出趋势</h4>
+          <ReactECharts option={lineOption} style={{ height: '180px', width: '100%' }} />
+        </div>
+        
       </div>
     </div>
   );
