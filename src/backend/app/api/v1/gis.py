@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-from typing import List
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, Query, HTTPException
 from pydantic import BaseModel
@@ -15,6 +15,10 @@ router = APIRouter(prefix="/api/v1/gis", tags=["gis"])
 
 class BatchDeleteBody(BaseModel):
     ids: List[int]
+
+class StatusUpdateBody(BaseModel):
+    status: str
+    worker_name: Optional[str] = None
 
 
 @router.get("/records", response_model=list[DiseaseRecordOut])
@@ -37,6 +41,35 @@ def get_records(
         .all()
     )
     return records
+
+
+@router.patch("/records/{record_id}/status", response_model=DiseaseRecordOut)
+def update_record_status(
+    record_id: int,
+    body: StatusUpdateBody,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """更新工单流转状态（待修/维修中/已修）- 仅限记录创建者或管理员"""
+    _valid = {"pending", "processing", "repaired"}
+    if body.status not in _valid:
+        raise HTTPException(status_code=400, detail=f"无效状态值，可选：{_valid}")
+
+    record = db.query(DiseaseRecord).filter(
+        DiseaseRecord.id == record_id,
+        DiseaseRecord.deleted_at == None,
+    ).first()
+    if not record:
+        raise HTTPException(status_code=404, detail="记录不存在")
+    if record.creator_id != current_user.id and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="无权修改他人的记录")
+
+    record.status = body.status
+    if body.worker_name is not None:
+        record.worker_name = body.worker_name
+    db.commit()
+    db.refresh(record)
+    return record
 
 
 @router.get("/my-records", response_model=list[DiseaseRecordOut])

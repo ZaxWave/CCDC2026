@@ -19,11 +19,31 @@ from app.api.v1.auth import router as auth_router
 from app.api.v1.users import router as users_router
 from app.api.v1.report import router as report_router
 
+from sqlalchemy import inspect, text
 from .db.database import engine
 from .db import models
 
 # 初始化数据库（自动建表）
 models.Base.metadata.create_all(bind=engine)
+
+# 热升级：为已有 disease_records 表补充新字段（幂等）
+def _migrate_disease_records():
+    try:
+        with engine.connect() as conn:
+            cols = {c["name"] for c in inspect(engine).get_columns("disease_records")}
+            if "status" not in cols:
+                conn.execute(text(
+                    "ALTER TABLE disease_records ADD COLUMN status VARCHAR NOT NULL DEFAULT 'pending'"
+                ))
+            if "worker_name" not in cols:
+                conn.execute(text(
+                    "ALTER TABLE disease_records ADD COLUMN worker_name VARCHAR"
+                ))
+            conn.commit()
+    except Exception as e:
+        warnings.warn(f"⚠️ DB migration warning: {e}", RuntimeWarning)
+
+_migrate_disease_records()
 
 # 路径配置
 ROOT = Path(__file__).resolve().parents[3]  # → CCDC2026-LightScan/

@@ -8,7 +8,8 @@ import VideoPanel from './panels/VideoPanel'
 import MapPanel from './panels/MapPanel'
 import MyRecordsPanel from './panels/MyRecordsPanel'
 import LoginPanel from './panels/LoginPanel'
-import AboutPanel from './panels/AboutPanel' // ⬅️ 新增导入 AboutPanel
+import AboutPanel from './panels/AboutPanel'
+import DashboardPanel from './panels/DashboardPanel'
 import { ToastProvider } from './context/ToastContext'
 
 const FULLSCREEN_TABS = ['map'];
@@ -26,6 +27,15 @@ export default function App() {
 
   if (!isAuthenticated) {
     return <LoginPanel onLoginSuccess={() => setIsAuthenticated(true)} />
+  }
+
+  // 大屏模式：沉浸式全屏，隐藏所有导航
+  if (tab === 'dashboard') {
+    return (
+      <ToastProvider>
+        <DashboardPanel onExit={() => setTab('map')} />
+      </ToastProvider>
+    )
   }
 
   const isFullscreen = FULLSCREEN_TABS.includes(tab);
@@ -51,7 +61,7 @@ export default function App() {
         {tab === 'video'   && <VideoPanel />}
         {tab === 'map'     && <MapPanel />}
         {tab === 'records' && <MyRecordsPanel />}
-        {tab === 'about'   && <AboutPanel />} 
+        {tab === 'about'   && <AboutPanel />}
       </div>
 
       {tab !== 'map' && (

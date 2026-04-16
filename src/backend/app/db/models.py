@@ -4,6 +4,7 @@ from sqlalchemy.orm import relationship
 from datetime import datetime
 from .database import Base
 
+
 class User(Base):
     __tablename__ = "users"
 
@@ -30,6 +31,10 @@ class DiseaseRecord(Base):
     confidence = Column(Float)
     color_hex = Column(String)
     bbox = Column(JSONB)
+
+    # 工单流转 (pending / processing / repaired)
+    status      = Column(String, default="pending", nullable=False, server_default="pending")
+    worker_name = Column(String, nullable=True)
 
     # 软删除：记录进入回收站的时间，NULL 表示正常
     deleted_at = Column(DateTime, nullable=True, default=None)

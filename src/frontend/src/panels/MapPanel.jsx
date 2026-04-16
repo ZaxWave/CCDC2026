@@ -91,6 +91,16 @@ export default function MapPanel() {
       .catch(err => console.error("获取统计数据失败:", err));
   }, []);
 
+  // 根据工单状态确定标记颜色
+  function statusColor(item) {
+    const st = item.status || 'pending';
+    if (st === 'repaired')   return '#22c55e'; // 绿：已修
+    if (st === 'processing') return '#f97316'; // 橙：维修中
+    return item.color_hex || '#ef4444';        // 红：待修（保留病害原色）
+  }
+
+  const STATUS_LABEL = { pending: '待修', processing: '维修中', repaired: '已修' };
+
   // marker 内容生成器
   function mkContent(color, mode) {
     if (mode === 'pulse') return `<div style="background:${color};width:18px;height:18px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 15px ${color};animation:ls-pulse 1s ease-in-out infinite;cursor:pointer;"></div>`;
@@ -124,11 +134,13 @@ export default function MapPanel() {
       const lat = parseFloat(item?.lat);
       if (!isNaN(lng) && !isNaN(lat) && lng !== 0 && lat !== 0) {
         try {
-          const color = item.color_hex || '#ff4444';
-          const conf  = item.confidence != null ? (item.confidence * 100).toFixed(1) : '--';
-          const ts    = item.timestamp
+          const color  = statusColor(item);
+          const dColor = item.color_hex || '#ff4444'; // 病害类型原色（进度条用）
+          const conf   = item.confidence != null ? (item.confidence * 100).toFixed(1) : '--';
+          const ts     = item.timestamp
             ? new Date(item.timestamp).toLocaleString('zh-CN', { hour12: false })
             : '--';
+          const stLabel = STATUS_LABEL[item.status] || '待修';
 
           const marker = new window.AMap.Marker({
             position: [lng, lat],
@@ -152,7 +164,7 @@ export default function MapPanel() {
               ">
                 <!-- 顶部色带 + 标题 -->
                 <div style="
-                  background:${color};
+                  background:${dColor};
                   padding:10px 14px 8px;
                   display:flex;align-items:center;gap:8px;
                 ">
@@ -168,6 +180,12 @@ export default function MapPanel() {
                 </div>
                 <!-- 详情区 -->
                 <div style="padding:12px 14px;display:flex;flex-direction:column;gap:8px;">
+                  <!-- 工单状态 -->
+                  <div style="display:flex;gap:6px;align-items:center;">
+                    <span style="font-size:11px;color:#9ca3af;white-space:nowrap;">工单状态</span>
+                    <span style="font-size:11px;font-weight:600;color:${color};background:${color}22;border:1px solid ${color}55;border-radius:3px;padding:1px 7px;">${stLabel}</span>
+                    ${item.worker_name ? `<span style="font-size:11px;color:#9ca3af;">· ${item.worker_name}</span>` : ''}
+                  </div>
                   <!-- 置信度 -->
                   <div>
                     <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
@@ -175,7 +193,7 @@ export default function MapPanel() {
                       <span style="font-size:12px;font-weight:600;color:#fff;">${conf}%</span>
                     </div>
                     <div style="height:4px;border-radius:2px;background:rgba(255,255,255,0.1);">
-                      <div style="height:100%;border-radius:2px;width:${conf}%;background:${color};transition:width 0.3s;"></div>
+                      <div style="height:100%;border-radius:2px;width:${conf}%;background:${dColor};transition:width 0.3s;"></div>
                     </div>
                   </div>
                   <!-- 坐标 -->
@@ -220,7 +238,7 @@ export default function MapPanel() {
   // 根据 selectedType 更新所有 marker 的外观
   useEffect(() => {
     markersDataRef.current.forEach(({ marker, item }) => {
-      const color = item.color_hex || '#ff4444';
+      const color = statusColor(item);
       if (!selectedType) {
         marker.setContent(mkContent(color, 'normal'));
       } else if (item.label_cn === selectedType) {

@@ -1,7 +1,27 @@
 import { useState, useEffect, useMemo } from 'react';
-import { getMyGisRecords, deleteRecord, getMyStats, getDeletedRecords, restoreRecord, batchDeleteRecords } from '../api/client';
+import { getMyGisRecords, deleteRecord, getMyStats, getDeletedRecords, restoreRecord, batchDeleteRecords, updateRecordStatus } from '../api/client';
 import WeeklyReportModal from '../components/WeeklyReportModal';
 import s from './MyRecordsPanel.module.css';
+
+const STATUS_CONFIG = {
+  pending:    { label: '待修',   color: '#D93025', bg: 'rgba(217,48,37,0.08)',   border: 'rgba(217,48,37,0.3)'  },
+  processing: { label: '维修中', color: '#d97706', bg: 'rgba(217,119,6,0.08)',   border: 'rgba(217,119,6,0.35)' },
+  repaired:   { label: '已修',   color: '#1a8045', bg: 'rgba(26,128,69,0.08)',   border: 'rgba(26,128,69,0.3)'  },
+};
+
+function StatusBadge({ status }) {
+  const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.pending;
+  return (
+    <span style={{
+      display: 'inline-block', fontSize: '11px', fontWeight: 500,
+      padding: '2px 8px', borderRadius: '2px',
+      color: cfg.color, background: cfg.bg, border: `1px solid ${cfg.border}`,
+      whiteSpace: 'nowrap',
+    }}>
+      {cfg.label}
+    </span>
+  );
+}
 
 const LABELS = ['全部', '坑槽', '纵横裂缝', '网状裂缝', '横向裂缝'];
 
@@ -103,6 +123,12 @@ export default function MyRecordsPanel() {
   const [batchDeleting, setBatchDeleting] = useState(false);
   const [showBatchConfirm, setShowBatchConfirm] = useState(false);
 
+  // 状态更新
+  const [statusModal,    setStatusModal]    = useState(null); // record being updated
+  const [statusValue,    setStatusValue]    = useState('pending');
+  const [workerValue,    setWorkerValue]    = useState('');
+  const [statusUpdating, setStatusUpdating] = useState(false);
+
   // 回收站
   const [showTrash, setShowTrash]   = useState(false);
   const [trashRecs, setTrashRecs]   = useState([]);
@@ -118,6 +144,27 @@ export default function MyRecordsPanel() {
     ]).finally(() => setLoading(false));
 
   useEffect(() => { loadActive(); }, []);
+
+  const openStatusModal = (record) => {
+    setStatusModal(record);
+    setStatusValue(record.status || 'pending');
+    setWorkerValue(record.worker_name || '');
+  };
+
+  const handleStatusUpdate = async () => {
+    if (!statusModal) return;
+    setStatusUpdating(true);
+    try {
+      const updated = await updateRecordStatus(
+        statusModal.id,
+        statusValue,
+        workerValue.trim() || null,
+      );
+      setRecords(prev => prev.map(r => r.id === updated.id ? updated : r));
+      setStatusModal(null);
+    } catch (e) { alert(e.message); }
+    finally { setStatusUpdating(false); }
+  };
 
   const openTrash = () => {
     setShowTrash(true);
@@ -266,7 +313,8 @@ export default function MyRecordsPanel() {
                   <input type="checkbox" checked={allSelected} onChange={toggleAll} className={s.chk} />
                 </th>
                 <th>ID</th><th>病害类型</th><th>置信度</th>
-                <th>经纬度</th><th>来源文件</th><th>检测时间</th><th></th>
+                <th>经纬度</th><th>来源文件</th><th>检测时间</th>
+                <th>处理状态</th><th></th>
               </tr>
             </thead>
             <tbody>
@@ -299,7 +347,9 @@ export default function MyRecordsPanel() {
                         })
                       : '—'}
                   </td>
-                  <td>
+                  <td><StatusBadge status={r.status || 'pending'} /></td>
+                  <td className={s.actionCell}>
+                    <button className={s.updateBtn} onClick={() => openStatusModal(r)}>更新</button>
                     <button className={s.delBtn} onClick={() => setDeleteId(r.id)}>删除</button>
                   </td>
                 </tr>
@@ -317,6 +367,50 @@ export default function MyRecordsPanel() {
           <span className={s.pageInfo}>{page + 1} / {totalPages}</span>
           <button className={s.pageBtn} disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)}>›</button>
           <button className={s.pageBtn} disabled={page >= totalPages - 1} onClick={() => setPage(totalPages - 1)}>»</button>
+        </div>
+      )}
+
+      {/* ── 状态更新 Modal ── */}
+      {statusModal && (
+        <div className={s.overlay} onClick={() => setStatusModal(null)}>
+          <div className={s.modal} style={{ borderTopColor: STATUS_CONFIG[statusValue]?.color || '#3E6AE1' }} onClick={e => e.stopPropagation()}>
+            <div className={s.modalTitle}>更新工单状态</div>
+            <div className={s.modalSub}>记录 #{statusModal.id}「{statusModal.label_cn || statusModal.label || '—'}」</div>
+            <div className={s.statusRadioGroup}>
+              {Object.entries(STATUS_CONFIG).map(([val, cfg]) => (
+                <label
+                  key={val}
+                  className={`${s.statusRadioLabel} ${statusValue === val ? s.statusRadioActive : ''}`}
+                  style={statusValue === val ? { borderColor: cfg.color, color: cfg.color, background: cfg.bg } : {}}
+                >
+                  <input
+                    type="radio" name="status" value={val}
+                    checked={statusValue === val}
+                    onChange={() => setStatusValue(val)}
+                    style={{ display: 'none' }}
+                  />
+                  {cfg.label}
+                </label>
+              ))}
+            </div>
+            <input
+              className={s.workerInput}
+              placeholder="负责人姓名（可选）"
+              value={workerValue}
+              onChange={e => setWorkerValue(e.target.value)}
+            />
+            <div className={s.modalActions}>
+              <button className={s.modalCancel} onClick={() => setStatusModal(null)}>取消</button>
+              <button
+                className={s.modalConfirm}
+                style={{ background: STATUS_CONFIG[statusValue]?.color || '#3E6AE1' }}
+                onClick={handleStatusUpdate}
+                disabled={statusUpdating}
+              >
+                {statusUpdating ? '更新中...' : '确认更新'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -364,7 +458,7 @@ export default function MyRecordsPanel() {
                 <div className={s.trashTitle}>回收站</div>
                 <div className={s.trashSub}>软删除记录将在 7 天后自动清除</div>
               </div>
-              <button className={s.modalCancel} style={{ width: 60 }} onClick={() => setShowTrash(false)}>关闭</button>
+              <button className={s.modalCancel} style={{ flex: 'none', padding: '0 18px' }} onClick={() => setShowTrash(false)}>关闭</button>
             </div>
             {trashLoad ? (
               <div className={s.loading}>加载中...</div>

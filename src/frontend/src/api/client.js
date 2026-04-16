@@ -90,3 +90,8 @@ export function restoreRecord(id) {
 export function batchDeleteRecords(ids) {
   return request('/api/v1/gis/records/batch-delete', { ids }, 'POST');
 }
+export function updateRecordStatus(id, status, worker_name) {
+  const body = { status };
+  if (worker_name !== undefined && worker_name !== null) body.worker_name = worker_name;
+  return request(`/api/v1/gis/records/${id}/status`, body, 'PATCH');
+}

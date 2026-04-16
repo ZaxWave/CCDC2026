@@ -25,3 +25,34 @@
   color: var(--dark);
   border-bottom-color: var(--dark);
 }
+
+.dashTab {
+  margin-left: auto;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  padding: 14px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #3E6AE1;
+  letter-spacing: 0.04em;
+  margin-bottom: -1px;
+  transition: color 0.15s, border-color 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.dashTab::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #3E6AE1;
+  box-shadow: 0 0 5px #3E6AE1;
+}
+.dashTab:hover {
+  color: #2650c0;
+  border-bottom-color: #3E6AE1;
+}
