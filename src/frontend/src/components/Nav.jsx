@@ -11,12 +11,14 @@ export default function Nav({ onBackToDetect, onLogout, onTabChange }) {
     <nav className={s.nav}>
       <a className={s.brand} href="/">LIGHTSCAN</a>
 
-      <div className={s.links}>
-        <a href="#" onClick={handleDetectClick}>检测</a>
-        <a href="#">关于</a>
+      <div className={s.right}>
+        <div className={s.links}>
+          <a href="#" onClick={handleDetectClick}>检测</a>
+          <a href="#">关于</a>
+        </div>
+        <div className={s.divider} />
+        <UserMenu onLogout={onLogout} onNavigate={onTabChange} />
       </div>
-
-      <UserMenu onLogout={onLogout} onNavigate={onTabChange} />
     </nav>
   )
 }

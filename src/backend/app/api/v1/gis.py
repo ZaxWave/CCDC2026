@@ -60,6 +60,45 @@ def delete_record(
     return {"message": "删除成功"}
 
 
+@router.get("/my-stats", response_model=StatsOut)
+def get_my_stats(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """返回当前用户近 7 天每日检出数量及个人总计"""
+    today = datetime.now(tz=timezone.utc).date()
+    seven_days_ago = today - timedelta(days=6)
+
+    rows = (
+        db.query(
+            func.date(DiseaseRecord.timestamp).label("date"),
+            func.count(DiseaseRecord.id).label("count"),
+        )
+        .filter(
+            DiseaseRecord.creator_id == current_user.id,
+            func.date(DiseaseRecord.timestamp) >= seven_days_ago,
+        )
+        .group_by(func.date(DiseaseRecord.timestamp))
+        .order_by(func.date(DiseaseRecord.timestamp))
+        .all()
+    )
+
+    counts_by_date = {str(row.date): row.count for row in rows}
+    daily = []
+    for i in range(7):
+        day = today - timedelta(days=6 - i)
+        day_str = str(day)
+        daily.append(DailyCount(date=day_str, count=counts_by_date.get(day_str, 0)))
+
+    total = (
+        db.query(func.count(DiseaseRecord.id))
+        .filter(DiseaseRecord.creator_id == current_user.id)
+        .scalar()
+        or 0
+    )
+    return StatsOut(daily=daily, total=total)
+
+
 @router.get("/stats", response_model=StatsOut)
 def get_stats(db: Session = Depends(get_db)):
     """返回近 7 天每日检出数量及总计"""

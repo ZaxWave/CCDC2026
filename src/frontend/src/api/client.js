@@ -63,3 +63,15 @@ export function getGisRecords() {
 export function getMyGisRecords() {
   return request('/api/v1/gis/my-records', null, 'GET');
 }
+export function deleteRecord(id) {
+  return request(`/api/v1/gis/records/${id}`, null, 'DELETE');
+}
+export function getMyProfile() {
+  return request('/api/v1/users/me', null, 'GET');
+}
+export function changePassword(old_password, new_password) {
+  return request('/api/v1/users/me/password', { old_password, new_password }, 'POST');
+}
+export function getMyStats() {
+  return request('/api/v1/gis/my-stats', null, 'GET');
+}

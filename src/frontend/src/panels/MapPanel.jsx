@@ -312,26 +312,30 @@ export default function MapPanel() {
       : ['周一', '周二', '周三', '周四', '周五', '周六', '今日'];
     const yData = daily.length > 0 ? daily.map(d => d.count) : [0, 0, 0, 0, 0, 0, 0];
     return {
-      tooltip: { trigger: 'axis', backgroundColor: 'rgba(10, 15, 30, 0.9)', borderColor: '#3b82f6', textStyle: { color: '#fff' } },
-      grid: { left: '3%', right: '4%', bottom: '3%', top: '10%', containLabel: true },
+      tooltip: { trigger: 'axis', backgroundColor: 'rgba(8,11,20,0.95)', borderColor: 'rgba(62,106,225,0.4)', textStyle: { color: '#fff', fontSize: 12 } },
+      grid: { left: '3%', right: '4%', bottom: '3%', top: '8%', containLabel: true },
       xAxis: {
         type: 'category', boundaryGap: false, data: xData,
-        axisLabel: { color: '#9ca3af' }, axisLine: { lineStyle: { color: '#374151' } }
+        axisLabel: { color: 'rgba(255,255,255,0.3)', fontSize: 10 },
+        axisLine: { lineStyle: { color: 'rgba(255,255,255,0.08)' } },
+        axisTick: { show: false },
       },
       yAxis: {
         type: 'value', minInterval: 1,
-        axisLabel: { color: '#9ca3af' }, splitLine: { lineStyle: { color: '#1f2937', type: 'dashed' } }
+        axisLabel: { color: 'rgba(255,255,255,0.3)', fontSize: 10 },
+        splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)', type: 'dashed' } },
       },
       series: [{
-        name: '检出数量', type: 'line', smooth: true, data: yData,
-        lineStyle: { color: '#3b82f6', width: 3 },
+        name: '检出数量', type: 'line', smooth: 0.4, data: yData,
+        lineStyle: { color: '#3E6AE1', width: 2 },
         areaStyle: {
           color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [
-            { offset: 0, color: 'rgba(59, 130, 246, 0.5)' },
-            { offset: 1, color: 'rgba(59, 130, 246, 0)' }
+            { offset: 0, color: 'rgba(62,106,225,0.35)' },
+            { offset: 1, color: 'rgba(62,106,225,0)' },
           ]}
         },
-        symbol: 'circle', symbolSize: 8, itemStyle: { color: '#60a5fa', borderColor: '#fff', borderWidth: 2 }
+        symbol: 'circle', symbolSize: 6,
+        itemStyle: { color: '#3E6AE1', borderColor: '#fff', borderWidth: 1.5 },
       }]
     };
   }, [stats]);
@@ -346,97 +350,95 @@ export default function MapPanel() {
       {/* 可收起的数据仪表盘 */}
       <div style={{
         position: 'absolute', top: '20px', bottom: '20px',
-        left: isSidebarOpen ? '20px' : '-340px', width: '320px',
-        background: 'rgba(10, 15, 30, 0.85)', backdropFilter: 'blur(10px)',
-        border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px',
+        left: isSidebarOpen ? '20px' : '-340px', width: '316px',
+        background: 'rgba(8, 11, 20, 0.92)', backdropFilter: 'blur(16px)',
+        borderTop: '2px solid #3E6AE1',
+        border: '1px solid rgba(255,255,255,0.07)',
+        borderRadius: '0',
         display: 'flex', flexDirection: 'column', zIndex: 999,
-        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+        transition: 'left 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
+        boxShadow: '4px 0 32px rgba(0,0,0,0.4)',
       }}>
-        <div onClick={() => setIsSidebarOpen(!isSidebarOpen)} style={{
-          position: 'absolute', right: '-35px', top: '20px',
-          width: '35px', height: '60px',
-          background: 'rgba(10, 15, 30, 0.85)', backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255,255,255,0.1)', borderLeft: 'none',
-          borderRadius: '0 8px 8px 0',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          cursor: 'pointer', color: '#60a5fa', fontSize: '12px',
-          boxShadow: '4px 0 10px rgba(0,0,0,0.3)'
-        }}>
+        {/* 收起 tab */}
+        <div
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          style={{
+            position: 'absolute', right: '-28px', top: '24px',
+            width: '28px', height: '52px',
+            background: 'rgba(8, 11, 20, 0.92)', backdropFilter: 'blur(16px)',
+            borderTop: '1px solid rgba(255,255,255,0.07)',
+            borderRight: '1px solid rgba(255,255,255,0.07)',
+            borderBottom: '1px solid rgba(255,255,255,0.07)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', color: '#3E6AE1', fontSize: '11px',
+          }}
+        >
           {isSidebarOpen ? '◀' : '▶'}
         </div>
 
         <div style={{
-          opacity: isSidebarOpen ? 1 : 0, transition: 'opacity 0.2s',
+          opacity: isSidebarOpen ? 1 : 0, transition: 'opacity 0.18s',
           display: 'flex', flexDirection: 'column', height: '100%',
-          pointerEvents: isSidebarOpen ? 'auto' : 'none'
+          pointerEvents: isSidebarOpen ? 'auto' : 'none', overflow: 'hidden',
         }}>
-          <div style={{ padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-            <h3 style={{ margin: '0 0 15px 0', fontSize: '18px', color: '#60a5fa', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ width: '8px', height: '18px', background: '#3b82f6', borderRadius: '4px' }}></span>
-              态势感知面板
-            </h3>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-              <span style={{ color: '#9ca3af', fontSize: '14px' }}>累计检出病害</span>
-              <strong style={{ fontSize: '32px', color: '#fff', lineHeight: '1' }}>{totalCount}</strong>
+
+          {/* ── 顶部：标题 + 统计 ── */}
+          <div style={{ padding: '18px 20px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
+              <span style={{ width: '3px', height: '16px', background: '#3E6AE1', flexShrink: 0 }} />
+              <span style={{ fontSize: '10px', fontWeight: '600', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>
+                Situational Awareness
+              </span>
             </div>
 
-            {/* 散点 / 热力图切换 */}
-            <div style={{ marginTop: '14px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span style={{ fontSize: '12px', color: '#9ca3af', flexShrink: 0 }}>视图模式</span>
-              <div
-                onClick={() => setHeatMode(prev => !prev)}
-                style={{
-                  display: 'flex', alignItems: 'center',
-                  background: 'rgba(255,255,255,0.06)',
-                  border: '1px solid rgba(255,255,255,0.12)',
-                  borderRadius: '20px',
-                  padding: '2px',
-                  cursor: 'pointer',
-                  gap: '2px',
-                  userSelect: 'none',
-                }}
-              >
-                {[
-                  { label: '散点', val: false, icon: '⬤' },
-                  { label: '热力', val: true,  icon: '◈' },
-                ].map(({ label, val, icon }) => (
-                  <span
-                    key={label}
-                    style={{
-                      padding: '4px 12px',
-                      borderRadius: '16px',
-                      fontSize: '12px',
-                      fontWeight: heatMode === val ? '600' : '400',
-                      color: heatMode === val ? '#fff' : '#6b7280',
-                      background: heatMode === val
-                        ? (val ? 'linear-gradient(135deg,#ef4444,#f97316)' : '#3b82f6')
-                        : 'transparent',
-                      transition: 'all 0.25s ease',
-                      display: 'flex', alignItems: 'center', gap: '4px',
-                    }}
-                  >
-                    <span style={{ fontSize: '9px' }}>{icon}</span>{label}
-                  </span>
-                ))}
-              </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '16px' }}>
+              <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: '12px', letterSpacing: '0.04em' }}>累计检出病害</span>
+              <strong style={{ fontSize: '36px', fontWeight: '700', color: '#fff', lineHeight: '1', letterSpacing: '-0.02em' }}>{totalCount}</strong>
+            </div>
+
+            {/* 视图切换 */}
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {[
+                { label: '散点模式', val: false },
+                { label: '热力图',  val: true  },
+              ].map(({ label, val }) => (
+                <button
+                  key={label}
+                  onClick={() => setHeatMode(val)}
+                  style={{
+                    flex: 1, height: '28px',
+                    background: heatMode === val ? (val ? 'rgba(239,68,68,0.15)' : 'rgba(62,106,225,0.15)') : 'rgba(255,255,255,0.04)',
+                    border: heatMode === val ? `1px solid ${val ? 'rgba(239,68,68,0.5)' : '#3E6AE1'}` : '1px solid rgba(255,255,255,0.1)',
+                    color: heatMode === val ? (val ? '#f87171' : '#93b4f7') : 'rgba(255,255,255,0.35)',
+                    fontSize: '11px', fontWeight: heatMode === val ? '600' : '400',
+                    cursor: 'pointer', letterSpacing: '0.02em',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
           </div>
 
-          <div style={{ padding: '20px', flex: 1, borderBottom: '1px solid rgba(255,255,255,0.1)', minHeight: '240px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-              <h4 style={{ margin: 0, fontSize: '14px', color: '#d1d5db', fontWeight: 'normal' }}>分布占比</h4>
+          {/* ── 中间：饼图 ── */}
+          <div style={{ padding: '16px 20px', flex: 1, borderBottom: '1px solid rgba(255,255,255,0.06)', minHeight: '220px', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+              <span style={{ fontSize: '10px', fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)' }}>
+                分布占比
+              </span>
               {selectedType && (
                 <span
                   onClick={() => setSelectedType(null)}
-                  style={{ fontSize: '11px', color: '#60a5fa', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px' }}
+                  style={{ fontSize: '11px', color: '#93b4f7', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
                 >
-                  已筛选：{selectedType} &nbsp;×
+                  {selectedType} ×
                 </span>
               )}
             </div>
             <ReactECharts
               option={pieOption}
-              style={{ height: 'calc(100% - 24px)', width: '100%' }}
+              style={{ flex: 1, width: '100%' }}
               onEvents={{
                 click: (params) => {
                   if (params.componentType === 'series') {
@@ -447,10 +449,14 @@ export default function MapPanel() {
             />
           </div>
 
-          <div style={{ padding: '20px', flex: 1, minHeight: '240px' }}>
-            <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#d1d5db', fontWeight: 'normal' }}>近七日检出趋势</h4>
-            <ReactECharts option={lineOption} style={{ height: '100%', width: '100%' }} />
+          {/* ── 底部：折线图 ── */}
+          <div style={{ padding: '16px 20px', flex: 1, minHeight: '200px', display: 'flex', flexDirection: 'column' }}>
+            <span style={{ fontSize: '10px', fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: '8px', display: 'block' }}>
+              近七日趋势
+            </span>
+            <ReactECharts option={lineOption} style={{ flex: 1, width: '100%' }} />
           </div>
+
         </div>
       </div>
     </div>

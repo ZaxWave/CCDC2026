@@ -7,7 +7,7 @@
   justify-content: space-between;
   padding: 0 32px;
   height: 56px;
-  background: rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--border);
@@ -22,13 +22,16 @@
   flex-shrink: 0;
 }
 
+/* 右侧区域：links + user avatar 并排 */
+.right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .links {
   display: flex;
   gap: 2px;
-  /* 中间区域居中显示 */
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
 }
 
 .links a {
@@ -44,4 +47,11 @@
 .links a:hover {
   color: var(--dark);
   background: var(--ash);
+}
+
+.divider {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+  margin: 0 8px;
 }
