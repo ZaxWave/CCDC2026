@@ -8,9 +8,9 @@ import VideoPanel from './panels/VideoPanel'
 import MapPanel from './panels/MapPanel'
 import MyRecordsPanel from './panels/MyRecordsPanel'
 import LoginPanel from './panels/LoginPanel'
+import AboutPanel from './panels/AboutPanel' // ⬅️ 新增导入 AboutPanel
 import { ToastProvider } from './context/ToastContext'
 
-// 全屏面板（无 Hero、无 Footer）
 const FULLSCREEN_TABS = ['map'];
 
 export default function App() {
@@ -29,25 +29,29 @@ export default function App() {
   }
 
   const isFullscreen = FULLSCREEN_TABS.includes(tab);
+  const showHero = !isFullscreen && tab !== 'about';
 
   return (
     <ToastProvider>
       <Nav onBackToDetect={() => setTab('image')} onLogout={handleLogout} onTabChange={setTab} />
 
-      {!isFullscreen && (
+      {/* 只有在检测页面（image, video, records）才显示 Hero */}
+      {showHero && (
         <Hero
           onImageClick={() => setTab('image')}
           onVideoClick={() => setTab('video')}
         />
       )}
 
-      <TabBar active={tab} onChange={setTab} />
+      {/* 只有不是关于页面时，才显示 TabBar */}
+      {tab !== 'about' && <TabBar active={tab} onChange={setTab} />}
 
       <div className={isFullscreen ? `content-wrapper fullscreen-map` : 'content-wrapper'}>
         {tab === 'image'   && <ImagePanel />}
         {tab === 'video'   && <VideoPanel />}
         {tab === 'map'     && <MapPanel />}
         {tab === 'records' && <MyRecordsPanel />}
+        {tab === 'about'   && <AboutPanel />} 
       </div>
 
       {tab !== 'map' && (

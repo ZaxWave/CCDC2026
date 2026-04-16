@@ -14,7 +14,7 @@ export default function Nav({ onBackToDetect, onLogout, onTabChange }) {
       <div className={s.right}>
         <div className={s.links}>
           <a href="#" onClick={handleDetectClick}>检测</a>
-          <a href="#">关于</a>
+          <a href="#" onClick={(e) => { e.preventDefault(); onTabChange?.('about'); }}>关于</a>
         </div>
         <div className={s.divider} />
         <UserMenu onLogout={onLogout} onNavigate={onTabChange} />

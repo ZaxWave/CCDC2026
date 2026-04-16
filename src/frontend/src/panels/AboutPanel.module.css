@@ -1,0 +1,440 @@
+/* ── 页面容器 ─────────────────────────────────────────────── */
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 48px 32px 80px;
+}
+
+/* ── 通用 Section 头部 ────────────────────────────────────── */
+.sectionHeader { margin-bottom: 20px; }
+
+.sectionLabel {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: #3E6AE1;
+  text-transform: uppercase;
+  font-family: 'Courier New', Consolas, monospace;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.sectionTitle {
+  font-size: 15px;
+  font-weight: 650;
+  color: #171A20;
+  letter-spacing: 0.01em;
+}
+
+.section {
+  margin-bottom: 52px;
+  padding-top: 40px;
+  border-top: 1px solid #ebebeb;
+}
+
+/* ══ HERO ════════════════════════════════════════════════════ */
+.hero {
+  display: flex;
+  align-items: flex-start;
+  gap: 40px;
+  margin-bottom: 52px;
+  padding: 36px 36px 32px;
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-left: 4px solid #3E6AE1;
+}
+
+.heroLeft { flex: 1 1 0; min-width: 0; }
+.heroRight { flex: 0 0 340px; }
+
+.logoLine {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+
+.logoText {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #171A20;
+  font-family: 'Courier New', Consolas, monospace;
+  line-height: 1;
+}
+
+.versionBadge {
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Courier New', Consolas, monospace;
+  color: #3E6AE1;
+  background: rgba(62,106,225,0.07);
+  border: 1px solid rgba(62,106,225,0.22);
+  padding: 3px 10px;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.tagline {
+  font-size: 14px;
+  color: #5C5E62;
+  margin-bottom: 18px;
+  line-height: 1.5;
+}
+
+.heroBadges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.badge {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #5C5E62;
+  border: 1px solid #e0e0e0;
+  padding: 3px 10px;
+  background: #f9f9f9;
+}
+
+/* 系统概览 key-value */
+.sysProfile {
+  border: 1px solid #ebebeb;
+  border-left: 3px solid #3E6AE1;
+  background: #fafafa;
+  padding: 4px 0;
+}
+
+.sysRow {
+  display: flex;
+  align-items: baseline;
+  gap: 0;
+  padding: 7px 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.sysRow:last-child { border-bottom: none; }
+
+.sysKey {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #3E6AE1;
+  font-family: 'Courier New', Consolas, monospace;
+  width: 72px;
+  flex-shrink: 0;
+}
+
+.sysVal {
+  font-size: 12px;
+  color: #393C41;
+  font-family: 'Courier New', Consolas, monospace;
+  line-height: 1.4;
+}
+
+/* ══ TECH STACK ══════════════════════════════════════════════ */
+.stackGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.stackCard {
+  padding: 16px 18px;
+  border: 1px solid #e8e8e8;
+  border-top: 2px solid #3E6AE1;
+  background: #fff;
+}
+
+.stackGroup {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #3E6AE1;
+  margin-bottom: 12px;
+  font-family: 'Courier New', Consolas, monospace;
+}
+
+.stackItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #393C41;
+  font-family: 'Courier New', Consolas, monospace;
+  line-height: 1.4;
+  padding: 3px 0;
+}
+
+.stackDot {
+  width: 5px;
+  height: 5px;
+  background: #3E6AE1;
+  flex-shrink: 0;
+}
+
+/* ══ TWO COLUMN ══════════════════════════════════════════════ */
+.twoCol {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.colCard {
+  border: 1px solid #e8e8e8;
+  border-top: 2px solid #171A20;
+  background: #fff;
+  padding: 20px 22px;
+}
+
+.colTitle {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #9ca3af;
+  margin-bottom: 16px;
+}
+
+/* 病害类别 */
+.defectList { display: flex; flex-direction: column; gap: 10px; }
+
+.defectRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.defectCode {
+  font-size: 11px;
+  font-weight: 700;
+  font-family: 'Courier New', Consolas, monospace;
+  border: 1px solid;
+  padding: 2px 7px;
+  flex-shrink: 0;
+  letter-spacing: 0.04em;
+}
+
+.defectName {
+  font-size: 13px;
+  color: #393C41;
+  width: 80px;
+  flex-shrink: 0;
+}
+
+.defectBar {
+  flex: 1;
+  height: 6px;
+}
+
+.colFootnote {
+  margin-top: 18px;
+  font-size: 11px;
+  color: #9ca3af;
+  line-height: 1.7;
+  padding-top: 14px;
+  border-top: 1px solid #f0f0f0;
+}
+
+/* 架构图 */
+.archPlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+.archLayers {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+}
+
+.archLayer {
+  width: 100%;
+  border: 1px solid;
+  padding: 10px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.archLayerLabel {
+  font-size: 11px;
+  font-weight: 600;
+  font-family: 'Courier New', Consolas, monospace;
+  color: #171A20;
+  letter-spacing: 0.04em;
+}
+
+.archLayerDetail {
+  font-size: 11px;
+  color: #9ca3af;
+  font-family: 'Courier New', Consolas, monospace;
+}
+
+.archArrow {
+  font-size: 11px;
+  color: #b0b0b0;
+  padding: 4px 0;
+  font-family: 'Courier New', Consolas, monospace;
+  letter-spacing: 0.06em;
+}
+
+/* ══ INNOVATIONS ═════════════════════════════════════════════ */
+.innovGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.innovCard {
+  border: 1px solid #e8e8e8;
+  border-left: 4px solid #3E6AE1;
+  padding: 18px 18px 20px;
+  background: #fff;
+  transition: box-shadow 0.15s, border-left-color 0.15s;
+}
+.innovCard:hover {
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  border-left-color: #3260d0;
+}
+
+.innovTag {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #3E6AE1;
+  font-family: 'Courier New', Consolas, monospace;
+  margin-bottom: 8px;
+}
+
+.innovTitle {
+  font-size: 14px;
+  font-weight: 650;
+  color: #171A20;
+  margin-bottom: 10px;
+  line-height: 1.3;
+}
+
+.innovDesc {
+  font-size: 12px;
+  color: #5C5E62;
+  line-height: 1.8;
+}
+
+/* ══ TEAM ════════════════════════════════════════════════════ */
+.teamGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.teamCard {
+  border: 1px solid #e8e8e8;
+  border-top: 2px solid #ebebeb;
+  padding: 20px 18px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  transition: border-top-color 0.15s;
+}
+.teamCard:hover { border-top-color: #3E6AE1; }
+
+.teamAvatar {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #3E6AE1, #60a5fa);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-family: 'Courier New', Consolas, monospace;
+}
+
+.teamInfo { display: flex; flex-direction: column; gap: 3px; }
+
+.teamName {
+  font-size: 14px;
+  font-weight: 650;
+  color: #171A20;
+}
+
+.teamRole {
+  font-size: 11px;
+  color: #3E6AE1;
+  font-weight: 500;
+}
+
+.teamNote {
+  font-size: 11px;
+  color: #9ca3af;
+  line-height: 1.5;
+}
+
+/* ══ FOOTER ══════════════════════════════════════════════════ */
+.footerBlock {
+  border-top: 1px solid #ebebeb;
+  padding-top: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.footerDisclaimer {
+  font-size: 12px;
+  color: #9ca3af;
+  line-height: 1.8;
+  padding: 14px 16px;
+  border: 1px solid #ebebeb;
+  border-left: 3px solid #e0e0e0;
+  background: #fafafa;
+}
+
+.footerTag {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #b0b0b0;
+  font-family: 'Courier New', Consolas, monospace;
+  border: 1px solid #e0e0e0;
+  padding: 1px 6px;
+  margin-right: 10px;
+  vertical-align: middle;
+}
+
+.footerCopy {
+  font-size: 11px;
+  color: #b0b0b0;
+  text-align: center;
+}
+
+.mono {
+  font-family: 'Courier New', Consolas, monospace;
+  color: #9ca3af;
+}
+
+/* ── 响应式收缩 ───────────────────────────────────────────── */
+@media (max-width: 860px) {
+  .stackGrid  { grid-template-columns: repeat(2, 1fr); }
+  .innovGrid  { grid-template-columns: repeat(2, 1fr); }
+  .teamGrid   { grid-template-columns: repeat(2, 1fr); }
+  .twoCol     { grid-template-columns: 1fr; }
+  .hero       { flex-direction: column; }
+  .heroRight  { flex: none; width: 100%; }
+}
+@media (max-width: 560px) {
+  .stackGrid  { grid-template-columns: 1fr; }
+  .innovGrid  { grid-template-columns: 1fr; }
+  .teamGrid   { grid-template-columns: 1fr; }
+}
