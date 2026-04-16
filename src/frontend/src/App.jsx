@@ -17,6 +17,7 @@ export default function App() {
   const handleLogout = () => {
     localStorage.removeItem('token')
     localStorage.removeItem('username')
+    localStorage.removeItem('login_time')
     setIsAuthenticated(false)
   }
 
@@ -27,7 +28,7 @@ export default function App() {
 
   return (
     <>
-      <Nav onBackToDetect={() => setTab('image')} onLogout={handleLogout} />
+      <Nav onBackToDetect={() => setTab('image')} onLogout={handleLogout} onTabChange={setTab} />
       
       {tab !== 'map' && (
         <Hero 

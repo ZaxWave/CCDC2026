@@ -19,6 +19,7 @@ export default function LoginPanel({ onLoginSuccess }) {
       const data = await loginUser(username, password);
       localStorage.setItem('token', data.access_token);
       localStorage.setItem('username', username);
+      localStorage.setItem('login_time', Date.now());
       onLoginSuccess();
     } catch (err) {
       setError(err.message || 'AUTH_REJECTED');
