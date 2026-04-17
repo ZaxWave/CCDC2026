@@ -1,0 +1,135 @@
+// px 值 = 目标dp × 2（Taro 750设计规范）
+
+.page {
+  min-height: 100vh;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  padding: 0 56px;   // 28dp
+}
+
+// ── 品牌 ──────────────────────────────────────────────
+.brand {
+  padding-top: 200px;  // 100dp
+  margin-bottom: 120px; // 60dp
+}
+
+.wordmark {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin-bottom: 20px;
+}
+
+// "Light" 细体深色，"Scan" 重体蓝色 — 文字即 logo
+.wordLight {
+  font-size: 80px;   // 40dp
+  font-weight: 300;
+  color: #393c41;
+  letter-spacing: -2px;
+}
+
+.wordScan {
+  font-size: 80px;   // 40dp
+  font-weight: 800;
+  color: #3e6ae1;
+  letter-spacing: -2px;
+}
+
+.tagline {
+  font-size: 24px;   // 12dp
+  color: #9a9a9e;
+  letter-spacing: 5px;
+  margin-top: 8px;
+  display: block;
+}
+
+// ── 分隔线 ─────────────────────────────────────────────
+.divider {
+  height: 1px;
+  background: #eeeeee;
+  margin-bottom: 0;
+}
+
+// ── 入口列表 ───────────────────────────────────────────
+.entries {
+  flex: 1;
+}
+
+.entryRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 56px 0;   // 28dp 上下
+  &:active { opacity: 0.5; }
+}
+
+.entryLeft {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-right: 24px;
+}
+
+.entryTitle {
+  font-size: 40px;   // 20dp
+  font-weight: 600;
+  color: #171a20;
+}
+
+.entryDesc {
+  font-size: 26px;   // 13dp
+  color: #9a9a9e;
+  line-height: 1.55;
+}
+
+.entryRight {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.entryTag {
+  padding: 6px 18px;
+  border-radius: 8px;   // 4dp
+  background: #f4f4f4;
+  border: 1px solid #eeeeee;
+}
+
+.entryTagBlue {
+  background: rgba(62, 106, 225, 0.07);
+  border-color: rgba(62, 106, 225, 0.18);
+}
+
+.entryTagText {
+  font-size: 22px;   // 11dp
+  font-weight: 600;
+  color: #5c5e62;
+}
+
+.entryTagTextBlue {
+  color: #3e6ae1;
+}
+
+.entryChevron {
+  font-size: 52px;
+  color: #d0d0d4;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.rowDivider {
+  height: 1px;
+  background: #eeeeee;
+}
+
+// ── 底部 ──────────────────────────────────────────────
+.footer {
+  font-size: 22px;
+  color: #d0d0d4;
+  padding: 48px 0 80px;
+  text-align: center;
+  letter-spacing: 2px;
+}

@@ -1,0 +1,145 @@
+.page {
+  min-height: 100vh;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  padding: 0 56px 80px;
+}
+
+// ── 返回 ───────────────────────────────────────────────
+.topBar {
+  padding-top: 80px;
+  margin-bottom: 72px;
+}
+
+.backBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  &:active { opacity: 0.4; }
+}
+
+.backIcon {
+  font-size: 52px;
+  color: #9a9a9e;
+  line-height: 1;
+  margin-top: -4px;
+}
+
+.backText {
+  font-size: 28px;
+  color: #9a9a9e;
+}
+
+// ── 标题 ──────────────────────────────────────────────
+.header {
+  margin-bottom: 80px;
+}
+
+.roleLabel {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  color: #3e6ae1;
+  margin-bottom: 24px;
+  display: block;
+}
+
+.title {
+  display: block;
+  font-size: 72px;   // 36dp
+  font-weight: 700;
+  color: #171a20;
+  margin-bottom: 14px;
+  letter-spacing: -1px;
+}
+
+.subtitle {
+  font-size: 28px;
+  color: #9a9a9e;
+}
+
+// ── 表单 ──────────────────────────────────────────────
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 40px 0;
+  border-bottom: 1px solid #eeeeee;
+}
+
+.fieldLabel {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: #9a9a9e;
+}
+
+.inputRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.inputIcon {
+  font-size: 32px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.input {
+  flex: 1;
+  font-size: 32px;   // 16dp
+  color: #171a20;
+  background: transparent;
+  border: none;
+  height: 64px;
+}
+
+.ph { color: #d0d0d4; }
+
+// ── 错误 ──────────────────────────────────────────────
+.errorBox {
+  margin-top: 32px;
+  padding: 24px 0;
+  border-top: 1px solid #fce8e8;
+}
+
+.errorText {
+  font-size: 26px;
+  color: #d93025;
+}
+
+// ── 按钮 ──────────────────────────────────────────────
+.submitBtn {
+  margin-top: 64px;
+  height: 108px;
+  border-radius: 16px;   // 8dp
+  background: #3e6ae1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  &:active { opacity: 0.8; }
+}
+
+.submitLoading { opacity: 0.65; }
+
+.submitText {
+  font-size: 34px;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: 6px;
+}
+
+.demoHint {
+  font-size: 24px;
+  color: #d0d0d4;
+  text-align: center;
+  margin-top: 32px;
+}
