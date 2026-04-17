@@ -11,6 +11,7 @@ import LoginPanel from './panels/LoginPanel'
 import AboutPanel from './panels/AboutPanel'
 import DashboardPanel from './panels/DashboardPanel'
 import { ToastProvider } from './context/ToastContext'
+import { NetworkProvider } from './context/NetworkContext'
 
 const FULLSCREEN_TABS = ['map'];
 
@@ -33,7 +34,9 @@ export default function App() {
   if (tab === 'dashboard') {
     return (
       <ToastProvider>
-        <DashboardPanel onExit={() => setTab('map')} />
+        <NetworkProvider>
+          <DashboardPanel onExit={() => setTab('map')} />
+        </NetworkProvider>
       </ToastProvider>
     )
   }
@@ -43,6 +46,7 @@ export default function App() {
 
   return (
     <ToastProvider>
+      <NetworkProvider>
       <Nav onBackToDetect={() => setTab('image')} onLogout={handleLogout} onTabChange={setTab} />
 
       {/* 只有在检测页面（image, video, records）才显示 Hero */}
@@ -75,6 +79,7 @@ export default function App() {
           © 2026 LightScan Team · 第19届中国大学生计算机设计大赛
         </footer>
       )}
+      </NetworkProvider>
     </ToastProvider>
   )
 }

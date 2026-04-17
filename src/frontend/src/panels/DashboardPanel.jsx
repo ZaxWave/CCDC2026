@@ -177,7 +177,7 @@ export default function DashboardPanel({ onExit }) {
     return Array.from({ length: count }, (_, i) => latest[(tickIdx + i) % latest.length]);
   }, [latest, tickIdx]);
 
-  // ── 饼图（中心显示总数）
+  // ── 饼图（病害类型占比，outside 标签 + 引导线）
   const total = records.length;
   const pieOption = useMemo(() => {
     const counts = {};
@@ -185,13 +185,19 @@ export default function DashboardPanel({ onExit }) {
       const name = r.label_cn || '未知';
       counts[name] = (counts[name] || 0) + 1;
     });
-    const colorMap = { '坑槽': '#ef4444', '网状裂缝': '#f59e0b', '纵横裂缝': '#f97316', '横向裂缝': '#3b82f6' };
+    const colorMap = {
+      '坑槽':    '#ef4444',
+      '网状裂缝': '#f59e0b',
+      '纵横裂缝': '#f97316',
+      '横向裂缝': '#3b82f6',
+    };
     const data = Object.entries(counts).map(([name, value]) => ({
       name, value,
       itemStyle: {
         color: Object.entries(colorMap).find(([k]) => name.includes(k))?.[1] || '#6366f1',
       },
     }));
+
     return {
       backgroundColor: 'transparent',
       tooltip: {
@@ -199,94 +205,143 @@ export default function DashboardPanel({ onExit }) {
         backgroundColor: 'rgba(8,12,26,0.95)',
         borderColor: 'rgba(0,212,255,0.25)',
         textStyle: { color: '#fff', fontSize: 12 },
-        formatter: '{b}: {c} ({d}%)',
+        formatter: (p) => `${p.marker}${p.name}<br/>${p.value} 条 &nbsp;<b>${p.percent}%</b>`,
       },
+      // 中心：总数
       graphic: [
         {
-          type: 'text', left: 'center', top: '42%',
-          style: { text: String(total), fill: '#fff', font: 'bold 26px sans-serif' },
+          type: 'text', left: 'center', top: '38%',
+          style: { text: String(total), fill: '#fff', font: 'bold 24px sans-serif' },
         },
         {
-          type: 'text', left: 'center', top: '57%',
+          type: 'text', left: 'center', top: '53%',
           style: { text: '总计', fill: 'rgba(255,255,255,0.35)', font: '10px sans-serif' },
         },
       ],
       series: [{
         type: 'pie',
-        radius: ['44%', '66%'],
-        center: ['50%', '52%'],
+        radius: ['32%', '50%'],
+        center: ['50%', '48%'],
         avoidLabelOverlap: true,
+        minShowLabelAngle: 8,          // 小于 8° 的扇区隐藏标签，防密集重叠
         itemStyle: { borderRadius: 4, borderColor: 'rgba(8,12,26,0.85)', borderWidth: 2 },
         label: {
           show: true,
           position: 'outside',
-          color: 'rgba(255,255,255,0.6)',
-          fontSize: 10,
+          alignTo: 'edge',             // 标签对齐到容器边缘，彻底防越界
+          margin: 6,                   // 距边缘留 6px
+          fontSize: 9,
+          lineHeight: 13,
+          color: 'rgba(255,255,255,0.65)',
           formatter: '{b}\n{d}%',
-          lineHeight: 14,
         },
-        labelLine: { length: 8, length2: 6, lineStyle: { color: 'rgba(255,255,255,0.2)' } },
-        data: data.length > 0 ? data : [{ name: '暂无数据', value: 0, itemStyle: { color: '#333' } }],
+        labelLine: {
+          show: true,
+          length: 6,
+          length2: 10,
+          smooth: 0.3,
+          lineStyle: { color: 'rgba(255,255,255,0.2)', width: 1 },
+        },
+        emphasis: {
+          label: { fontSize: 10, fontWeight: 700 },
+          itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.5)' },
+        },
+        data: data.length > 0 ? data : [{ name: '暂无数据', value: 1, itemStyle: { color: '#2a2a3a' } }],
       }],
     };
   }, [records, total]);
 
-  // ── 折线图
-  const lineOption = useMemo(() => {
-    const daily = stats?.daily ?? [];
-    const xData = daily.length > 0
-      ? daily.map(d => {
-          const date  = new Date(d.date + 'T00:00:00');
-          const days  = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
-          const today = new Date().toISOString().slice(0, 10);
-          return d.date === today ? '今日' : days[date.getDay()];
-        })
-      : ['周一', '周二', '周三', '周四', '周五', '周六', '今日'];
-    const yData = daily.length > 0 ? daily.map(d => d.count) : Array(7).fill(0);
+  // ── 各类型修复进度（水平堆叠柱状图）— 与 MapPanel 七日趋势形成差异化
+  const repairOption = useMemo(() => {
+    // 按病害类型统计三种工单状态的数量
+    const typeMap = {};
+    records.forEach(r => {
+      const type   = r.label_cn || '未知';
+      const status = r.status   || 'pending';
+      if (!typeMap[type]) typeMap[type] = { pending: 0, processing: 0, repaired: 0 };
+      typeMap[type][status] = (typeMap[type][status] || 0) + 1;
+    });
+    const types     = Object.keys(typeMap);
+    const pending   = types.map(t => typeMap[t].pending);
+    const processing = types.map(t => typeMap[t].processing);
+    const repaired  = types.map(t => typeMap[t].repaired);
+
+    const axisBase = {
+      axisLabel: { color: 'rgba(255,255,255,0.3)', fontSize: 9 },
+      axisLine:  { lineStyle: { color: 'rgba(255,255,255,0.06)' } },
+      axisTick:  { show: false },
+      splitLine: { lineStyle: { color: 'rgba(255,255,255,0.04)', type: 'dashed' } },
+    };
 
     return {
       backgroundColor: 'transparent',
       tooltip: {
         trigger: 'axis',
+        axisPointer: { type: 'shadow' },
         backgroundColor: 'rgba(8,12,26,0.95)',
-        borderColor: 'rgba(57,255,20,0.25)',
+        borderColor: 'rgba(57,255,20,0.2)',
         textStyle: { color: '#fff', fontSize: 11 },
+        formatter: (params) => {
+          const type = params[0].axisValue;
+          const lines = params.map(p =>
+            `${p.marker}${p.seriesName}&nbsp;&nbsp;<b>${p.value}</b> 条`
+          ).join('<br/>');
+          return `${type}<br/>${lines}`;
+        },
       },
-      grid: { left: '2%', right: '3%', bottom: '3%', top: '10%', containLabel: true },
-      xAxis: {
-        type: 'category',
-        boundaryGap: false,
-        data: xData,
-        axisLabel: { color: 'rgba(255,255,255,0.3)', fontSize: 9 },
-        axisLine: { lineStyle: { color: 'rgba(255,255,255,0.08)' } },
-        axisTick: { show: false },
+      legend: {
+        top: 2,
+        right: 0,
+        itemWidth: 8, itemHeight: 8, itemGap: 8,
+        textStyle: { color: 'rgba(255,255,255,0.4)', fontSize: 9 },
+        data: [
+          { name: '待修',   icon: 'circle' },
+          { name: '维修中', icon: 'circle' },
+          { name: '已修',   icon: 'circle' },
+        ],
       },
+      grid: { left: '2%', right: '4%', bottom: '3%', top: '22%', containLabel: true },
+      xAxis: { type: 'value', minInterval: 1, ...axisBase },
       yAxis: {
-        type: 'value',
-        minInterval: 1,
-        axisLabel: { color: 'rgba(255,255,255,0.3)', fontSize: 9 },
-        splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)', type: 'dashed' } },
+        type: 'category',
+        data: types.length > 0 ? types : ['暂无数据'],
+        ...axisBase,
+        axisLabel: { ...axisBase.axisLabel, width: 52, overflow: 'truncate' },
       },
-      series: [{
-        type: 'line',
-        smooth: 0.4,
-        data: yData,
-        lineStyle: { color: GREEN, width: 1.5 },
-        areaStyle: {
-          color: {
-            type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
-            colorStops: [
-              { offset: 0, color: 'rgba(57,255,20,0.28)' },
-              { offset: 1, color: 'rgba(57,255,20,0)' },
-            ],
+      series: [
+        {
+          name: '待修', type: 'bar', stack: 'status',
+          barMaxWidth: 14,
+          data: pending.length > 0 ? pending : [0],
+          itemStyle: { color: '#ef4444', borderRadius: [2, 0, 0, 2] },
+        },
+        {
+          name: '维修中', type: 'bar', stack: 'status',
+          barMaxWidth: 14,
+          data: processing.length > 0 ? processing : [0],
+          itemStyle: { color: '#f97316' },
+        },
+        {
+          name: '已修', type: 'bar', stack: 'status',
+          barMaxWidth: 14,
+          data: repaired.length > 0 ? repaired : [0],
+          itemStyle: { color: '#22c55e', borderRadius: [0, 2, 2, 0] },
+          label: {
+            show: true,
+            position: 'right',
+            fontSize: 9,
+            color: 'rgba(255,255,255,0.35)',
+            formatter: (p) => {
+              const t = typeMap[p.name];
+              if (!t) return '';
+              const tot = t.pending + t.processing + t.repaired;
+              return tot > 0 ? `${((t.repaired / tot) * 100).toFixed(0)}%` : '';
+            },
           },
         },
-        symbol: 'circle',
-        symbolSize: 5,
-        itemStyle: { color: GREEN, borderColor: '#080c14', borderWidth: 1.5 },
-      }],
+      ],
     };
-  }, [stats]);
+  }, [records]);
 
   // ── 顶部统计
   const weekTotal  = stats?.daily?.reduce((a, d) => a + d.count, 0) ?? 0;
@@ -385,7 +440,7 @@ export default function DashboardPanel({ onExit }) {
 
         {/* ── 左侧面板：图表 ── */}
         <div style={{
-          width: 288, flexShrink: 0,
+          width: 340, flexShrink: 0,
           display: 'flex', flexDirection: 'column',
           padding: '12px 10px 12px 14px',
           gap: 10,
@@ -407,7 +462,7 @@ export default function DashboardPanel({ onExit }) {
             </div>
           </div>
 
-          {/* 折线图 */}
+          {/* 修复进度堆叠柱状图 */}
           <div style={{
             ...panelStyle(GREEN),
             flex: 1,
@@ -415,9 +470,9 @@ export default function DashboardPanel({ onExit }) {
             display: 'flex', flexDirection: 'column',
             minHeight: 0,
           }}>
-            <SectionLabel>近七日检出趋势</SectionLabel>
+            <SectionLabel>各类型修复进度</SectionLabel>
             <div style={{ flex: 1, minHeight: 0 }}>
-              <ReactECharts option={lineOption} style={{ height: '100%', width: '100%' }} />
+              <ReactECharts option={repairOption} style={{ height: '100%', width: '100%' }} />
             </div>
           </div>
         </div>

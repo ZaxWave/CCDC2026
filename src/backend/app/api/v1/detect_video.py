@@ -14,8 +14,9 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
+from app.api.deps import get_current_user
 from app.db.database import get_db
-from app.db.models import DiseaseRecord
+from app.db.models import DiseaseRecord, User
 from app.services.video_service import (
     detect_video_ocr,
     detect_video_timed,
@@ -55,6 +56,7 @@ async def detect_video(
         None, description="大致车速 km/h（仅 timed 模式使用）"
     ),
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """
     视频推理主接口。
@@ -148,6 +150,7 @@ async def detect_video(
                 confidence=det.get("conf"),
                 color_hex=det.get("color"),
                 bbox=det.get("bbox"),
+                creator_id=current_user.id,
             )
             db.add(db_record)
 

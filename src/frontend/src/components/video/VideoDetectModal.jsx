@@ -1,30 +1,62 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import s from './VideoDetectModal.module.css'
 import RegionCanvas from './RegionCanvas'
 import { getFirstFrame, detectVideo } from '../../api/client'
 
-const STEPS = { SELECT: 'select', OCR: 'ocr', TIMED: 'timed', REGION: 'region', PROCESSING: 'processing' }
-const TITLES = { select: '选择检测模式', ocr: 'OCR 模式参数', timed: '估算模式参数', region: '框选速度区域', processing: '正在处理…' }
+const STEPS = {
+  SELECT:     'select',
+  OCR:        'ocr',
+  TIMED:      'timed',
+  PROCESSING: 'processing',
+}
+
+const TITLES = {
+  select:     '选择检测模式',
+  ocr:        'OCR 模式配置',
+  timed:      '估算模式参数',
+  processing: '正在处理…',
+}
 
 export default function VideoDetectModal({ file, onClose, onResults }) {
-  const [step, setStep] = useState(STEPS.SELECT)
-  const [mode, setMode] = useState('ocr')
-  const [intervalM, setIntervalM] = useState(5)
-  const [speedKmh, setSpeedKmh] = useState(40)
-  const [region, setRegion] = useState(null)
-  const [frame, setFrame] = useState(null)
-  const [error, setError] = useState('')
+  const [step,         setStep]         = useState(STEPS.SELECT)
+  const [mode,         setMode]         = useState('ocr')
+  const [intervalM,    setIntervalM]    = useState(5)
+  const [speedKmh,     setSpeedKmh]     = useState(40)
+  const [region,       setRegion]       = useState(null)
+  const [frame,        setFrame]        = useState(null)      // { frame_b64, width, height }
+  const [frameLoading, setFrameLoading] = useState(false)
+  const [error,        setError]        = useState('')
 
-  async function submit(forceRegion) {
-    setError(''); setStep(STEPS.PROCESSING)
+  // 进入 OCR 配置步时自动预加载第一帧，让用户可直接标注速度区域
+  useEffect(() => {
+    if (step !== STEPS.OCR || frame) return
+    setFrameLoading(true)
+    getFirstFrame(file)
+      .then(setFrame)
+      .catch(() => { /* 帧加载失败不阻断流程 */ })
+      .finally(() => setFrameLoading(false))
+  }, [step, file, frame])
+
+  async function submit() {
+    setError('')
+    setStep(STEPS.PROCESSING)
     try {
-      const data = await detectVideo(file, { mode, intervalM, speedKmh, region: forceRegion || region })
+      const data = await detectVideo(file, {
+        mode,
+        intervalM,
+        speedKmh,
+        region: mode === 'ocr' ? region : undefined,
+      })
+
+      // OCR 自动识别失败 且 用户没有预标区域 → 回到 OCR 步让用户框选
       if (data.status === 'ocr_failed') {
-        setStep(STEPS.REGION)
-        try { setFrame(await getFirstFrame(file)) } catch (e) { setError(`获取第一帧失败：${e.message}`) }
+        setStep(STEPS.OCR)
+        setError('未能自动识别速度区域，请在下方图像上手动框选速度数字所在位置后重新检测。')
         return
       }
-      onResults(data.results); onClose()
+
+      onResults(data.results)
+      onClose()
     } catch (e) {
       setError(`推理失败：${e.message}`)
       setStep(mode === 'ocr' ? STEPS.OCR : STEPS.TIMED)
@@ -36,73 +68,154 @@ export default function VideoDetectModal({ file, onClose, onResults }) {
       <div className={s.modal}>
         <div className={s.header}>
           <h2>{TITLES[step]}</h2>
-          {step !== STEPS.PROCESSING && <button className={s.closeBtn} onClick={onClose}>×</button>}
+          {step !== STEPS.PROCESSING && (
+            <button className={s.closeBtn} onClick={onClose}>×</button>
+          )}
         </div>
 
-        {step === STEPS.SELECT && <>
-          <div className={s.modeGrid}>
-            <div className={`${s.modeCard} ${mode === 'ocr' ? s.selected : ''}`} onClick={() => setMode('ocr')}>
-              <h4>OCR 模式</h4><p>自动识别视频左下角速度字幕，按行驶距离均匀抽帧</p>
+        {/* ── 模式选择 ───────────────────────────────────────── */}
+        {step === STEPS.SELECT && (
+          <>
+            <div className={s.modeGrid}>
+              <div
+                className={`${s.modeCard} ${mode === 'ocr' ? s.selected : ''}`}
+                onClick={() => setMode('ocr')}
+              >
+                <h4>OCR 模式</h4>
+                <p>读取视频速度字幕，按行驶距离均匀抽帧。字幕清晰时精度最高。</p>
+              </div>
+              <div
+                className={`${s.modeCard} ${mode === 'timed' ? s.selected : ''}`}
+                onClick={() => setMode('timed')}
+              >
+                <h4>估算模式</h4>
+                <p>手动输入大致车速，系统按时间间隔估算位置。无速度字幕时推荐使用。</p>
+              </div>
             </div>
-            <div className={`${s.modeCard} ${mode === 'timed' ? s.selected : ''}`} onClick={() => setMode('timed')}>
-              <h4>估算模式</h4><p>手动输入大致车速，系统按时间间隔估算抽帧位置</p>
+            <div className={s.footer}>
+              <button className={s.btnSecondary} onClick={onClose}>取消</button>
+              <button
+                className={s.btnPrimary}
+                onClick={() => setStep(mode === 'ocr' ? STEPS.OCR : STEPS.TIMED)}
+              >
+                下一步
+              </button>
             </div>
-          </div>
-          <div className={s.footer}>
-            <button className={s.btnSecondary} onClick={onClose}>取消</button>
-            <button className={s.btnPrimary} onClick={() => setStep(mode === 'ocr' ? STEPS.OCR : STEPS.TIMED)}>下一步</button>
-          </div>
-        </>}
+          </>
+        )}
 
-        {step === STEPS.OCR && <>
-          <div className={s.field}>
-            <label>抽帧间隔（米）</label>
-            <input type="number" min="1" max="100" value={intervalM} onChange={e => setIntervalM(Number(e.target.value))} />
-          </div>
-          {error && <div className={s.error}>{error}</div>}
-          <div className={s.footer}>
-            <button className={s.btnSecondary} onClick={() => setStep(STEPS.SELECT)}>上一步</button>
-            <button className={s.btnPrimary} onClick={() => submit()}>开始检测</button>
-          </div>
-        </>}
+        {/* ── OCR 配置 + 可选区域标注 ────────────────────────── */}
+        {step === STEPS.OCR && (
+          <>
+            <div className={s.field}>
+              <label>抽帧间隔（米）</label>
+              <input
+                type="number" min="1" max="100"
+                value={intervalM}
+                onChange={e => setIntervalM(Number(e.target.value))}
+              />
+            </div>
 
-        {step === STEPS.TIMED && <>
-          <div className={s.field}>
-            <label>大致车速（km/h）</label>
-            <input type="number" min="1" max="200" value={speedKmh} onChange={e => setSpeedKmh(Number(e.target.value))} />
-          </div>
-          <div className={s.field}>
-            <label>抽帧间隔（米）</label>
-            <input type="number" min="1" max="100" value={intervalM} onChange={e => setIntervalM(Number(e.target.value))} />
-            {speedKmh > 0 && intervalM > 0 && (
-              <div className={s.preview}>预计每 {(intervalM / (speedKmh / 3.6)).toFixed(1)} 秒抽一帧</div>
-            )}
-          </div>
-          {error && <div className={s.error}>{error}</div>}
-          <div className={s.footer}>
-            <button className={s.btnSecondary} onClick={() => setStep(STEPS.SELECT)}>上一步</button>
-            <button className={s.btnPrimary} onClick={() => submit()}>开始检测</button>
-          </div>
-        </>}
+            {/* 第一帧预览 + 可选速度区域框选 */}
+            <div className={s.regionSection}>
+              <div className={s.regionLabel}>
+                速度区域
+                <span className={s.regionHint}>
+                  {region ? '✓ 已标注' : '可选 — 留空则自动识别'}
+                </span>
+                {region && (
+                  <button className={s.clearRegion} onClick={() => setRegion(null)}>
+                    清除
+                  </button>
+                )}
+              </div>
 
-        {step === STEPS.REGION && <>
-          <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 16 }}>自动检测未能找到速度文字，请手动框选速度数字所在区域。</p>
-          {frame
-            ? <RegionCanvas frameB64={frame.frame_b64} frameW={frame.width} frameH={frame.height} onRegion={r => setRegion(r)} />
-            : <p style={{ color: 'var(--muted)', fontSize: 13 }}>正在加载第一帧…</p>
-          }
-          {error && <div className={s.error}>{error}</div>}
-          <div className={s.footer}>
-            <button className={s.btnSecondary} onClick={onClose}>取消</button>
-            <button className={s.btnPrimary} disabled={!region} onClick={() => submit(region)}>确认并重新检测</button>
-          </div>
-        </>}
+              {frameLoading && (
+                <div className={s.frameLoading}>加载视频帧…</div>
+              )}
 
+              {!frameLoading && frame && (
+                <RegionCanvas
+                  frameB64={frame.frame_b64}
+                  frameW={frame.width}
+                  frameH={frame.height}
+                  onRegion={setRegion}
+                />
+              )}
+
+              {!frameLoading && !frame && (
+                <div className={s.frameLoading} style={{ color: '#9ca3af' }}>
+                  帧加载失败，将尝试自动识别速度区域
+                </div>
+              )}
+            </div>
+
+            {error && <div className={s.error}>{error}</div>}
+
+            <div className={s.footer}>
+              <button className={s.btnSecondary} onClick={() => setStep(STEPS.SELECT)}>
+                上一步
+              </button>
+              <button
+                className={s.btnSecondary}
+                onClick={() => { setMode('timed'); setStep(STEPS.TIMED) }}
+                title="切换到不依赖字幕的估算模式"
+              >
+                切换估算模式
+              </button>
+              <button className={s.btnPrimary} onClick={submit}>
+                开始检测
+              </button>
+            </div>
+          </>
+        )}
+
+        {/* ── 估算模式参数 ────────────────────────────────────── */}
+        {step === STEPS.TIMED && (
+          <>
+            <div className={s.field}>
+              <label>大致车速（km/h）</label>
+              <input
+                type="number" min="1" max="200"
+                value={speedKmh}
+                onChange={e => setSpeedKmh(Number(e.target.value))}
+              />
+            </div>
+            <div className={s.field}>
+              <label>抽帧间隔（米）</label>
+              <input
+                type="number" min="1" max="100"
+                value={intervalM}
+                onChange={e => setIntervalM(Number(e.target.value))}
+              />
+              {speedKmh > 0 && intervalM > 0 && (
+                <div className={s.preview}>
+                  预计每 {(intervalM / (speedKmh / 3.6)).toFixed(1)} 秒抽一帧
+                </div>
+              )}
+            </div>
+            {error && <div className={s.error}>{error}</div>}
+            <div className={s.footer}>
+              <button className={s.btnSecondary} onClick={() => setStep(STEPS.SELECT)}>
+                上一步
+              </button>
+              <button className={s.btnPrimary} onClick={submit}>
+                开始检测
+              </button>
+            </div>
+          </>
+        )}
+
+        {/* ── 处理中 ─────────────────────────────────────────── */}
         {step === STEPS.PROCESSING && (
           <div className={s.processing}>
             <div className={s.spinner} />
             <p>正在处理视频，请稍候…</p>
-            <small>视频较长时可能需要数分钟</small>
+            <small>
+              {mode === 'timed'
+                ? '估算模式已启用跳帧优化，速度较快'
+                : 'OCR 模式正在识别速度字幕并按距离抽帧'}
+            </small>
           </div>
         )}
       </div>
