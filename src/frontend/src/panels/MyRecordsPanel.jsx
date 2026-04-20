@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { getMyGisRecords, deleteRecord, getMyStats, getDeletedRecords, restoreRecord, batchDeleteRecords, updateRecordStatus } from '../api/client';
+import { getMyGisRecords, deleteRecord, getMyStats, getDeletedRecords, restoreRecord, batchDeleteRecords, updateRecordStatus, permanentDeleteRecord, batchPermanentDeleteRecords } from '../api/client';
 import WeeklyReportModal from '../components/WeeklyReportModal';
 import s from './MyRecordsPanel.module.css';
 
@@ -137,6 +137,11 @@ export default function MyRecordsPanel() {
   const [trashRecs, setTrashRecs]   = useState([]);
   const [trashLoad, setTrashLoad]   = useState(false);
   const [restoring, setRestoring]   = useState(null);
+  const [trashSelected, setTrashSelected] = useState(new Set());
+  const [permanentDeleteId, setPermanentDeleteId] = useState(null);
+  const [permanentDeleting, setPermanentDeleting] = useState(false);
+  const [showBatchPermanentConfirm, setShowBatchPermanentConfirm] = useState(false);
+  const [batchPermanentDeleting, setBatchPermanentDeleting] = useState(false);
 
   // 修复照片预览 URL 管理
   useEffect(() => {
@@ -187,6 +192,7 @@ export default function MyRecordsPanel() {
   const openTrash = () => {
     setShowTrash(true);
     setTrashLoad(true);
+    setTrashSelected(new Set());
     getDeletedRecords().then(setTrashRecs).finally(() => setTrashLoad(false));
   };
 
@@ -195,11 +201,34 @@ export default function MyRecordsPanel() {
     try {
       await restoreRecord(id);
       setTrashRecs(prev => prev.filter(r => r.id !== id));
+      setTrashSelected(prev => { const s = new Set(prev); s.delete(id); return s; });
       // refresh active list
       getMyGisRecords().then(setRecords);
       getMyStats().then(setStats);
     } catch (e) { alert(e.message); }
     finally { setRestoring(null); }
+  };
+
+  const handlePermanentDelete = async () => {
+    if (!permanentDeleteId) return;
+    setPermanentDeleting(true);
+    try {
+      await permanentDeleteRecord(permanentDeleteId);
+      setTrashRecs(prev => prev.filter(r => r.id !== permanentDeleteId));
+      setTrashSelected(prev => { const s = new Set(prev); s.delete(permanentDeleteId); return s; });
+    } catch (e) { alert(e.message); }
+    finally { setPermanentDeleting(false); setPermanentDeleteId(null); }
+  };
+
+  const handleBatchPermanentDelete = async () => {
+    if (trashSelected.size === 0) return;
+    setBatchPermanentDeleting(true);
+    try {
+      await batchPermanentDeleteRecords([...trashSelected]);
+      setTrashRecs(prev => prev.filter(r => !trashSelected.has(r.id)));
+      setTrashSelected(new Set());
+    } catch (e) { alert(e.message); }
+    finally { setBatchPermanentDeleting(false); setShowBatchPermanentConfirm(false); }
   };
 
   const filtered = useMemo(() => {
@@ -525,6 +554,21 @@ export default function MyRecordsPanel() {
                 <div className={s.trashTitle}>回收站</div>
                 <div className={s.trashSub}>软删除记录将在 7 天后自动清除</div>
               </div>
+              {trashSelected.size > 0 && (
+                <span className={s.batchBar} style={{ marginRight: '10px' }}>
+                  已选 {trashSelected.size} 条
+                  <button
+                    className={s.batchDelBtn}
+                    style={{ background: '#ef4444', borderColor: '#ef4444' }}
+                    onClick={() => setShowBatchPermanentConfirm(true)}
+                  >
+                    彻底删除
+                  </button>
+                  <button className={s.batchClrBtn} onClick={() => setTrashSelected(new Set())}>
+                    取消选择
+                  </button>
+                </span>
+              )}
               <button className={s.modalCancel} style={{ flex: 'none', padding: '0 18px' }} onClick={() => setShowTrash(false)}>关闭</button>
             </div>
             {trashLoad ? (
@@ -536,12 +580,39 @@ export default function MyRecordsPanel() {
                 <table className={s.table}>
                   <thead>
                     <tr>
+                      <th style={{ width: 36 }}>
+                        <input
+                          type="checkbox"
+                          checked={trashRecs.length > 0 && trashRecs.every(r => trashSelected.has(r.id))}
+                          onChange={() => {
+                            if (trashRecs.every(r => trashSelected.has(r.id))) {
+                              setTrashSelected(new Set());
+                            } else {
+                              setTrashSelected(new Set(trashRecs.map(r => r.id)));
+                            }
+                          }}
+                          className={s.chk}
+                        />
+                      </th>
                       <th>ID</th><th>病害类型</th><th>删除时间</th><th></th>
                     </tr>
                   </thead>
                   <tbody>
                     {trashRecs.map(r => (
-                      <tr key={r.id} className={s.row}>
+                      <tr key={r.id} className={`${s.row} ${trashSelected.has(r.id) ? s.rowSelected : ''}`}>
+                        <td>
+                          <input
+                            type="checkbox"
+                            checked={trashSelected.has(r.id)}
+                            onChange={() => {
+                              const newSelected = new Set(trashSelected);
+                              if (newSelected.has(r.id)) newSelected.delete(r.id);
+                              else newSelected.add(r.id);
+                              setTrashSelected(newSelected);
+                            }}
+                            className={s.chk}
+                          />
+                        </td>
                         <td className={s.idCell}>#{r.id}</td>
                         <td>
                           <span className={s.labelTag}
@@ -552,13 +623,19 @@ export default function MyRecordsPanel() {
                         <td className={s.timeCell}>
                           {r.deleted_at ? new Date(r.deleted_at).toLocaleString('zh-CN', { hour12: false }) : '—'}
                         </td>
-                        <td>
+                        <td className={s.actionCell}>
                           <button
                             className={s.restoreBtn}
                             onClick={() => handleRestore(r.id)}
                             disabled={restoring === r.id}
                           >
                             {restoring === r.id ? '恢复中...' : '恢复'}
+                          </button>
+                          <button
+                            className={s.permanentDelBtn}
+                            onClick={() => setPermanentDeleteId(r.id)}
+                          >
+                            彻底删除
                           </button>
                         </td>
                       </tr>
@@ -567,6 +644,52 @@ export default function MyRecordsPanel() {
                 </table>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── 彻底删除确认弹窗 ── */}
+      {permanentDeleteId && (
+        <div className={s.overlay} onClick={() => setPermanentDeleteId(null)}>
+          <div className={s.modal} onClick={e => e.stopPropagation()}>
+            <div className={s.modalTitle}>彻底删除？</div>
+            <div className={s.modalSub} style={{ color: '#ef4444' }}>
+              此操作不可恢复，记录 #{permanentDeleteId} 将被永久删除！
+            </div>
+            <div className={s.modalActions}>
+              <button className={s.modalCancel} onClick={() => setPermanentDeleteId(null)}>取消</button>
+              <button
+                className={s.modalConfirm}
+                style={{ background: '#ef4444' }}
+                onClick={handlePermanentDelete}
+                disabled={permanentDeleting}
+              >
+                {permanentDeleting ? '删除中...' : '确认彻底删除'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── 批量彻底删除确认弹窗 ── */}
+      {showBatchPermanentConfirm && (
+        <div className={s.overlay} onClick={() => setShowBatchPermanentConfirm(false)}>
+          <div className={s.modal} onClick={e => e.stopPropagation()}>
+            <div className={s.modalTitle}>批量彻底删除？</div>
+            <div className={s.modalSub} style={{ color: '#ef4444' }}>
+              已选 {trashSelected.size} 条记录将被永久删除，此操作不可恢复！
+            </div>
+            <div className={s.modalActions}>
+              <button className={s.modalCancel} onClick={() => setShowBatchPermanentConfirm(false)}>取消</button>
+              <button
+                className={s.modalConfirm}
+                style={{ background: '#ef4444' }}
+                onClick={handleBatchPermanentDelete}
+                disabled={batchPermanentDeleting}
+              >
+                {batchPermanentDeleting ? '删除中...' : `确认彻底删除 ${trashSelected.size} 条`}
+              </button>
+            </div>
           </div>
         </div>
       )}

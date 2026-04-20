@@ -22,11 +22,38 @@ import numpy as np
 
 from app.services.inference_service import run_detect
 
+# ── OCR 引擎单例 ───────────────────────────────────────────────────────────
+_ocr_engine = None  # 单例：只加载一次
+_ocr_lock = None  # 线程锁
+
+def _get_ocr_engine():
+    """获取 OCR 单例，仅第一次调用时加载模型。"""
+    global _ocr_engine, _ocr_lock
+    if _ocr_engine is not None:
+        return _ocr_engine
+    
+    try:
+        import threading
+        _ocr_lock = threading.Lock()
+        
+        from paddleocr import PaddleOCR
+        
+        # 使用移动版模型（精度好 + 速度快 + 内存省）
+        _ocr_engine = PaddleOCR(
+            use_angle_cls=False,  # 禁用方向检测（不需要，省内存）
+            lang='en',  # 只需要数字，用英文就够
+        )
+        return _ocr_engine
+    except Exception as e:
+        print(f"[OCR] 加载失败: {e}")
+        raise
+
+
 # ── 常量 ───────────────────────────────────────────────────────────────────
-OCR_INTERVAL = 15    # 每 N 帧做一次 OCR（30fps 下约 0.5 秒）
-OCR_PROBES   = 5     # 自动检测速度区域时的采样帧数
+OCR_INTERVAL = 30    # 每 N 帧做一次 OCR（30fps 下约 1 秒，减少内存消耗）
+OCR_PROBES   = 3     # 自动检测速度区域时的采样帧数（减少采样）
 REGION_PAD   = 20    # 自动检测区域时向外扩展的像素边距
-MAX_FRAMES   = 300   # 单次最多推理帧数，防止超大视频耗尽内存
+MAX_FRAMES   = 200   # 单次最多推理帧数（进一步限制，防止内存溢出）
 
 
 # ── 视频 I/O ──────────────────────────────────────────────────────────────
@@ -67,7 +94,7 @@ def get_first_frame(video_bytes: bytes) -> dict:
         ret, frame = cap.read()
         if not ret:
             raise ValueError("视频为空或第一帧读取失败")
-        _, buf = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 85])
+        _, buf = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 60])
         b64 = "data:image/jpeg;base64," + base64.b64encode(buf).decode()
 
     return {"frame_b64": b64, "width": w, "height": h}
@@ -217,11 +244,8 @@ def detect_video_ocr(
     {"status": "ok",         "results": [...], "total_frames": N}
     {"status": "ocr_failed", "results": [],    "total_frames": 0}
     """
-    from paddleocr import PaddleOCR  # 懒导入：仅 OCR 模式时才加载，不拖慢服务启动
-
-    ocr_engine = PaddleOCR(
-        use_textline_orientation=False, lang="en", enable_mkldnn=False
-    )
+    # 获取 OCR 单例（第一次调用时才加载模型）
+    ocr_engine = _get_ocr_engine()
 
     with _open_video(video_bytes) as cap:
         fps            = cap.get(cv2.CAP_PROP_FPS) or 30.0

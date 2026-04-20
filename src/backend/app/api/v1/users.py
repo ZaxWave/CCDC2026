@@ -24,7 +24,10 @@ def get_my_profile(
     """获取当前用户信息 + 个人检出统计"""
     record_count = (
         db.query(func.count(DiseaseRecord.id))
-        .filter(DiseaseRecord.creator_id == current_user.id)
+        .filter(
+            DiseaseRecord.creator_id == current_user.id,
+            DiseaseRecord.deleted_at == None,
+        )
         .scalar()
         or 0
     )
@@ -61,7 +64,10 @@ def update_my_profile(
     db.refresh(current_user)
     record_count = (
         db.query(func.count(DiseaseRecord.id))
-        .filter(DiseaseRecord.creator_id == current_user.id)
+        .filter(
+            DiseaseRecord.creator_id == current_user.id,
+            DiseaseRecord.deleted_at == None,
+        )
         .scalar()
         or 0
     )

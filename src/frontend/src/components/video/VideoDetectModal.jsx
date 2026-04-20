@@ -7,6 +7,7 @@ const STEPS = {
   SELECT:     'select',
   OCR:        'ocr',
   TIMED:      'timed',
+  GPS:        'gps',
   PROCESSING: 'processing',
 }
 
@@ -14,15 +15,17 @@ const TITLES = {
   select:     '选择检测模式',
   ocr:        'OCR 模式配置',
   timed:      '估算模式参数',
+  gps:        'GPS 轨迹模式',
   processing: '正在处理…',
 }
 
 export default function VideoDetectModal({ file, onClose, onResults }) {
   const [step,         setStep]         = useState(STEPS.SELECT)
-  const [mode,         setMode]         = useState('ocr')
+  const [mode,         setMode]         = useState('gps')  // 默认 GPS 模式
   const [intervalM,    setIntervalM]    = useState(5)
   const [speedKmh,     setSpeedKmh]     = useState(40)
   const [region,       setRegion]       = useState(null)
+  const [gpsFile,      setGpsFile]      = useState(null)
   const [frame,        setFrame]        = useState(null)      // { frame_b64, width, height }
   const [frameLoading, setFrameLoading] = useState(false)
   const [error,        setError]        = useState('')
@@ -39,13 +42,29 @@ export default function VideoDetectModal({ file, onClose, onResults }) {
 
   async function submit() {
     setError('')
+    
+    // GPS 模式需要先上传轨迹
+    if (mode === 'gps' && !gpsFile) {
+      setError('请上传 GPS 轨迹 JSON 文件')
+      return
+    }
+
     setStep(STEPS.PROCESSING)
+
     try {
+      let gpsTrack = undefined
+      if (mode === 'gps' && gpsFile) {
+        const text = await gpsFile.text()
+        const data = JSON.parse(text)
+        gpsTrack = JSON.stringify(data.gps_track || data)
+      }
+
       const data = await detectVideo(file, {
         mode,
         intervalM,
         speedKmh,
         region: mode === 'ocr' ? region : undefined,
+        gpsTrack,
       })
 
       // OCR 自动识别失败 且 用户没有预标区域 → 回到 OCR 步让用户框选
@@ -59,7 +78,9 @@ export default function VideoDetectModal({ file, onClose, onResults }) {
       onClose()
     } catch (e) {
       setError(`推理失败：${e.message}`)
-      setStep(mode === 'ocr' ? STEPS.OCR : STEPS.TIMED)
+      if (mode === 'ocr') setStep(STEPS.OCR)
+      else if (mode === 'gps') setStep(STEPS.GPS)
+      else setStep(STEPS.TIMED)
     }
   }
 
@@ -78,11 +99,11 @@ export default function VideoDetectModal({ file, onClose, onResults }) {
           <>
             <div className={s.modeGrid}>
               <div
-                className={`${s.modeCard} ${mode === 'ocr' ? s.selected : ''}`}
-                onClick={() => setMode('ocr')}
+                className={`${s.modeCard} ${mode === 'gps' ? s.selected : ''}`}
+                onClick={() => setMode('gps')}
               >
-                <h4>OCR 模式</h4>
-                <p>读取视频速度字幕，按行驶距离均匀抽帧。字幕清晰时精度最高。</p>
+                <h4>GPS 轨迹模式</h4>
+                <p>上传预先生成的轨迹 JSON 文件，按真实 GPS 位置抽帧。</p>
               </div>
               <div
                 className={`${s.modeCard} ${mode === 'timed' ? s.selected : ''}`}
@@ -91,12 +112,23 @@ export default function VideoDetectModal({ file, onClose, onResults }) {
                 <h4>估算模式</h4>
                 <p>手动输入大致车速，系统按时间间隔估算位置。无速度字幕时推荐使用。</p>
               </div>
+              <div
+                className={`${s.modeCard} ${mode === 'ocr' ? s.selected : ''}`}
+                onClick={() => setMode('ocr')}
+              >
+                <h4>OCR 模式</h4>
+                <p>读取视频速度字幕，按行驶距离均匀抽帧。字幕清晰时精度最高。</p>
+              </div>
             </div>
             <div className={s.footer}>
               <button className={s.btnSecondary} onClick={onClose}>取消</button>
               <button
                 className={s.btnPrimary}
-                onClick={() => setStep(mode === 'ocr' ? STEPS.OCR : STEPS.TIMED)}
+                onClick={() => {
+                  if (mode === 'ocr') setStep(STEPS.OCR)
+                  else if (mode === 'gps') setStep(STEPS.GPS)
+                  else setStep(STEPS.TIMED)
+                }}
               >
                 下一步
               </button>
@@ -170,6 +202,50 @@ export default function VideoDetectModal({ file, onClose, onResults }) {
           </>
         )}
 
+        {/* ── GPS 轨迹模式 ────────────────────────────────────── */}
+        {step === STEPS.GPS && (
+          <>
+            <div className={s.field}>
+              <label>GPS 轨迹文件</label>
+              <input
+                type="file" accept=".json"
+                onChange={e => setGpsFile(e.target.files[0])}
+              />
+              {gpsFile && (
+                <div style={{ marginTop: '0.5rem', color: '#22c55e' }}>
+                  ✓ 已选择: {gpsFile.name}
+                </div>
+              )}
+            </div>
+            <div className={s.field}>
+              <label>抽帧间隔（米）</label>
+              <input
+                type="number" min="1" max="100"
+                value={intervalM}
+                onChange={e => setIntervalM(Number(e.target.value))}
+              />
+            </div>
+            <div style={{ 
+              padding: '1rem', 
+              background: '#f0fdf4', 
+              borderRadius: '0.5rem', 
+              color: '#166534',
+              fontSize: '0.9rem'
+            }}>
+              💡 提示: 如果没有轨迹文件，可以使用项目中的 <code>videotest/trajectory.json</code>
+            </div>
+            {error && <div className={s.error}>{error}</div>}
+            <div className={s.footer}>
+              <button className={s.btnSecondary} onClick={() => setStep(STEPS.SELECT)}>
+                上一步
+              </button>
+              <button className={s.btnPrimary} onClick={submit}>
+                开始检测
+              </button>
+            </div>
+          </>
+        )}
+
         {/* ── 估算模式参数 ────────────────────────────────────── */}
         {step === STEPS.TIMED && (
           <>
@@ -212,7 +288,9 @@ export default function VideoDetectModal({ file, onClose, onResults }) {
             <div className={s.spinner} />
             <p>正在处理视频，请稍候…</p>
             <small>
-              {mode === 'timed'
+              {mode === 'gps'
+                ? 'GPS 模式正在根据轨迹按距离抽帧'
+                : mode === 'timed'
                 ? '估算模式已启用跳帧优化，速度较快'
                 : 'OCR 模式正在识别速度字幕并按距离抽帧'}
             </small>

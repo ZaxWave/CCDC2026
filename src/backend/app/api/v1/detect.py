@@ -18,7 +18,7 @@ MAX_FILES = 20
 @router.post("/detect")
 async def detect(
     files: list[UploadFile] = File(...),
-    conf: float = Query(0.25, ge=0.0, le=1.0, description="置信度阈值"),
+    conf: float = Query(0.15, ge=0.0, le=1.0, description="置信度阈值"),
     lat: Optional[float] = Form(None, description="纬度（移动端 GPS 直传，优先于 EXIF）"),
     lng: Optional[float] = Form(None, description="经度（移动端 GPS 直传，优先于 EXIF）"),
     db: Session = Depends(get_db),

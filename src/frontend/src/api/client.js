@@ -54,6 +54,9 @@ export function detectVideo(file, config) {
   if (config.mode === 'timed') {
     form.append('approx_speed_kmh', config.speedKmh)
   }
+  if (config.mode === 'gps' && config.gpsTrack) {
+    form.append('gps_track', config.gpsTrack)
+  }
   return request('/api/v1/detect-video', form)
 }
 
@@ -87,8 +90,14 @@ export function getDeletedRecords() {
 export function restoreRecord(id) {
   return request(`/api/v1/gis/records/${id}/restore`, {}, 'POST');
 }
+export function permanentDeleteRecord(id) {
+  return request(`/api/v1/gis/records/${id}/permanent`, null, 'DELETE');
+}
 export function batchDeleteRecords(ids) {
   return request('/api/v1/gis/records/batch-delete', { ids }, 'POST');
+}
+export function batchPermanentDeleteRecords(ids) {
+  return request('/api/v1/gis/records/batch-permanent-delete', { ids }, 'POST');
 }
 export function updateRecordStatus(id, status, worker_name, repairedImageFile) {
   const form = new FormData();

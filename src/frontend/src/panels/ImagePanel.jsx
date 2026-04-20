@@ -84,19 +84,23 @@ export default function ImagePanel() {
       newStats.defects += item.detections.length
 
       let hasD40 = false
+      let d40Confidence = 0
       item.detections.forEach(d => {
         if (['D00', 'D10', 'D20'].includes(d.label)) {
           newStats.crack++
         } else if (d.label === 'D40') {
           newStats.pothole++
           hasD40 = true
+          if (d.confidence > d40Confidence) {
+            d40Confidence = d.confidence
+          }
         }
       })
 
       if (hasD40) {
         toast(
           `⚠ 高风险病害：检测到坑槽（D40），置信度 ${
-            (item.detections.find(d => d.label === 'D40')?.confidence * 100 || 0).toFixed(1)
+            (d40Confidence * 100).toFixed(1)
           }%，请及时处置！`,
           'danger',
           6000,

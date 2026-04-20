@@ -197,6 +197,49 @@ def restore_record(
     return {"message": "已恢复"}
 
 
+@router.delete("/records/{record_id}/permanent")
+def permanent_delete_record(
+    record_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """从回收站彻底删除记录（不可恢复）"""
+    record = db.query(DiseaseRecord).filter(
+        DiseaseRecord.id == record_id,
+        DiseaseRecord.creator_id == current_user.id,
+        DiseaseRecord.deleted_at != None,
+    ).first()
+    if not record:
+        raise HTTPException(status_code=404, detail="记录不存在")
+    db.delete(record)
+    db.commit()
+    return {"message": "已彻底删除"}
+
+
+@router.post("/records/batch-permanent-delete")
+def batch_permanent_delete_records(
+    body: BatchDeleteBody,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """批量彻底删除回收站记录"""
+    if not body.ids:
+        raise HTTPException(status_code=400, detail="请提供要删除的记录 ID")
+    records = (
+        db.query(DiseaseRecord)
+        .filter(
+            DiseaseRecord.id.in_(body.ids),
+            DiseaseRecord.creator_id == current_user.id,
+            DiseaseRecord.deleted_at != None,
+        )
+        .all()
+    )
+    for r in records:
+        db.delete(r)
+    db.commit()
+    return {"message": f"已彻底删除：{len(records)} 条"}
+
+
 @router.get("/my-stats", response_model=StatsOut)
 def get_my_stats(
     db: Session = Depends(get_db),
@@ -364,7 +407,10 @@ def get_stats(db: Session = Depends(get_db)):
             func.date(DiseaseRecord.timestamp).label("date"),
             func.count(DiseaseRecord.id).label("count"),
         )
-        .filter(func.date(DiseaseRecord.timestamp) >= seven_days_ago)
+        .filter(
+            func.date(DiseaseRecord.timestamp) >= seven_days_ago,
+            DiseaseRecord.deleted_at == None,
+        )
         .group_by(func.date(DiseaseRecord.timestamp))
         .order_by(func.date(DiseaseRecord.timestamp))
         .all()
@@ -378,6 +424,6 @@ def get_stats(db: Session = Depends(get_db)):
         day_str = str(day)
         daily.append(DailyCount(date=day_str, count=counts_by_date.get(day_str, 0)))
 
-    total = db.query(func.count(DiseaseRecord.id)).scalar() or 0
+    total = db.query(func.count(DiseaseRecord.id)).filter(DiseaseRecord.deleted_at == None).scalar() or 0
 
     return StatsOut(daily=daily, total=total)

@@ -127,12 +127,13 @@ def run_detect(img_bytes: bytes, conf: float = 0.25) -> dict:
 
         # 封装前端所需数据结构
         detections.append({
-            "label":    label,
-            "label_cn": label_cn,
-            "color":    LABEL_HEX.get(label, DEFAULT_HEX),
-            "conf":     confidence,
-            "bbox":     [x1, y1, x2, y2],
-            "feature":  feature,           # 传递给 API 层做聚类，不发往前端
+            "label":       label,
+            "label_cn":    label_cn,
+            "color":       LABEL_HEX.get(label, DEFAULT_HEX),
+            "conf":        confidence,       # 兼容旧代码
+            "confidence":  confidence,       # 新代码标准
+            "bbox":        [x1, y1, x2, y2],
+            "feature":     feature,          # 传递给 API 层做聚类，不发往前
         })
 
         # --- 图像可视化绘制 ---
