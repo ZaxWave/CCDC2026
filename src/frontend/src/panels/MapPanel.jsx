@@ -25,7 +25,7 @@ if (!document.getElementById('ls-map-style')) {
   document.head.appendChild(el);
 }
 
-export default function MapPanel() {
+export default function MapPanel({ onBackToDetect }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const mapRef    = useRef(null);
   const mapObjRef = useRef(null);
@@ -165,6 +165,31 @@ export default function MapPanel() {
 
   return (
     <div className={s.container} style={{ position: 'relative', width: '100%', height: 'calc(100vh - 60px)', overflow: 'hidden' }}>
+
+      {/* ── 快捷返回检测按钮 ── */}
+      {onBackToDetect && (
+        <button
+          onClick={onBackToDetect}
+          style={{
+            position: 'absolute',
+            top: '20px',
+            right: '20px',
+            zIndex: 1000,
+            padding: '10px 16px',
+            background: '#3E6AE1',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '4px',
+            fontSize: '13px',
+            fontWeight: '500',
+            cursor: 'pointer',
+            boxShadow: '0 4px 12px rgba(62,106,225,0.3)',
+            transition: 'all 0.2s'
+          }}
+        >
+          回到检测
+        </button>
+      )}
 
       {/* ── 地图底层 ── */}
       <div ref={mapRef} style={{ width: '100%', height: '100%', background: '#090a0f' }} />

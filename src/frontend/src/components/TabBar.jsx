@@ -5,6 +5,7 @@ const TABS = [
   { id: 'video',   label: '视频流分析' },
   { id: 'map',     label: '全平台态势' },
   { id: 'records', label: '我的检测' },
+  { id: 'dashboard', label: '路政大屏' },
 ]
 
 export default function TabBar({ active, onChange }) {
@@ -19,13 +20,6 @@ export default function TabBar({ active, onChange }) {
           {tab.label}
         </button>
       ))}
-      <button
-        className={s.dashTab}
-        onClick={() => onChange('dashboard')}
-        title="进入路政态势感知大屏"
-      >
-        路政大屏
-      </button>
     </div>
   )
 }

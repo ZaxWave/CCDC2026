@@ -13,11 +13,12 @@ import DashboardPanel from './panels/DashboardPanel'
 import { ToastProvider } from './context/ToastContext'
 import { NetworkProvider } from './context/NetworkContext'
 
-const FULLSCREEN_TABS = ['map'];
+const FULLSCREEN_TABS = ['map', 'dashboard'];
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'))
   const [tab, setTab] = useState('image')
+  const [prevTab, setPrevTab] = useState('image')
 
   const handleLogout = () => {
     localStorage.removeItem('token')
@@ -26,19 +27,15 @@ export default function App() {
     setIsAuthenticated(false)
   }
 
-  if (!isAuthenticated) {
-    return <LoginPanel onLoginSuccess={() => setIsAuthenticated(true)} />
+  const handleTabChange = (newTab) => {
+    if (tab !== newTab) {
+      setPrevTab(tab)
+    }
+    setTab(newTab)
   }
 
-  // 大屏模式：沉浸式全屏，隐藏所有导航
-  if (tab === 'dashboard') {
-    return (
-      <ToastProvider>
-        <NetworkProvider>
-          <DashboardPanel onExit={() => setTab('map')} />
-        </NetworkProvider>
-      </ToastProvider>
-    )
+  if (!isAuthenticated) {
+    return <LoginPanel onLoginSuccess={() => setIsAuthenticated(true)} />
   }
 
   const isFullscreen = FULLSCREEN_TABS.includes(tab);
@@ -47,28 +44,29 @@ export default function App() {
   return (
     <ToastProvider>
       <NetworkProvider>
-      <Nav onBackToDetect={() => setTab('image')} onLogout={handleLogout} onTabChange={setTab} />
+      <Nav onBackToDetect={() => handleTabChange('image')} onLogout={handleLogout} onTabChange={handleTabChange} />
 
       {/* 只有在检测页面（image, video, records）才显示 Hero */}
       {showHero && (
         <Hero
-          onImageClick={() => setTab('image')}
-          onVideoClick={() => setTab('video')}
+          onImageClick={() => handleTabChange('image')}
+          onVideoClick={() => handleTabChange('video')}
         />
       )}
 
       {/* 只有不是关于页面时，才显示 TabBar */}
-      {tab !== 'about' && <TabBar active={tab} onChange={setTab} />}
+      {tab !== 'about' && <TabBar active={tab} onChange={handleTabChange} />}
 
       <div className={isFullscreen ? `content-wrapper fullscreen-map` : 'content-wrapper'}>
         {tab === 'image'   && <ImagePanel />}
         {tab === 'video'   && <VideoPanel />}
-        {tab === 'map'     && <MapPanel />}
+        {tab === 'map'     && <MapPanel onBackToDetect={() => handleTabChange('image')} />}
         {tab === 'records' && <MyRecordsPanel />}
         {tab === 'about'   && <AboutPanel />}
+        {tab === 'dashboard' && <DashboardPanel onExit={() => handleTabChange(prevTab)} />}
       </div>
 
-      {tab !== 'map' && (
+      {tab !== 'map' && tab !== 'dashboard' && (
         <footer style={{
           borderTop: '1px solid var(--border)',
           padding: '32px',
