@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { getMyGisRecords, deleteRecord, getMyStats, getDeletedRecords, restoreRecord, batchDeleteRecords, updateRecordStatus, permanentDeleteRecord, batchPermanentDeleteRecords } from '../api/client';
 import WeeklyReportModal from '../components/WeeklyReportModal';
+import RepairCompareModal from '../components/RepairCompareModal';
 import s from './MyRecordsPanel.module.css';
 
 const STATUS_CONFIG = {
@@ -131,6 +132,9 @@ export default function MyRecordsPanel() {
   const [repairPreview,  setRepairPreview]  = useState(null);
   const repairInputRef = useRef(null);
   const [statusUpdating, setStatusUpdating] = useState(false);
+
+  // 修复对比
+  const [compareRecord, setCompareRecord] = useState(null);
 
   // 回收站
   const [showTrash, setShowTrash]   = useState(false);
@@ -396,6 +400,9 @@ export default function MyRecordsPanel() {
                   </td>
                   <td><StatusBadge status={r.status || 'pending'} /></td>
                   <td className={s.actionCell}>
+                    {r.status === 'repaired' && r.repaired_image_b64 && (
+                      <button className={s.compareBtn} onClick={() => setCompareRecord(r)}>对比</button>
+                    )}
                     <button className={s.updateBtn} onClick={() => openStatusModal(r)}>更新</button>
                     <button className={s.delBtn} onClick={() => setDeleteId(r.id)}>删除</button>
                   </td>
@@ -509,6 +516,9 @@ export default function MyRecordsPanel() {
           </div>
         </div>
       )}
+
+      {/* ── 修复对比 Modal ── */}
+      {compareRecord && <RepairCompareModal record={compareRecord} onClose={() => setCompareRecord(null)} />}
 
       {/* ── 周报 Modal ── */}
       {showReport && <WeeklyReportModal onClose={() => setShowReport(false)} />}
