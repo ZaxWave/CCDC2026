@@ -80,6 +80,8 @@ export default function DashboardPanel({ onExit }) {
   const [now,         setNow]         = useState(new Date());
   const [mapReady,    setMapReady]    = useState(false);
   const [tickIdx,     setTickIdx]     = useState(0);
+  const [rtspModal,   setRtspModal]   = useState(false);
+  const [rtspSuccess, setRtspSuccess] = useState(false);
 
   const mapRef     = useRef(null);
   const mapObjRef  = useRef(null);
@@ -394,6 +396,51 @@ export default function DashboardPanel({ onExit }) {
     };
   }, [sourceStat]);
 
+  const devicePieOption = useMemo(() => {
+    const DEVICE_MAP = {
+      bus_dashcam:   { label: '公交车监控',   color: '#3b82f6' },
+      street_camera: { label: '路侧摄像头',   color: '#f59e0b' },
+      drone:         { label: '无人机',       color: '#8b5cf6' },
+      manual:        { label: '巡检员手机',   color: '#22c55e' },
+      rideshare:     { label: '网约车记录仪', color: '#00d4ff' },
+    };
+    const DEMO = [
+      { source_type: 'rideshare',   count: 45 },
+      { source_type: 'bus_dashcam', count: 35 },
+      { source_type: 'manual',      count: 20 },
+    ];
+    const src = sourceStat.length >= 2 ? sourceStat : DEMO;
+    const data = src.map(s => ({
+      name:  DEVICE_MAP[s.source_type]?.label || s.label || s.source_type,
+      value: s.count,
+      itemStyle: { color: DEVICE_MAP[s.source_type]?.color || '#6366f1' },
+    }));
+    return {
+      backgroundColor: 'transparent',
+      tooltip: {
+        trigger: 'item',
+        backgroundColor: 'rgba(8,12,26,0.95)',
+        borderColor: 'rgba(0,212,255,0.25)',
+        textStyle: { color: '#fff', fontSize: 11 },
+        formatter: p => `${p.marker}${p.name}&nbsp;&nbsp;<b>${p.percent}%</b>`,
+      },
+      series: [{
+        type: 'pie',
+        radius: ['30%', '52%'],
+        center: ['50%', '50%'],
+        avoidLabelOverlap: true,
+        minShowLabelAngle: 10,
+        itemStyle: { borderRadius: 3, borderColor: 'rgba(8,12,26,0.85)', borderWidth: 2 },
+        label: {
+          show: true, position: 'outside', alignTo: 'edge', margin: 4,
+          fontSize: 9, color: 'rgba(255,255,255,0.6)', formatter: '{b}\n{d}%',
+        },
+        labelLine: { show: true, length: 5, length2: 8, lineStyle: { color: 'rgba(255,255,255,0.2)', width: 1 } },
+        data,
+      }],
+    };
+  }, [sourceStat]);
+
   // ── 顶部统计
   const weekTotal  = stats?.daily?.reduce((a, d) => a + d.count, 0) ?? 0;
   const todayCount = stats?.daily?.at(-1)?.count ?? 0;
@@ -665,24 +712,39 @@ export default function DashboardPanel({ onExit }) {
             ))}
           </div>
 
-          {/* 数据来源分布 */}
+          {/* 多源数据接入统计 */}
           <div style={{
             flexShrink: 0,
-            ...panelStyle('#f59e0b'),
+            ...panelStyle(BLUE),
             padding: '8px 10px',
-            height: 140,
+            height: 190,
             display: 'flex', flexDirection: 'column',
           }}>
-            <SectionLabel>数据来源分布</SectionLabel>
-            <div style={{ flex: 1, minHeight: 0 }}>
-              {sourceStat.length === 0 ? (
-                <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: 'rgba(255,255,255,0.15)' }}>
-                  暂无数据
-                </div>
-              ) : (
-                <ReactECharts option={sourceOption} style={{ height: '100%', width: '100%' }} />
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+              <SectionLabel>多源数据接入统计</SectionLabel>
+              {sourceStat.length < 2 && (
+                <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.06em', marginBottom: 6 }}>DEMO</span>
               )}
             </div>
+            <div style={{ flex: 1, minHeight: 0 }}>
+              <ReactECharts option={devicePieOption} style={{ height: '100%', width: '100%' }} />
+            </div>
+            <button
+              onClick={() => { setRtspModal(true); setRtspSuccess(false); }}
+              style={{
+                flexShrink: 0, marginTop: 4,
+                width: '100%', height: 22,
+                background: 'rgba(0,212,255,0.06)',
+                border: '1px solid rgba(0,212,255,0.2)',
+                color: 'rgba(0,212,255,0.6)',
+                fontSize: 9, fontWeight: 500, letterSpacing: '0.06em',
+                cursor: 'pointer', transition: 'all 0.15s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,212,255,0.14)'; e.currentTarget.style.color = '#00d4ff'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,212,255,0.06)'; e.currentTarget.style.color = 'rgba(0,212,255,0.6)'; }}
+            >
+              + 添加第三方摄像头（RTSP 流）
+            </button>
           </div>
 
           {/* 底部刷新提示 */}
@@ -698,6 +760,88 @@ export default function DashboardPanel({ onExit }) {
           </div>
         </div>
       </div>
+
+      {/* ── RTSP 接入弹窗 ── */}
+      {rtspModal && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, zIndex: 9999,
+            background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
+          onClick={() => setRtspModal(false)}
+        >
+          <div
+            style={{
+              width: 400,
+              background: '#080c14',
+              border: '1px solid rgba(0,212,255,0.2)',
+              borderTop: '2px solid #00d4ff',
+              padding: 24,
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+              <span style={{ fontSize: 14, fontWeight: 700, color: '#00d4ff', letterSpacing: '0.05em' }}>
+                接入第三方摄像头
+              </span>
+              <span style={{ marginLeft: 'auto', fontSize: 9, color: 'rgba(255,255,255,0.2)', background: 'rgba(0,212,255,0.08)', padding: '2px 6px', border: '1px solid rgba(0,212,255,0.15)' }}>
+                RTSP 流接入
+              </span>
+            </div>
+
+            {rtspSuccess ? (
+              <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                <div style={{ fontSize: 36, color: '#22c55e', marginBottom: 10 }}>✓</div>
+                <div style={{ color: '#22c55e', fontSize: 13, marginBottom: 6 }}>摄像头接入成功</div>
+                <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11 }}>
+                  已加入多源融合队列，预计 30s 后开始推流
+                </div>
+                <button
+                  onClick={() => setRtspModal(false)}
+                  style={{ marginTop: 16, padding: '6px 20px', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', color: '#22c55e', fontSize: 11, cursor: 'pointer' }}
+                >
+                  关闭
+                </button>
+              </div>
+            ) : (
+              <>
+                {[
+                  { label: 'RTSP 地址',  defaultValue: 'rtsp://bus-cam-04.lanzhou.gov.cn:554/live' },
+                  { label: '摄像头名称', defaultValue: '公交车 K17 路 #04' },
+                ].map(({ label, defaultValue }) => (
+                  <div key={label} style={{ marginBottom: 14 }}>
+                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginBottom: 6, letterSpacing: '0.08em' }}>{label}</div>
+                    <input
+                      defaultValue={defaultValue}
+                      style={{
+                        width: '100%', height: 32, boxSizing: 'border-box',
+                        background: 'rgba(255,255,255,0.04)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        color: '#fff', fontSize: 11, padding: '0 10px', outline: 'none',
+                      }}
+                    />
+                  </div>
+                ))}
+                <div style={{ display: 'flex', gap: 8, marginTop: 20 }}>
+                  <button
+                    onClick={() => setRtspModal(false)}
+                    style={{ flex: 1, height: 32, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.4)', fontSize: 11, cursor: 'pointer' }}
+                  >
+                    取消
+                  </button>
+                  <button
+                    onClick={() => setRtspSuccess(true)}
+                    style={{ flex: 2, height: 32, background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.3)', color: '#00d4ff', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
+                  >
+                    模拟接入
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

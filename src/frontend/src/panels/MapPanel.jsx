@@ -36,6 +36,7 @@ export default function MapPanel({ onBackToDetect }) {
   const [selectedType, setSelectedType] = useState(null);
   const [heatMode,     setHeatMode]     = useState(false);
   const [timelineId,   setTimelineId]   = useState(null);
+  const [sliderVal,    setSliderVal]    = useState(100);
 
   // ── 初始化地图 ──────────────────────────────────────────────────────────
   useEffect(() => {
@@ -102,9 +103,17 @@ export default function MapPanel({ onBackToDetect }) {
         borderColor: '#3b82f6',
         textStyle: { color: '#fff' },
       },
-      legend: { top: 'bottom', textStyle: { color: '#9ca3af' } },
+      legend: {
+        bottom: 0,
+        left: 'center',
+        itemWidth: 8, itemHeight: 8, itemGap: 10,
+        textStyle: { color: '#9ca3af', fontSize: 11 },
+      },
       series: [{
-        name: '病害类型', type: 'pie', radius: ['50%', '70%'], avoidLabelOverlap: false,
+        name: '病害类型', type: 'pie',
+        radius: ['44%', '62%'],
+        center: ['50%', '44%'],
+        avoidLabelOverlap: false,
         itemStyle: { borderRadius: 8, borderColor: 'rgba(10, 15, 30, 0.85)', borderWidth: 2 },
         label: { show: false, position: 'center' },
         emphasis: { label: { show: true, fontSize: 16, fontWeight: 'bold', color: '#fff' } },
@@ -163,6 +172,23 @@ export default function MapPanel({ onBackToDetect }) {
 
   const totalCount = loading ? '-' : (stats?.total ?? records.length);
 
+  const { minTs, maxTs } = useMemo(() => {
+    const ts = records.filter(r => r.timestamp).map(r => new Date(r.timestamp).getTime());
+    if (ts.length === 0) return { minTs: 0, maxTs: Date.now() };
+    return { minTs: Math.min(...ts), maxTs: Math.max(...ts) };
+  }, [records]);
+
+  const cutoffTs = minTs + (maxTs - minTs) * (sliderVal / 100);
+
+  const filteredRecords = useMemo(() => {
+    if (sliderVal >= 100) return records;
+    return records.filter(r => !r.timestamp || new Date(r.timestamp).getTime() <= cutoffTs);
+  }, [records, sliderVal, cutoffTs]);
+
+  const cutoffLabel = sliderVal >= 100
+    ? '全部数据'
+    : new Date(cutoffTs).toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' });
+
   return (
     <div className={s.container} style={{ position: 'relative', width: '100%', height: 'calc(100vh - 60px)', overflow: 'hidden' }}>
 
@@ -197,7 +223,7 @@ export default function MapPanel({ onBackToDetect }) {
       {/* ── 标记聚合层（散点模式）── */}
       <ClusterLayer
         mapInstance={mapInstance}
-        records={records}
+        records={filteredRecords}
         selectedType={selectedType}
         visible={!heatMode}
         onShowTimeline={setTimelineId}
@@ -206,7 +232,7 @@ export default function MapPanel({ onBackToDetect }) {
       {/* ── 热力图层 + 参数控制面板 ── */}
       <HeatmapControls
         mapInstance={mapInstance}
-        records={records}
+        records={filteredRecords}
         visible={heatMode}
       />
 
@@ -320,6 +346,39 @@ export default function MapPanel({ onBackToDetect }) {
               近七日趋势
             </span>
             <ReactECharts option={lineOption} style={{ flex: 1, width: '100%' }} />
+          </div>
+
+          {/* 时间轴滑块 */}
+          <div style={{
+            flexShrink: 0,
+            borderTop: '1px solid rgba(255,255,255,0.06)',
+            padding: '12px 20px 14px',
+            transition: 'border-color 0.2s',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 7 }}>
+              <span style={{ fontSize: '10px', fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)' }}>
+                历史回溯
+              </span>
+              <span style={{ fontSize: 10, fontVariantNumeric: 'tabular-nums', color: sliderVal < 100 ? '#93b4f7' : 'rgba(255,255,255,0.22)', transition: 'color 0.2s' }}>
+                {sliderVal < 100 ? `截至 ${cutoffLabel}` : '实时 · 全部数据'}
+              </span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.2)', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
+                {minTs ? new Date(minTs).toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' }) : '--'}
+              </span>
+              <input
+                type="range" min={0} max={100} value={sliderVal}
+                onChange={e => setSliderVal(Number(e.target.value))}
+                style={{ flex: 1, accentColor: '#3E6AE1', cursor: 'pointer' }}
+              />
+              <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.2)', whiteSpace: 'nowrap' }}>今日</span>
+            </div>
+            {sliderVal < 100 && (
+              <div style={{ marginTop: 6, fontSize: 9, color: 'rgba(62,106,225,0.65)', textAlign: 'center', letterSpacing: '0.04em' }}>
+                该时段共检出 <b style={{ color: '#93b4f7' }}>{filteredRecords.length}</b> 处病害
+              </div>
+            )}
           </div>
         </div>
       </div>
