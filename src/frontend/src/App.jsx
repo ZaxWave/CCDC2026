@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './App.css'
 import Nav from './components/Nav'
 import Hero from './components/Hero'
@@ -22,6 +22,12 @@ export default function App() {
   const [tab, setTab] = useState('image')
   const [prevTab, setPrevTab] = useState('image')
   const [taskDrawerOpen, setTaskDrawerOpen] = useState(false)
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('theme') === 'dark')
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light')
+    localStorage.setItem('theme', darkMode ? 'dark' : 'light')
+  }, [darkMode])
 
   const handleLogout = () => {
     localStorage.removeItem('token')
@@ -53,6 +59,8 @@ export default function App() {
         onLogout={handleLogout}
         onTabChange={handleTabChange}
         onTaskCenterClick={() => setTaskDrawerOpen(true)}
+        darkMode={darkMode}
+        onToggleDark={() => setDarkMode(v => !v)}
       />
 
       {/* 只有在检测页面（image, video, records）才显示 Hero */}

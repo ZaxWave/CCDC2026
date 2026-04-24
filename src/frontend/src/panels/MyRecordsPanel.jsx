@@ -576,7 +576,7 @@ export default function MyRecordsPanel() {
             ) : trashRecs.length === 0 ? (
               <div className={s.empty} style={{ padding: '40px 0' }}>回收站为空</div>
             ) : (
-              <div className={s.tableWrap} style={{ border: 'none', borderTop: '1px solid #ebebeb' }}>
+              <div className={`${s.tableWrap} ${s.trashTableInner}`} style={{ border: 'none', borderTop: '1px solid var(--border)' }}>
                 <table className={s.table}>
                   <thead>
                     <tr>

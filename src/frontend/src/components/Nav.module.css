@@ -7,7 +7,7 @@
   justify-content: space-between;
   padding: 0 32px;
   height: 56px;
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--nav-bg);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--border);
@@ -65,6 +65,15 @@
   transition: color 0.15s, background 0.15s;
 }
 .taskBtn:hover { color: var(--dark); background: var(--ash); }
+
+.themeBtn {
+  display: flex; align-items: center; justify-content: center;
+  background: none; border: none; cursor: pointer;
+  color: var(--muted); border-radius: 6px;
+  width: 32px; height: 32px;
+  transition: color 0.15s, background 0.15s;
+}
+.themeBtn:hover { color: var(--dark); background: var(--ash); }
 
 .badge {
   position: absolute; top: 2px; right: 2px;

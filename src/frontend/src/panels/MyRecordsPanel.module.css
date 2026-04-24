@@ -611,3 +611,86 @@
 
 .trashTitle { font-size: 15px; font-weight: 650; color: var(--dark); margin-bottom: 4px; }
 .trashSub   { font-size: 12px; color: #9ca3af; }
+
+/* ── 深色模式适配 ────────────────────────────────────────── */
+[data-theme="dark"] .tableWrap {
+  background: var(--white);
+  border-color: var(--border);
+  border-top-color: var(--border);
+}
+[data-theme="dark"] .table thead tr {
+  border-bottom-color: var(--border);
+}
+[data-theme="dark"] .row {
+  border-bottom-color: var(--border);
+}
+[data-theme="dark"] .row:hover { background: var(--ash); }
+
+[data-theme="dark"] .statCard { border-color: var(--border); }
+
+[data-theme="dark"] .modal,
+[data-theme="dark"] .trashModal {
+  background: var(--ash);
+  border-color: var(--border);
+}
+[data-theme="dark"] .trashHeader { border-bottom-color: var(--border); }
+
+[data-theme="dark"] .confTrack { background: var(--border); }
+
+[data-theme="dark"] .workerInput {
+  background: var(--white);
+  border-color: var(--border);
+  color: var(--dark);
+}
+[data-theme="dark"] .workerInput::placeholder { color: var(--muted); }
+
+[data-theme="dark"] .repairZone {
+  background: var(--white);
+  border-color: var(--border);
+  color: var(--muted);
+}
+
+[data-theme="dark"] .statusRadioLabel { border-color: var(--border); }
+[data-theme="dark"] .statusRadioLabel:hover { background: var(--white); }
+
+[data-theme="dark"] .filterActive {
+  background: var(--blue) !important;
+  border-color: var(--blue) !important;
+  color: #fff !important;
+}
+
+[data-theme="dark"] .trashBtn,
+[data-theme="dark"] .exportBtn,
+[data-theme="dark"] .filterBtn,
+[data-theme="dark"] .pageBtn,
+[data-theme="dark"] .modalCancel,
+[data-theme="dark"] .batchClrBtn {
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .idCell { color: var(--muted) !important; }
+[data-theme="dark"] .coordCell,
+[data-theme="dark"] .fileCell,
+[data-theme="dark"] .timeCell { color: var(--muted) !important; }
+
+[data-theme="dark"] .pageSub,
+[data-theme="dark"] .exportLabel,
+[data-theme="dark"] .statCardSub,
+[data-theme="dark"] .filterCount,
+[data-theme="dark"] .trashSub,
+[data-theme="dark"] .emptyMsg,
+[data-theme="dark"] .repairFileSize,
+[data-theme="dark"] .repairZoneSub { color: var(--muted); }
+
+[data-theme="dark"] .rowSelected { background: rgba(99,132,238,0.08) !important; }
+
+[data-theme="dark"] .updateBtn {
+  border-color: rgba(99,132,238,0.3);
+  color: var(--blue);
+}
+[data-theme="dark"] .updateBtn:hover {
+  background: rgba(99,132,238,0.08);
+  border-color: var(--blue);
+}
+
+[data-theme="dark"] .trashTableInner { border-top-color: var(--border) !important; }
