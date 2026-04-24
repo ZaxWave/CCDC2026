@@ -70,6 +70,7 @@ class DiseaseRecord(Base):
     repaired_image_b64 = Column(Text, nullable=True)
     repaired_at        = Column(DateTime, nullable=True)
     dispatch_info      = Column(JSONB, nullable=True)  # AI 生成的工单内容
+    thumbnail_b64      = Column(Text, nullable=True)   # 标注后的检测截图
 
     creator = relationship("User",           back_populates="records")
     cluster = relationship("DiseaseCluster", back_populates="records")

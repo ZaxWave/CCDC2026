@@ -59,6 +59,8 @@ def _migrate_disease_records():
                 conn.execute(text("ALTER TABLE disease_records ADD COLUMN repaired_at TIMESTAMP"))
             if "dispatch_info" not in cols:
                 conn.execute(text("ALTER TABLE disease_records ADD COLUMN dispatch_info JSONB"))
+            if "thumbnail_b64" not in cols:
+                conn.execute(text("ALTER TABLE disease_records ADD COLUMN thumbnail_b64 TEXT"))
             conn.commit()
 
         # users 表补充设备字段

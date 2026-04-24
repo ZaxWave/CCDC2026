@@ -58,6 +58,7 @@ async def detect(
         rec_lat = lat if lat is not None else location.get("lat", 0.0)
         rec_lng = lng if lng is not None else location.get("lng", 0.0)
 
+        img_b64 = res.get("image_b64", "") or ""
         for det in res.get("detections", []):
             feature = det.get("feature")
             cluster_id = assign_cluster(rec_lat, rec_lng, det.get("label_cn"), feature, db)
@@ -75,6 +76,7 @@ async def detect(
                 source_type=current_user.source_type or "manual",
                 device_id=current_user.device_id,
                 creator_id=current_user.id,
+                thumbnail_b64=img_b64 or None,
             )
             db.add(db_record)
 

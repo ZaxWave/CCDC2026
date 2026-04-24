@@ -346,12 +346,13 @@ def get_cluster_timeline(
                 pass
 
         timeline.append({
-            "id":         r.id,
-            "timestamp":  r.timestamp.isoformat(),
-            "confidence": round(r.confidence, 4) if r.confidence is not None else None,
-            "bbox_area":  bbox_area,
-            "filename":   r.filename,
-            "status":     r.status,
+            "id":            r.id,
+            "timestamp":     r.timestamp.isoformat(),
+            "confidence":    round(r.confidence, 4) if r.confidence is not None else None,
+            "bbox_area":     bbox_area,
+            "filename":      r.filename,
+            "status":        r.status,
+            "thumbnail_b64": r.thumbnail_b64 or None,
         })
 
     # 简单趋势判断：末尾 vs 开头置信度差值
