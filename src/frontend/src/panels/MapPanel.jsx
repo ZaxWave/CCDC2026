@@ -426,7 +426,7 @@ export default function MapPanel({ onBackToDetect }) {
                 <div style={{ flex: 1, overflowY: 'auto', padding: '0 12px 12px' }}>
                   {healthGrid.length === 0 ? (
                     <div style={{ padding: '20px 0', textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: 12 }}>暂无含坐标的记录</div>
-                  ) : healthGrid.slice(0, 15).map((cell, i) => (
+                  ) : healthGrid.map((cell, i) => (
                     <div
                       key={cell.key}
                       onClick={() => mapInstance?.setCenter([cell.gLng, cell.gLat])}
@@ -462,13 +462,15 @@ export default function MapPanel({ onBackToDetect }) {
             )}
           </div>
 
-          {/* 底部：折线图 */}
-          <div style={{ padding: '16px 20px', flex: 1, minHeight: '200px', display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontSize: '10px', fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: '8px', display: 'block' }}>
-              近七日趋势
-            </span>
-            <ReactECharts option={lineOption} style={{ flex: 1, width: '100%' }} />
-          </div>
+          {/* 底部：折线图（健康图模式下隐藏，排行榜独占全高） */}
+          {!healthMode && (
+            <div style={{ padding: '16px 20px', flex: 1, minHeight: '200px', display: 'flex', flexDirection: 'column' }}>
+              <span style={{ fontSize: '10px', fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: '8px', display: 'block' }}>
+                近七日趋势
+              </span>
+              <ReactECharts option={lineOption} style={{ flex: 1, width: '100%' }} />
+            </div>
+          )}
 
           {/* 时间轴滑块 */}
           <div style={{

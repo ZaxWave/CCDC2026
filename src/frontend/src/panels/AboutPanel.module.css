@@ -6,13 +6,13 @@
 }
 
 /* ── 通用 Section 头部 ────────────────────────────────────── */
-.sectionHeader { margin-bottom: 20px; }
+.sectionHeader { margin-bottom: 24px; }
 
 .sectionLabel {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.16em;
-  color: #3E6AE1;
+  color: var(--blue);
   text-transform: uppercase;
   font-family: 'Courier New', Consolas, monospace;
   display: block;
@@ -22,14 +22,14 @@
 .sectionTitle {
   font-size: 15px;
   font-weight: 650;
-  color: #171A20;
+  color: var(--dark);
   letter-spacing: 0.01em;
 }
 
 .section {
   margin-bottom: 52px;
   padding-top: 40px;
-  border-top: 1px solid #ebebeb;
+  border-top: 1px solid var(--border);
 }
 
 /* ══ HERO ════════════════════════════════════════════════════ */
@@ -39,9 +39,9 @@
   gap: 40px;
   margin-bottom: 52px;
   padding: 36px 36px 32px;
-  background: #fff;
-  border: 1px solid #e8e8e8;
-  border-left: 4px solid #3E6AE1;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--blue);
 }
 
 .heroLeft { flex: 1 1 0; min-width: 0; }
@@ -58,7 +58,7 @@
   font-size: 32px;
   font-weight: 800;
   letter-spacing: 0.06em;
-  color: #171A20;
+  color: var(--dark);
   font-family: 'Courier New', Consolas, monospace;
   line-height: 1;
 }
@@ -67,7 +67,7 @@
   font-size: 13px;
   font-weight: 600;
   font-family: 'Courier New', Consolas, monospace;
-  color: #3E6AE1;
+  color: var(--blue);
   background: rgba(62,106,225,0.07);
   border: 1px solid rgba(62,106,225,0.22);
   padding: 3px 10px;
@@ -78,42 +78,36 @@
 
 .tagline {
   font-size: 14px;
-  color: #5C5E62;
+  color: var(--muted);
   margin-bottom: 18px;
   line-height: 1.5;
 }
 
-.heroBadges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
+.heroBadges { display: flex; flex-wrap: wrap; gap: 6px; }
 
 .badge {
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #5C5E62;
-  border: 1px solid #e0e0e0;
+  color: var(--muted);
+  border: 1px solid var(--border);
   padding: 3px 10px;
-  background: #f9f9f9;
+  background: var(--ash);
 }
 
-/* 系统概览 key-value */
 .sysProfile {
-  border: 1px solid #ebebeb;
-  border-left: 3px solid #3E6AE1;
-  background: #fafafa;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--blue);
+  background: var(--ash);
   padding: 4px 0;
 }
 
 .sysRow {
   display: flex;
   align-items: baseline;
-  gap: 0;
   padding: 7px 16px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border);
 }
 .sysRow:last-child { border-bottom: none; }
 
@@ -121,7 +115,7 @@
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.12em;
-  color: #3E6AE1;
+  color: var(--blue);
   font-family: 'Courier New', Consolas, monospace;
   width: 72px;
   flex-shrink: 0;
@@ -129,7 +123,7 @@
 
 .sysVal {
   font-size: 12px;
-  color: #393C41;
+  color: var(--body);
   font-family: 'Courier New', Consolas, monospace;
   line-height: 1.4;
 }
@@ -143,9 +137,9 @@
 
 .stackCard {
   padding: 16px 18px;
-  border: 1px solid #e8e8e8;
-  border-top: 2px solid #3E6AE1;
-  background: #fff;
+  border: 1px solid var(--border);
+  border-top: 2px solid var(--blue);
+  background: var(--white);
 }
 
 .stackGroup {
@@ -153,7 +147,7 @@
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #3E6AE1;
+  color: var(--blue);
   margin-bottom: 12px;
   font-family: 'Courier New', Consolas, monospace;
 }
@@ -163,7 +157,7 @@
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  color: #393C41;
+  color: var(--body);
   font-family: 'Courier New', Consolas, monospace;
   line-height: 1.4;
   padding: 3px 0;
@@ -172,8 +166,90 @@
 .stackDot {
   width: 5px;
   height: 5px;
-  background: #3E6AE1;
+  background: var(--blue);
   flex-shrink: 0;
+}
+
+/* ══ PIPELINE ════════════════════════════════════════════════ */
+.pipeline {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.pipeGroup {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.pipeNode {
+  flex: 1;
+  padding: 18px 16px 20px;
+  border: 1px solid var(--border);
+  border-top: 3px solid;
+  background: var(--white);
+  min-width: 140px;
+  transition: box-shadow 0.15s;
+}
+.pipeNode:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.07); }
+
+.pipeIcon {
+  font-size: 22px;
+  margin-bottom: 10px;
+  line-height: 1;
+}
+
+.pipeTitle {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  margin-bottom: 2px;
+}
+
+.pipeSub {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  text-transform: uppercase;
+  font-family: 'Courier New', Consolas, monospace;
+  margin-bottom: 12px;
+}
+
+.pipePoints {
+  list-style: none;
+  padding: 0; margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.pipePoint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.pipeDot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.pipeArrow {
+  flex-shrink: 0;
+  padding: 0 6px;
+  color: var(--border);
+  display: flex;
+  align-items: center;
 }
 
 /* ══ TWO COLUMN ══════════════════════════════════════════════ */
@@ -184,9 +260,9 @@
 }
 
 .colCard {
-  border: 1px solid #e8e8e8;
-  border-top: 2px solid #171A20;
-  background: #fff;
+  border: 1px solid var(--border);
+  border-top: 2px solid var(--dark);
+  background: var(--white);
   padding: 20px 22px;
 }
 
@@ -195,16 +271,16 @@
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #9ca3af;
+  color: var(--muted);
   margin-bottom: 16px;
 }
 
 /* 病害类别 */
-.defectList { display: flex; flex-direction: column; gap: 10px; }
+.defectList { display: flex; flex-direction: column; gap: 12px; }
 
 .defectRow {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
 }
 
@@ -216,74 +292,118 @@
   padding: 2px 7px;
   flex-shrink: 0;
   letter-spacing: 0.04em;
+  margin-top: 2px;
 }
+
+.defectInfo { display: flex; flex-direction: column; gap: 2px; }
 
 .defectName {
   font-size: 13px;
-  color: #393C41;
-  width: 80px;
-  flex-shrink: 0;
+  font-weight: 600;
+  color: var(--dark);
 }
 
-.defectBar {
-  flex: 1;
-  height: 6px;
+.defectDesc {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.5;
 }
 
 .colFootnote {
   margin-top: 18px;
   font-size: 11px;
-  color: #9ca3af;
+  color: var(--muted);
   line-height: 1.7;
   padding-top: 14px;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--border);
 }
 
-/* 架构图 */
-.archPlaceholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 200px;
+/* 模型性能 */
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 20px;
 }
 
-.archLayers {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0;
-  width: 100%;
+.metricCard {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  background: var(--ash);
+  text-align: center;
 }
 
-.archLayer {
-  width: 100%;
-  border: 1px solid;
-  padding: 10px 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.metricVal {
+  font-size: 20px;
+  font-weight: 800;
+  font-family: 'Courier New', Consolas, monospace;
+  line-height: 1;
+  margin-bottom: 4px;
+  letter-spacing: -0.02em;
 }
 
-.archLayerLabel {
-  font-size: 11px;
+.metricKey {
+  font-size: 9px;
   font-weight: 600;
-  font-family: 'Courier New', Consolas, monospace;
-  color: #171A20;
-  letter-spacing: 0.04em;
-}
-
-.archLayerDetail {
-  font-size: 11px;
-  color: #9ca3af;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
   font-family: 'Courier New', Consolas, monospace;
 }
 
-.archArrow {
-  font-size: 11px;
-  color: #b0b0b0;
-  padding: 4px 0;
+.apSection { border-top: 1px solid var(--border); padding-top: 14px; }
+
+.apTitle {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
   font-family: 'Courier New', Consolas, monospace;
-  letter-spacing: 0.06em;
+  margin-bottom: 12px;
+}
+
+.apRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.apCode {
+  font-size: 10px;
+  font-weight: 700;
+  font-family: 'Courier New', Consolas, monospace;
+  width: 32px;
+  flex-shrink: 0;
+}
+
+.apName {
+  font-size: 11px;
+  color: var(--muted);
+  width: 64px;
+  flex-shrink: 0;
+}
+
+.apTrack {
+  flex: 1;
+  height: 6px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.apFill {
+  height: 100%;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.apNum {
+  font-size: 11px;
+  font-weight: 700;
+  font-family: 'Courier New', Consolas, monospace;
+  width: 42px;
+  text-align: right;
+  flex-shrink: 0;
 }
 
 /* ══ INNOVATIONS ═════════════════════════════════════════════ */
@@ -294,10 +414,10 @@
 }
 
 .innovCard {
-  border: 1px solid #e8e8e8;
-  border-left: 4px solid #3E6AE1;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--blue);
   padding: 18px 18px 20px;
-  background: #fff;
+  background: var(--white);
   transition: box-shadow 0.15s, border-left-color 0.15s;
 }
 .innovCard:hover {
@@ -309,7 +429,7 @@
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.14em;
-  color: #3E6AE1;
+  color: var(--blue);
   font-family: 'Courier New', Consolas, monospace;
   margin-bottom: 8px;
 }
@@ -317,14 +437,14 @@
 .innovTitle {
   font-size: 14px;
   font-weight: 650;
-  color: #171A20;
+  color: var(--dark);
   margin-bottom: 10px;
   line-height: 1.3;
 }
 
 .innovDesc {
   font-size: 12px;
-  color: #5C5E62;
+  color: var(--muted);
   line-height: 1.8;
 }
 
@@ -336,22 +456,21 @@
 }
 
 .teamCard {
-  border: 1px solid #e8e8e8;
-  border-top: 2px solid #ebebeb;
+  border: 1px solid var(--border);
+  border-top: 2px solid var(--border);
   padding: 20px 18px;
-  background: #fff;
+  background: var(--white);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 10px;
   transition: border-top-color 0.15s;
 }
-.teamCard:hover { border-top-color: #3E6AE1; }
+.teamCard:hover { border-top-color: var(--team-accent, var(--blue)); }
 
 .teamAvatar {
   width: 40px;
   height: 40px;
-  background: linear-gradient(135deg, #3E6AE1, #60a5fa);
   color: #fff;
   font-size: 16px;
   font-weight: 700;
@@ -363,28 +482,13 @@
 }
 
 .teamInfo { display: flex; flex-direction: column; gap: 3px; }
-
-.teamName {
-  font-size: 14px;
-  font-weight: 650;
-  color: #171A20;
-}
-
-.teamRole {
-  font-size: 11px;
-  color: #3E6AE1;
-  font-weight: 500;
-}
-
-.teamNote {
-  font-size: 11px;
-  color: #9ca3af;
-  line-height: 1.5;
-}
+.teamName { font-size: 14px; font-weight: 650; color: var(--dark); }
+.teamRole { font-size: 11px; font-weight: 500; }
+.teamNote { font-size: 11px; color: var(--muted); line-height: 1.5; }
 
 /* ══ FOOTER ══════════════════════════════════════════════════ */
 .footerBlock {
-  border-top: 1px solid #ebebeb;
+  border-top: 1px solid var(--border);
   padding-top: 32px;
   display: flex;
   flex-direction: column;
@@ -393,21 +497,21 @@
 
 .footerDisclaimer {
   font-size: 12px;
-  color: #9ca3af;
+  color: var(--muted);
   line-height: 1.8;
   padding: 14px 16px;
-  border: 1px solid #ebebeb;
-  border-left: 3px solid #e0e0e0;
-  background: #fafafa;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--border);
+  background: var(--ash);
 }
 
 .footerTag {
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.14em;
-  color: #b0b0b0;
+  color: var(--muted);
   font-family: 'Courier New', Consolas, monospace;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--border);
   padding: 1px 6px;
   margin-right: 10px;
   vertical-align: middle;
@@ -415,16 +519,16 @@
 
 .footerCopy {
   font-size: 11px;
-  color: #b0b0b0;
+  color: var(--muted);
   text-align: center;
 }
 
 .mono {
   font-family: 'Courier New', Consolas, monospace;
-  color: #9ca3af;
+  color: var(--muted);
 }
 
-/* ── 响应式收缩 ───────────────────────────────────────────── */
+/* ── 响应式 ───────────────────────────────────────────────── */
 @media (max-width: 860px) {
   .stackGrid  { grid-template-columns: repeat(2, 1fr); }
   .innovGrid  { grid-template-columns: repeat(2, 1fr); }
@@ -432,6 +536,11 @@
   .twoCol     { grid-template-columns: 1fr; }
   .hero       { flex-direction: column; }
   .heroRight  { flex: none; width: 100%; }
+  .metricsGrid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 680px) {
+  .pipeline { flex-direction: column; }
+  .pipeArrow { transform: rotate(90deg); padding: 4px 0; }
 }
 @media (max-width: 560px) {
   .stackGrid  { grid-template-columns: 1fr; }

@@ -21,11 +21,11 @@
 
 | 模块 | 技术栈 | 核心能力 |
 |------|--------|----------|
-| 🧠 算法核心 | LS-Det v1 + SAHI | 4 类病害实时检测（坑槽 / 纵缝 / 横缝 / 龟裂） |
-| ⚙️ 后端服务 | FastAPI + PostgreSQL | 推理 API、GIS 工单管理、JWT 鉴权、时空聚类 |
-| 🖥️ Web 前端 | React 18 + Vite | 图片/视频检测、高德地图 GIS 大屏、3D 态势感知 |
+| 🧠 算法核心 | LS-Det v1 + SAHI | 4 类病害实时检测，18ms/帧，支持 SAHI 自适应切片；ReID 特征聚类追踪同一病害演化 |
+| ⚙️ 后端服务 | FastAPI + PostgreSQL | 推理 API、GIS 工单全生命周期管理、JWT 鉴权、时空聚类、DeepSeek AI 派单 |
+| 🖥️ Web 前端 | React 18 + Vite | 图片/视频检测、高德地图 GIS（散点/热力/健康评分三模式）、暗色模式、PWA 离线安装、键盘快捷键、修复前后对比图库 |
 | 📱 移动端 | Taro 4 + React | 微信小程序 + H5，市民随手拍 & 巡检员工作台 |
-| 📱 安卓端 | React Native + Expo | 原生安卓 App，支持摄像头实时录像、GPS 轨迹记录 |
+| 📱 安卓端 | React Native + Expo | 原生安卓 App，引导页 Onboarding、GPS 轨迹记录、工单接单/完工闭环 |
 
 ### 训练数据
 
