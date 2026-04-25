@@ -2,18 +2,18 @@
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #ffffff;
+  background: #111111;
   overflow: hidden;
 }
 
-// ── 修改后的顶部栏 ─────────────────────────────────────────────
+// ── 顶部栏 ─────────────────────────────────────────────────
 .header {
   flex-shrink: 0;
-  background: #ffffff;
-  border-bottom: 1px solid #eeeeee;
-  padding: 80px 40px 30px; // 调整了 padding 适配返回键
+  background: rgba(17, 17, 17, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 80px 48px 36px;
   display: flex;
-  align-items: center; // 改为 center 保证返回键对齐
+  align-items: center;
   justify-content: space-between;
 }
 
@@ -30,24 +30,24 @@
 
 .backIcon {
   font-size: 60px;
-  color: #9a9a9e;
+  color: rgba(255, 255, 255, 0.6);
   line-height: 1;
   margin-top: -6px;
 }
 
 .headerTitle {
-  font-size: 48px;
+  font-size: 44px;
   font-weight: 700;
-  color: #171a20;
+  color: #ffffff;
   letter-spacing: -1px;
 }
 
 .headerSub {
   font-size: 24px;
-  color: #9a9a9e;
+  color: rgba(255, 255, 255, 0.35);
 }
 
-// ── 以下是你原本的所有专业样式，原封不动 ────────────────────────────
+// ── 滚动区 ─────────────────────────────────────────────────
 .bodyScroll {
   flex: 1;
   height: 0;
@@ -57,11 +57,12 @@
   padding: 0 0 80px;
 }
 
+// ── Section ────────────────────────────────────────────────
 .section {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.03);
   padding: 40px;
   margin-bottom: 0;
-  border-bottom: 1px solid #eeeeee;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .secHeader {
@@ -74,14 +75,15 @@
 .secLabel {
   font-size: 26px;
   font-weight: 600;
-  color: #393c41;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .secNote {
   font-size: 24px;
-  color: #9a9a9e;
+  color: rgba(255, 255, 255, 0.3);
 }
 
+// ── 病害类型 ────────────────────────────────────────────────
 .typeGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -89,37 +91,37 @@
 }
 
 .typeItem {
-  border: 1px solid #eeeeee;
-  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
   padding: 28px 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.04);
   &:active { opacity: 0.6; }
 }
 
 .typeItemActive {
-  background: #3e6ae1;
-  border-color: #3e6ae1;
+  background: rgba(62, 106, 225, 0.2);
+  border-color: rgba(62, 106, 225, 0.6);
 }
 
 .typeItemLabel {
   font-size: 26px;
-  color: #393c41;
+  color: rgba(255, 255, 255, 0.6);
   font-weight: 500;
 }
 
 .typeItemActive .typeItemLabel {
   color: #ffffff;
-  font-weight: 500;
+  font-weight: 600;
 }
 
-// ── 模式切换 ─────────────────────────────────────────────
+// ── 模式切换 ────────────────────────────────────────────────
 .modeSwitch {
   display: flex;
-  border: 1px solid #eeeeee;
-  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
   overflow: hidden;
   margin-bottom: 24px;
 }
@@ -130,36 +132,38 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.04);
   &:active { opacity: 0.6; }
-  & + & { border-left: 1px solid #eeeeee; }
+  & + & { border-left: 1px solid rgba(255, 255, 255, 0.1); }
 }
 
 .modeBtnOn {
-  background: #171a20;
+  background: #3e6ae1;
 }
 
 .modeBtnText {
   font-size: 26px;
-  color: #5c5e62;
+  color: rgba(255, 255, 255, 0.5);
   font-weight: 500;
 }
 
 .modeBtnOn .modeBtnText {
   color: #ffffff;
+  font-weight: 600;
 }
 
-// ── AI 状态 ───────────────────────────────────────────────
+// ── AI 状态 ─────────────────────────────────────────────────
 .aiStatus {
   padding: 28px 0;
-  border-top: 1px solid #f4f4f4;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .aiStatusText {
   font-size: 26px;
-  color: #8e8e8e;
+  color: rgba(255, 255, 255, 0.4);
 }
 
+// ── 照片 ────────────────────────────────────────────────────
 .photoGrid {
   display: flex;
   gap: 16px;
@@ -172,7 +176,7 @@
   border-radius: 12px;
   overflow: hidden;
   position: relative;
-  border: 1px solid #eeeeee;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   flex-shrink: 0;
 }
 
@@ -183,7 +187,7 @@
   top: 8px; right: 8px;
   width: 44px; height: 44px;
   border-radius: 50%;
-  background: rgba(0,0,0,0.48);
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -195,8 +199,8 @@
   width: 196px;
   height: 196px;
   border-radius: 12px;
-  border: 1px dashed #d0d0d4;
-  background: #fafafa;
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.03);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -205,53 +209,54 @@
   &:active { opacity: 0.6; }
 }
 
-.addPlus { font-size: 52px; color: #c8c8cc; line-height: 1; }
-.addLabel { font-size: 22px; color: #c8c8cc; }
+.addPlus { font-size: 52px; color: rgba(255, 255, 255, 0.2); line-height: 1; }
+.addLabel { font-size: 22px; color: rgba(255, 255, 255, 0.2); }
 
+// ── 描述 ────────────────────────────────────────────────────
 .textarea {
   width: 100%;
   min-height: 160px;
   background: transparent;
   border: none;
   font-size: 28px;
-  color: #393c41;
+  color: #ffffff;
   line-height: 1.7;
 }
 
-.ph { color: #d0d0d4; }
+.ph { color: rgba(255, 255, 255, 0.25); }
 
 .charCount {
   font-size: 22px;
-  color: #d0d0d4;
+  color: rgba(255, 255, 255, 0.2);
   text-align: right;
   margin-top: 12px;
   display: block;
 }
 
+// ── 提交 ────────────────────────────────────────────────────
 .submitBtn {
-  height: 88px;
-  border-radius: 4px;
+  height: 96px;
+  border-radius: 12px;
   background: #3e6ae1;
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 40px 40px 24px;
-  transition: background-color 0.33s;
-  &:active { opacity: 0.85; }
+  &:active { opacity: 0.8; }
 }
 
-.submitBtnLoading { opacity: 0.65; }
+.submitBtnLoading { opacity: 0.6; }
 
 .submitText {
-  font-size: 28px;
-  font-weight: 500;
+  font-size: 30px;
+  font-weight: 700;
   color: #fff;
-  letter-spacing: 2px;
+  letter-spacing: 4px;
 }
 
 .privacy {
   font-size: 22px;
-  color: #c8c8cc;
+  color: rgba(255, 255, 255, 0.2);
   text-align: center;
   line-height: 1.6;
   display: block;

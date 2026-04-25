@@ -8,10 +8,15 @@ export default {
     'pages/worker/record/index'
   ],
   window: {
-    backgroundTextStyle: 'dark',
-    navigationBarBackgroundColor: '#ffffff',
+    backgroundTextStyle: 'light',
+    navigationBarBackgroundColor: '#111111',
     navigationBarTitleText: 'LightScan',
-    navigationBarTextStyle: 'black'
+    navigationBarTextStyle: 'white'
+  },
+  networkTimeout: {
+    request:      60000,
+    uploadFile:   120000,
+    downloadFile: 60000,
   },
   permission: {
     'scope.userLocation': {
@@ -24,5 +29,6 @@ export default {
       desc: 'LightScan 需要麦克风用于录像'
     }
   },
-  requiredPrivateInfos: ['getLocation', 'onLocationChange']
+  requiredPrivateInfos: ['getLocation', 'onLocationChange'],
+  __usePrivacyCheck__: true
 }

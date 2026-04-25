@@ -1,48 +1,49 @@
 .page {
   min-height: 100vh;
-  background: #f8f8f8;
+  background: #111111;
   display: flex;
   flex-direction: column;
 }
 
+// ── 顶部 ───────────────────────────────────────────────
 .header {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  padding: 88px 48px 40px;
-  background: #ffffff;
-  border-bottom: 1px solid #eeeeee;
+  padding: 96px 48px 48px;
+  background: #111111;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .greeting {
   display: block;
   font-size: 52px;
   font-weight: 700;
-  color: #171a20;
+  color: #ffffff;
   letter-spacing: -1px;
   margin-bottom: 8px;
 }
 
 .greetingSub {
   font-size: 26px;
-  color: #9a9a9e;
+  color: rgba(255, 255, 255, 0.4);
 }
 
 .logoutBtn {
   padding: 14px 28px;
-  border: 1px solid #eeeeee;
-  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
   &:active { opacity: 0.5; }
 }
 
 .logoutText {
   font-size: 24px;
-  color: #9a9a9e;
+  color: rgba(255, 255, 255, 0.4);
 }
 
-// ── 大卡片 ───────────────────────────────────────────────
+// ── 功能卡片 ─────────────────────────────────────────────
 .tiles {
-  padding: 40px 40px;
+  padding: 48px 40px;
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -53,15 +54,15 @@
   align-items: center;
   gap: 32px;
   padding: 48px 44px;
-  background: #ffffff;
-  border: 1px solid #eeeeee;
-  border-radius: 20px;
-  &:active { opacity: 0.75; }
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 32px;
+  &:active { opacity: 0.65; }
 }
 
 .tileDark {
-  background: #171a20;
-  border-color: #171a20;
+  background: rgba(62, 106, 225, 0.12);
+  border-color: rgba(62, 106, 225, 0.25);
 }
 
 .recDot {
@@ -82,7 +83,7 @@
 .tileTitle {
   font-size: 40px;
   font-weight: 700;
-  color: #171a20;
+  color: #ffffff;
   letter-spacing: -0.5px;
 }
 
@@ -90,14 +91,14 @@
 
 .tileDesc {
   font-size: 26px;
-  color: #9a9a9e;
+  color: rgba(255, 255, 255, 0.4);
 }
 
-.tileDescLight { color: rgba(255, 255, 255, 0.45); }
+.tileDescLight { color: rgba(255, 255, 255, 0.4); }
 
 .tileArrow {
   font-size: 56px;
-  color: #c8c8cc;
+  color: rgba(255, 255, 255, 0.25);
   line-height: 1;
 }
 

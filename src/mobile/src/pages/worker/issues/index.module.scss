@@ -2,14 +2,15 @@
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #f8f8f8;
+  background: #111111;
   overflow: hidden;
 }
 
+// ── 固定顶部 ────────────────────────────────────────────
 .fixedTop {
   flex-shrink: 0;
-  background: #ffffff;
-  border-bottom: 1px solid #eeeeee;
+  background: #111111;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   padding: 72px 48px 0;
 }
 
@@ -29,24 +30,25 @@
 
 .backIcon {
   font-size: 56px;
-  color: #171a20;
+  color: rgba(255, 255, 255, 0.7);
   line-height: 1;
 }
 
 .topTitle {
   font-size: 40px;
   font-weight: 700;
-  color: #171a20;
+  color: #ffffff;
 }
 
 .topCount {
   font-size: 26px;
-  color: #9a9a9e;
+  color: rgba(255, 255, 255, 0.35);
 }
 
+// ── 统计栏 ─────────────────────────────────────────────
 .stats {
   display: flex;
-  border-top: 1px solid #eeeeee;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .statItem {
@@ -56,9 +58,9 @@
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  border-right: 1px solid #eeeeee;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
   &:last-child { border-right: none; }
-  &:active { background: #fafafa; }
+  &:active { background: rgba(255, 255, 255, 0.04); }
 }
 
 .statNum {
@@ -69,27 +71,33 @@
 
 .statLabel {
   font-size: 22px;
-  color: #9a9a9e;
+  color: rgba(255, 255, 255, 0.35);
 }
 
+// ── 筛选栏 ─────────────────────────────────────────────
 .filterBar {
   display: flex;
   padding: 20px 48px;
-  border-bottom: 1px solid #eeeeee;
-  background: #ffffff;
+  gap: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: #111111;
 }
 
 .filterTab {
   padding: 14px 28px;
-  border-radius: 8px;
+  border-radius: 12px;
+  border: 1px solid transparent;
   &:active { opacity: 0.6; }
 }
 
-.filterTabOn { background: #3e6ae1; }
+.filterTabOn {
+  background: rgba(62, 106, 225, 0.2);
+  border-color: rgba(62, 106, 225, 0.4);
+}
 
 .filterTabText {
   font-size: 26px;
-  color: #9a9a9e;
+  color: rgba(255, 255, 255, 0.4);
   font-weight: 500;
 }
 
@@ -98,6 +106,7 @@
   font-weight: 600;
 }
 
+// ── 列表 ───────────────────────────────────────────────
 .listScroll {
   flex: 1;
   height: 0;
@@ -106,14 +115,15 @@
 .list { padding: 20px 40px 0; }
 
 .taskCard {
-  background: #ffffff;
-  border: 1px solid #eeeeee;
-  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
   padding: 36px;
   margin-bottom: 16px;
   display: flex;
   flex-direction: column;
   gap: 14px;
+  &:active { background: rgba(255, 255, 255, 0.07); }
 }
 
 .taskTop {
@@ -124,7 +134,7 @@
 
 .taskId {
   font-size: 22px;
-  color: #c8c8cc;
+  color: rgba(255, 255, 255, 0.25);
   font-family: 'Courier New', monospace;
 }
 
@@ -133,7 +143,7 @@
   align-items: center;
   gap: 10px;
   padding: 6px 18px;
-  border-radius: 6px;
+  border-radius: 8px;
   border: 1px solid;
 }
 
@@ -158,7 +168,7 @@
 .taskType {
   font-size: 36px;
   font-weight: 700;
-  color: #171a20;
+  color: #ffffff;
 }
 
 .levelText {
@@ -168,7 +178,7 @@
 
 .taskLocation {
   font-size: 26px;
-  color: #5c5e62;
+  color: rgba(255, 255, 255, 0.45);
   line-height: 1.5;
 }
 
@@ -177,12 +187,12 @@
   align-items: center;
   justify-content: space-between;
   padding-top: 16px;
-  border-top: 1px solid #f4f4f4;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .taskTime {
   font-size: 24px;
-  color: #c8c8cc;
+  color: rgba(255, 255, 255, 0.25);
 }
 
 .actionText {
@@ -195,7 +205,7 @@
   display: block;
   text-align: center;
   font-size: 28px;
-  color: #c8c8cc;
+  color: rgba(255, 255, 255, 0.2);
   padding: 120px 0;
 }
 

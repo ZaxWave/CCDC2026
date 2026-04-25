@@ -2,16 +2,19 @@
 
 .page {
   min-height: 100vh;
-  background: #ffffff;
+  background: #111111;
   display: flex;
   flex-direction: column;
-  padding: 0 56px;   // 28dp
+  justify-content: center;
+  padding: 0 56px;
 }
 
 // ── 品牌 ──────────────────────────────────────────────
 .brand {
-  padding-top: 200px;  // 100dp
-  margin-bottom: 120px; // 60dp
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 96px;
 }
 
 .wordmark {
@@ -21,24 +24,23 @@
   margin-bottom: 20px;
 }
 
-// "Light" 细体深色，"Scan" 重体蓝色 — 文字即 logo
 .wordLight {
-  font-size: 80px;   // 40dp
+  font-size: 80px;
   font-weight: 300;
-  color: #393c41;
+  color: #ffffff;
   letter-spacing: -2px;
 }
 
 .wordScan {
-  font-size: 80px;   // 40dp
+  font-size: 80px;
   font-weight: 800;
   color: #3e6ae1;
   letter-spacing: -2px;
 }
 
 .tagline {
-  font-size: 24px;   // 12dp
-  color: #9a9a9e;
+  font-size: 24px;
+  color: rgba(255, 255, 255, 0.4);
   letter-spacing: 5px;
   margin-top: 8px;
   display: block;
@@ -47,21 +49,24 @@
 // ── 分隔线 ─────────────────────────────────────────────
 .divider {
   height: 1px;
-  background: #eeeeee;
-  margin-bottom: 0;
+  background: rgba(255, 255, 255, 0.08);
+  margin-bottom: 64px;
 }
 
 // ── 入口列表 ───────────────────────────────────────────
 .entries {
-  flex: 1;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
 }
 
 .entryRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 56px 0;   // 28dp 上下
-  &:active { opacity: 0.5; }
+  padding: 48px 44px;
+  &:active { opacity: 0.55; }
 }
 
 .entryLeft {
@@ -73,14 +78,14 @@
 }
 
 .entryTitle {
-  font-size: 40px;   // 20dp
+  font-size: 36px;
   font-weight: 600;
-  color: #171a20;
+  color: #ffffff;
 }
 
 .entryDesc {
-  font-size: 26px;   // 13dp
-  color: #9a9a9e;
+  font-size: 26px;
+  color: rgba(255, 255, 255, 0.4);
   line-height: 1.55;
 }
 
@@ -92,15 +97,19 @@
 }
 
 .entryTag {
-  padding: 4px 0;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 8px 20px;
 }
 
-.entryTagBlue {}
+.entryTagBlue {
+  background: rgba(62, 106, 225, 0.15);
+}
 
 .entryTagText {
   font-size: 22px;
-  font-weight: 500;
-  color: #9a9a9e;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .entryTagTextBlue {
@@ -109,21 +118,22 @@
 
 .entryChevron {
   font-size: 52px;
-  color: #d0d0d4;
+  color: rgba(255, 255, 255, 0.3);
   font-weight: 300;
   line-height: 1;
 }
 
 .rowDivider {
   height: 1px;
-  background: #eeeeee;
+  background: rgba(255, 255, 255, 0.06);
+  margin: 0 44px;
 }
 
 // ── 底部 ──────────────────────────────────────────────
 .footer {
   font-size: 22px;
-  color: #d0d0d4;
-  padding: 48px 0 80px;
+  color: rgba(255, 255, 255, 0.2);
+  padding: 64px 0 80px;
   text-align: center;
   letter-spacing: 2px;
 }

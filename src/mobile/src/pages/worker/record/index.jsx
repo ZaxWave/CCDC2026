@@ -1,6 +1,6 @@
 import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { uploadVideo } from '../../../api/detect'
 import CameraRecorder from './CameraRecorder'
 import styles from './index.module.scss'
@@ -44,12 +44,31 @@ export default function WorkerRecord() {
   const [totalDist,    setTotalDist]    = useState(0)
   const [currentSpeed, setCurrentSpeed] = useState(0)
   const [uploadMsg,    setUploadMsg]    = useState('')
+  const [camAuth,      setCamAuth]      = useState(false)
 
   const recorderRef  = useRef(null)
   const gpsTimerRef  = useRef(null)
   const timerRef     = useRef(null)
   const startTimeRef = useRef(0)
   const gpsPointsRef = useRef([])
+
+  // 页面加载时就申请权限，避免 Camera 组件挂载后才发现被拒
+  useEffect(() => {
+    Promise.all([
+      Taro.authorize({ scope: 'scope.camera' }),
+      Taro.authorize({ scope: 'scope.record' }),
+    ])
+      .then(() => setCamAuth(true))
+      .catch(() => {
+        Taro.showModal({
+          title: '需要摄像头和麦克风权限',
+          content: '请在设置中开启后返回重试',
+          confirmText: '去设置',
+          showCancel: false,
+          success: () => Taro.openSetting(),
+        })
+      })
+  }, [])
 
   const goBack = () => Taro.navigateBack()
 
@@ -93,7 +112,7 @@ export default function WorkerRecord() {
       Taro.showToast({ title: '录像功能仅支持微信小程序', icon: 'none', duration: 3000 })
       return
     }
-
+    if (phase !== 'idle' || !camAuth) return  // 状态锁，防止重入
     recorderRef.current.start(
       () => {
         startGps()
@@ -184,8 +203,8 @@ export default function WorkerRecord() {
         }
       </View>
 
-      {/* Camera 始终挂载到录像结束，避免 context 失效 */}
-      {showCamera && <CameraRecorder ref={recorderRef} />}
+      {/* Camera 仅在权限已授予时挂载 */}
+      {showCamera && camAuth && <CameraRecorder ref={recorderRef} />}
 
       {/* 录制中实时数据叠加 */}
       {phase === 'recording' && (

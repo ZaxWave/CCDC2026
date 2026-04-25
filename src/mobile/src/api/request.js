@@ -1,5 +1,7 @@
 import Taro from '@tarojs/taro'
 
+// 真机测试时改为电脑的局域网 IP，例如 http://192.168.1.100:8000
+// 可通过 src/mobile/.env 文件中 TARO_APP_API_URL=http://192.168.x.x:8000 配置
 export const BASE_URL = process.env.TARO_APP_API_URL || 'http://localhost:8000'
 
 function getToken() {

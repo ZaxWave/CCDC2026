@@ -41,6 +41,15 @@ export default function CitizenReport() {
     setAiDetected(false)
   }
 
+  async function compressPath(path) {
+    try {
+      const r = await Taro.compressImage({ src: path, quality: 30 })
+      return r.tempFilePath
+    } catch {
+      return path
+    }
+  }
+
   const handleAddPhoto = async () => {
     let res
     try {
@@ -55,7 +64,8 @@ export default function CitizenReport() {
       setAutoDetecting(true)
       setAiDetected(false)
       try {
-        const result = await uploadImage(newPaths[0], null, null)
+        const compressed = await compressPath(newPaths[0])
+        const result = await uploadImage(compressed, null, null)
         const dets = result?.detections ?? []
         if (dets.length > 0) {
           const top = dets.reduce((a, b) => (a.conf > b.conf ? a : b))
@@ -113,9 +123,10 @@ export default function CitizenReport() {
 
     // Step 2: 逐张上传
     try {
-      Taro.showLoading({ title: '上报中...' })
+      Taro.showLoading({ title: '上报中（首次加载模型约需30秒）...' })
       for (const filePath of photos) {
-        await uploadImage(filePath, lat, lng)
+        const compressed = await compressPath(filePath)
+        await uploadImage(compressed, lat, lng)
       }
       Taro.hideLoading()
       setLoading(false)

@@ -1,6 +1,6 @@
 .page {
   min-height: 100vh;
-  background: #ffffff;
+  background: #111111;
   display: flex;
   flex-direction: column;
   padding: 0 56px 80px;
@@ -21,14 +21,14 @@
 
 .backIcon {
   font-size: 52px;
-  color: #9a9a9e;
+  color: rgba(255, 255, 255, 0.6);
   line-height: 1;
   margin-top: -4px;
 }
 
 .backText {
   font-size: 28px;
-  color: #9a9a9e;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 // ── 标题 ──────────────────────────────────────────────
@@ -40,23 +40,23 @@
   font-size: 22px;
   font-weight: 700;
   letter-spacing: 4px;
-  color: #3e6ae1;
+  color: rgba(255, 255, 255, 0.3);
   margin-bottom: 24px;
   display: block;
 }
 
 .title {
   display: block;
-  font-size: 72px;   // 36dp
+  font-size: 72px;
   font-weight: 700;
-  color: #171a20;
+  color: #ffffff;
   margin-bottom: 14px;
   letter-spacing: -1px;
 }
 
 .subtitle {
   font-size: 28px;
-  color: #9a9a9e;
+  color: rgba(255, 255, 255, 0.4);
 }
 
 // ── 表单 ──────────────────────────────────────────────
@@ -71,14 +71,14 @@
   flex-direction: column;
   gap: 16px;
   padding: 40px 0;
-  border-bottom: 1px solid #eeeeee;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .fieldLabel {
   font-size: 22px;
   font-weight: 700;
   letter-spacing: 3px;
-  color: #9a9a9e;
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .inputRow {
@@ -90,37 +90,40 @@
 .inputIcon {
   font-size: 32px;
   line-height: 1;
+  color: rgba(255, 255, 255, 0.2);
   flex-shrink: 0;
 }
 
 .input {
   flex: 1;
-  font-size: 32px;   // 16dp
-  color: #171a20;
+  font-size: 32px;
+  color: #ffffff;
   background: transparent;
   border: none;
   height: 64px;
 }
 
-.ph { color: #d0d0d4; }
+.ph { color: rgba(255, 255, 255, 0.25); }
 
 // ── 错误 ──────────────────────────────────────────────
 .errorBox {
   margin-top: 32px;
-  padding: 24px 0;
-  border-top: 1px solid #fce8e8;
+  padding: 24px 28px;
+  background: rgba(220, 38, 38, 0.1);
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  border-radius: 8px;
 }
 
 .errorText {
   font-size: 26px;
-  color: #d93025;
+  color: #ef4444;
 }
 
 // ── 按钮 ──────────────────────────────────────────────
 .submitBtn {
   margin-top: 64px;
   height: 108px;
-  border-radius: 4px;
+  border-radius: 16px;
   background: #3e6ae1;
   display: flex;
   align-items: center;
@@ -132,14 +135,14 @@
 
 .submitText {
   font-size: 34px;
-  font-weight: 500;
+  font-weight: 700;
   color: #fff;
   letter-spacing: 6px;
 }
 
 .demoHint {
   font-size: 24px;
-  color: #d0d0d4;
+  color: rgba(255, 255, 255, 0.25);
   text-align: center;
   margin-top: 32px;
 }
