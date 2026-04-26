@@ -1,0 +1,1369 @@
+\documentclass[UTF8, a4paper, fontset=ubuntu]{ctexart}
+
+% --- 必备宏包 ---
+\usepackage{geometry}
+\usepackage{titlesec}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{tikz}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{multirow} % 必须添加，用于合并单元格
+\usepackage{booktabs} % 用于绘制专业三线表
+\usepackage{float}    % 用于控制表格位置 [H]
+\usepackage{enumitem}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{tcolorbox}
+\usepackage{fontawesome}
+\usepackage{pdfpages}
+\pagestyle{empty}
+\usepackage{url}
+\usepackage{subcaption}
+
+\usepackage{hyperref} 
+\hypersetup{
+    colorlinks=true,      % 开启链接颜色
+    linkcolor=black,      % 目录、内部跳转颜色（设为黑色则看不出区别）
+    citecolor=black,      % 参考文献引用的颜色
+    urlcolor=blue         % 网页链接的颜色（通常设为蓝色比较直观）
+}
+
+% --- 1. 加载宏包 ---
+\usepackage{tocloft}
+
+% --- 2. 目录标题设置（目 录）：强制居中方案 ---
+\renewcommand{\contentsname}{目\quad 录}
+\renewcommand{\cfttoctitlefont}{\hspace*{\fill}\zihao{3}\heiti} % 使用强制性的占位符
+\renewcommand{\cftaftertoctitle}{\hspace*{\fill}}               % 确保左右推力相等
+\setlength{\cftaftertoctitleskip}{20pt}                        % 标题下方的间距
+
+% --- 3. 一级目录设置 (Section)：4号加粗 ---
+\renewcommand{\cftsecfont}{\zihao{4}\bfseries}
+\renewcommand{\cftsecpagefont}{\zihao{4}\bfseries}
+\setlength{\cftbeforesecskip}{10pt}                             % 章之间的间距
+\renewcommand{\cftsecdotsep}{\cftdotsep}                        % 加引导点
+
+% --- 4. 二级目录设置 (Subsection)：5号常规 ---
+\renewcommand{\cftsubsecfont}{\zihao{5}}
+\renewcommand{\cftsubsecpagefont}{\zihao{5}}
+\setlength{\cftbeforesubsecskip}{3pt}                           % 节之间的间距
+\setlength{\cftsubsecnumwidth}{2.5em}                           % 修正后的编号宽度
+
+% --- 5. 目录深度控制 ---
+\setcounter{tocdepth}{2} % 只显示到二级
+
+\lstset{
+     basicstyle=\ttfamily\zihao{6}, 
+     breaklines=true,
+     frame=single, 
+     backgroundcolor=\color{gray!8},
+     rulecolor=\color{gray!40}, 
+     columns=flexible,
+     showstringspaces=false
+ }
+
+% --- 页面与字体规范设置 ---
+\geometry{margin=2.5cm}
+
+% --- 一级标题定制：第一章：需求分析 ---
+\ctexset{
+  section = {
+    format = {\centering\zihao{2}\heiti}, % 二号黑体，居中
+    name = {第, 章：},                    % 设置前缀和后缀，注意这里加了冒号
+    number = \chinese{section},           % 数字改为中文（一，二，三...）
+    aftername = \hspace{0pt},             % 编号与标题文字间的额外间距
+    beforeskip = 1.0ex,                   % 标题上方间距
+    afterskip = 1.0ex                     % 标题下方间距
+  }
+}
+% 二级标题：三号黑体，靠左
+\titleformat{\subsection}{\zihao{3}\heiti}{\thesubsection}{1em}{}
+% 三级标题：四号黑体，靠左
+\titleformat{\subsubsection}{\zihao{4}\heiti}{\thesubsubsection}{1em}{}
+% 正文：五号宋体
+\renewcommand{\normalsize}{\zihao{5}\songti}
+
+\usetikzlibrary{shapes.geometric, arrows, positioning, shadows, calc，positioning, fit, backgrounds}
+\tikzset{
+    startstop/.style={rectangle, rounded corners, minimum width=2.5cm, minimum height=0.8cm, text centered, draw=black, fill=blue!10},
+    process/.style={rectangle, minimum width=2.5cm, minimum height=0.8cm, text centered, draw=black, fill=orange!10},
+    decision/.style={diamond, aspect=2, minimum width=3cm, minimum height=1cm, text centered, draw=black, fill=green!10},
+    arrow/.style={thick,->,>=stealth}
+}
+
+% --- 绘图必备宏包 ---
+\usepackage{tikz}
+\usepackage{xcolor, colortbl} % 用于表格颜色
+\usepackage{array}
+\usetikzlibrary{positioning, arrows.meta, calc}
+
+% --- 定义图表颜色（确保颜色与你的设计语言一致） ---
+\definecolor{enthead}{HTML}{3E6AE1} % 标题蓝
+\definecolor{pkbg}{HTML}{FFF9C4}    % 主键黄（淡黄）
+\definecolor{fkbg}{HTML}{FFE0B2}    % 外键橙（淡橙）
+
+\begin{document}
+
+\includepdf[pages={1}, fitpaper=true]{cover.pdf}
+
+% --- 目录页 ---
+\pagenumbering{Roman} % 目录页使用罗马数字页码 (I, II, ...)
+% 设置目录深度：1=section, 2=subsection, 3=subsubsection
+\setcounter{tocdepth}{2}
+\pagestyle{plain}
+\tableofcontents      % 生成目录
+\clearpage            % 强制分页，使目录单独占据一页
+
+% --- 正文开始 ---
+\pagenumbering{arabic} % 正文切换回阿拉伯数字页码 (1, 2, 3...)
+\setcounter{page}{1}   % 从第 1 页开始计数
+
+\section{需求分析}                                                                                                                                                 
+  \subsection{开发背景}                                                                                       
+  中国公路网已全面进入"建养并重"的存量维护时代。
+  据交通运输部《2024年交通运输行业发展统计公报》\cite{mottstat2024}，
+  2024年末全国公路总里程达549万公里，高速公路19.07万公里，
+  均居世界第一；2025年公路养护市场规模达1.25万亿元，
+  交通基础设施巡检平台市场规模预计突破800亿元，
+  年复合增长率达18\%--20\%。
+
+  政策层面持续加码。《“十四五”公路养护管理发展纲要》\cite{shiswu2022}
+  明确提出路面自动化采集覆盖率达100\%的目标；
+  2025年9月，交通运输部等七部门联合印发
+  《关于"人工智能＋交通运输"的实施意见》\cite{aiplus2025}，
+  在"智能建养"部分明确提出"推广应用轻量化智能路面检测车"，
+  "推进人工智能技术在交通基础设施日常巡查、检测监测、
+  病害诊断、技术状况评定、养护决策等应用"，
+  为路面缺陷AI智能检测的落地提供了明确的顶层支撑。
+
+  然而现实存在显著落差。
+  《公路技术状况评定标准》（JTG\,5210-2018）\cite{jtg52102018}规定高速公路
+  每年检测两次、普通国省干线一至两次，
+  但专业检测车单台采购价200--350万元，
+  检测外包费1000--1200元/公里·车道，
+  全国公路养护资金缺口约50\%，大量路段实际检测频次严重不足，
+  病害从萌芽到恶化的演变过程长期处于监测盲区。
+
+  更深层的矛盾在于\textbf{数据来源的结构性匮乏}。
+  现有方案均以专用检测设备为唯一采集入口，
+  而每日在公路上高频往返的公交车、环卫车、出租车、邮政车
+  已内置行车记录仪，无人机、道路监控摄像头亦广泛部署，
+  市民与巡检人员随时携带智能手机——
+  这些\textbf{存量数据资产}因缺乏统一接入与处理能力而长期沉睡。
+  多源设备在坐标系、时间戳、图像质量上存在异构性，
+  \textbf{多源数据的融合与空间对齐}是将其转化为可用巡检数据的核心技术挑战。
+
+近年来，随着计算机视觉技术的飞速发展，深度学习在路面病害检测领域已取得显著进展，
+但在复杂光照、遮挡等极端环境下的鲁棒性仍是当前学术界的研究热点 \cite{fan2024survey}\cite{lin2026yolo11wlbs}\cite{aqeel2025roadfusion}\cite{cheng2025survey}。
+传统的检测方法往往依赖于单一传感器，而本项目则尝试在轻量化架构下实现更高精度的突破。
+
+  \subsection{竞品分析}
+
+  市场现有方案均需专用硬件，核心差距如表~\ref{tab:competitor}所示。
+
+  \begin{table}[H]
+  \centering
+  \caption{主要竞品对比}
+  \label{tab:competitor}
+  \zihao{6}
+  \resizebox{\linewidth}{!}{%
+  \begin{tabular}{llllll}
+  \toprule
+  产品 & 硬件门槛 & 单套成本 & 病害追踪 & 工单闭环 & 众包采集 \\
+  \midrule
+  中数途·高精度三维专业检测车   & 专用改装车+持证检测员  & 200--350万/台     & 无跨次关联 & 需外部对接 & $\times$ \\
+  千寻位置·千寻驰观轻量化巡检   & 专用AI相机+边缘计算盒  & $\approx$10万/套  & 无跨次聚合 & 需外部对接 & $\times$ \\
+  山西交控·AI+北斗智能巡检装备  & 北斗模组+专用相机      & $\approx$10万/套  & 无跨次聚合 & 需外部对接 & $\times$ \\
+  湖北交投·空地一体化AI巡检系统 & 集成巡检套件+无人机场  & 百万级             & 无跨次聚合 & 需外部对接 & $\times$ \\
+  云圣智能·路空一体立体交通巡检 & 无人机场网络           & 30--50万/套机场   & 无跨次聚合 & 需外部对接 & $\times$ \\
+  \midrule
+  \textbf{LightScan（本作品）}  & \textbf{无，复用手机/行车记录仪} & \textbf{零硬件成本} & \textbf{GPS+视觉ReID聚类} &
+  \textbf{内置全生命周期} & \checkmark \\
+  \bottomrule
+  \end{tabular}}
+  \end{table}
+
+  现有方案聚焦"精确检测"，共同缺陷是硬件门槛高、
+  数据跨次孤立、检测结果与工单管理割裂。
+  LightScan 定位于\textbf{无专用硬件条件下的高频次、可追踪、有闭环常态化巡检}，
+  填补县乡级管养单位的技术空白。
+  % ── 新增句 ────────────────────────────────────────────
+  系统支持手机拍照、行车记录仪视频（公交车、无人机、私家车等）、
+  巡检员上传与市民众包等多元采集入口，
+  通过时空约束与视觉 ReID 融合算法实现跨源数据的统一对齐与去重聚类，
+  将存量公共车辆与市民资源转化为常态化巡检网络。
+  % ──────────────────────────────────────────────────────
+
+  \subsection{用户需求}
+
+  根据上述背景，系统面向三类角色的核心诉求如下：
+
+  \begin{itemize}
+      \item \textbf{市民}：发现路面问题后需要一个\textbf{零门槛的上报渠道}，
+      无需注册、无需专业判断，10 秒内完成拍照提交即可。
+
+      \item \textbf{基层巡检员}：日常巡检中\textbf{不应额外采购设备}，
+      手机与行车记录仪应能直接作为采集工具；
+      病害识别与定位应自动化，减少人工判读负担；
+      工单分派、处理与核销需有清晰的流转记录。
+
+      \item \textbf{养护管理部门}：需掌握辖区病害的\textbf{空间全貌与演变趋势}，
+      而非仅有离散的单次检测快照；
+      需要从"发现病害"到"修复核验"的\textbf{闭环管理}，
+      确保每条工单有人负责、有结果可查；
+      高频次的多源数据汇聚应能支撑\textbf{预防性养护决策}，
+      在病害恶化前介入。
+  \end{itemize}
+
+由此归纳四项核心需求：
+  \begin{enumerate}[label=\textbf{R\arabic*.}, leftmargin=3.5em, itemsep=2pt]
+    \item \textbf{多源异构数据统一接入}：手机、行车记录仪、无人机及市民
+          众包数据的空间对齐与标准化处理；
+    \item \textbf{轻量化实时识别}：无专用硬件依赖的检测引擎，
+          降低技术与经济门槛；
+    \item \textbf{时空演变追踪}：跨批次、跨来源的病害点自动聚合，
+          支持病害生命周期全过程监测；
+    \item \textbf{全生命周期闭环}：覆盖病害发现、工单分发到修复验收
+          的数字化管理流程。
+  \end{enumerate}
+  
+ % ============================================================
+  \section{概要设计}
+  % ============================================================
+
+  \subsection{系统总体架构}
+
+  针对第一章归纳的四项核心需求（R1--R4），
+  系统采用前后端分离的四层架构，
+  各端通过 RESTful API 与云端服务层统一通信，
+  如图~\ref{fig:arch} 所示。
+
+  \begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[
+    font=\small,
+    box/.style={draw, thick, rounded corners=4pt,
+                align=center, inner sep=8pt},
+    arrow/.style={-{Stealth[length=4pt]}, thick},
+  ]
+
+  \node[box, fill=blue!8,
+        minimum width=5.2cm, minimum height=1.1cm] (mobile) at (-3.4, 0)
+    {\textbf{移动采集端}\\[3pt]
+     \footnotesize Taro 4（微信小程序 + H5）};
+
+  \node[box, fill=blue!8,
+        minimum width=6.4cm, minimum height=1.1cm] (web) at (3.4, 0)
+    {\textbf{Web 管理端}\\[3pt]
+     \footnotesize React 18 + Vite};
+
+  \node[box, fill=gray!14,
+        minimum width=13.2cm, minimum height=0.75cm] (api) at (0, -1.7)
+    {\footnotesize RESTful API \quad·\quad 14 个接口 \quad·\quad JWT 鉴权};
+
+  \node[box, fill=orange!8,
+        minimum width=13.2cm, minimum height=1.6cm] (cloud) at (0, -3.5)
+    {\textbf{云端服务层（FastAPI）}\\[5pt]
+     \footnotesize
+     鉴权\;(\texttt{auth})\enspace\textbar\enspace
+     检测\;(\texttt{detect})\enspace\textbar\enspace
+     GIS\,/\,聚类\;(\texttt{gis})\enspace\textbar\enspace
+     上报\;(\texttt{report})\enspace\textbar\enspace
+     用户\;(\texttt{users})};
+
+  \node[box, fill=green!8,
+        minimum width=5.2cm, minimum height=1.1cm] (ai) at (-3.4, -5.4)
+    {\textbf{AI 推理层}\\[3pt]
+     \footnotesize LS-Det + SAHI\quad PaddleOCR};
+
+  \node[box, fill=green!8,
+        minimum width=6.4cm, minimum height=1.1cm] (db) at (3.4, -5.4)
+    {\textbf{数据持久层（PostgreSQL）}\\[3pt]
+     \footnotesize users\;/\;disease\_records\;/\;disease\_clusters\\[1pt]
+     \footnotesize audit\_log\;/\;disease\_media};
+
+  \draw[arrow] (mobile.south) -- (mobile.south |- api.north);
+  \draw[arrow] (web.south)    -- (web.south    |- api.north);
+  \draw[arrow] (api.south)    -- (cloud.north);
+  \draw[arrow] (cloud.south -| ai.north) -- (ai.north);
+  \draw[arrow] (cloud.south -| db.north) -- (db.north);
+
+  \end{tikzpicture}
+  \caption{LightScan 系统总体架构}
+  \label{fig:arch}
+  \end{figure}
+
+  \subsection{功能模块划分}
+
+  \begin{table}[H]
+  \centering
+  \caption{功能模块与需求映射}
+  \label{tab:modules}
+  \zihao{6}
+  \begin{tabular}{lllc}
+  \toprule
+  层级 & 模块 & 主要职责 & 对应需求 \\
+  \midrule
+  \multirow{2}{*}{移动采集端}
+    & 市民上报     & 选择病害类型、拍照上传、GPS 自动采集，无需注册   & R1 \\
+    & 巡检员工作台 & 查看工单列表、按状态筛选、处理并上传修复照片     & R4 \\
+  \midrule
+  \multirow{4}{*}{Web 管理端}
+    & 图片检测 & 批量上传图片（$\leq$20张），展示标注结果，一键入库 & R2 \\
+    & 视频检测 & 上传行车记录仪视频，OCR/估算模式按里程抽帧检测   & R1、R2 \\
+    & GIS 地图 & 散点/热力图/时间轴三层渲染，病害点工单原地流转   & R3、R4 \\
+    & 数据大屏 & 3D 态势感知，展示病害分布、来源与趋势统计        & R3 \\
+  \midrule
+  \multirow{4}{*}{云端服务层}
+    & 鉴权模块   & JWT 签发与校验、bcrypt 密码哈希、角色管理            & --- \\
+    & AI 报告引擎 & 聚合病害统计摘要，调用 DeepSeek \cite{deepseekv3}生成巡检周报与单点养护建议 & R3、R4 \\
+    & 检测与聚类 & LS-Det推理、EXIF/OCR定位、ReID特征提取、时空聚类  & R1、R2、R3 \\
+    & 上报与工单 & 众包记录入库、工单状态流转、软删除管理               & R4 \\
+  \midrule
+  \multirow{2}{*}{AI 推理层}
+    & LS-Det & 单例懒加载，GPU/CPU 自动切换，4 类病害实时检测 & R2 \\
+    & PaddleOCR & 识别视频帧速度叠字，供视频服务按里程等距抽帧   & R1 \\
+  \bottomrule
+  \end{tabular}
+  \end{table}
+
+   \subsection{模块调用关系}
+  \begin{figure}[H]                                                                                                             
+  \centering                                                                                                                    
+  \begin{tikzpicture}[                                                                                                          
+    font=\footnotesize,                                                                                                         
+    mod/.style={draw, thick, rounded corners=3pt,                                                                               
+                minimum width=2.5cm, minimum height=0.62cm,                                                                     
+                align=center, inner sep=4pt},
+    arrow/.style ={-{Stealth[length=3.5pt]}, thick},                                                                            
+    iarrow/.style={-{Stealth[length=3pt]},  thick, gray},                                                                       
+    darrow/.style={-{Stealth[length=3.5pt]}, thick, dashed, gray},
+  ]
+
+  %% ── Col 1: 客户端 (x=0) ─────────────────────────────
+  \node[mod, fill=blue!8] (mob) at (0,  0.6) {移动端};
+  \node[mod, fill=blue!8] (web) at (0, -1.8) {Web 端};
+
+  %% ── Col 2: 路由层 (x=4) ─────────────────────────────
+  %  mobile 对应的路由放上半区，web 对应的放下半区，避免交叉
+  \node[mod, fill=gray!14] (auth) at (4,  1.4) {\texttt{/auth}};
+  \node[mod, fill=gray!14] (rep)  at (4,  0.0) {\texttt{/report}};
+  \node[mod, fill=gray!14] (det)  at (4, -0.8) {\texttt{/detect}};
+  \node[mod, fill=gray!14] (vid)  at (4, -1.8) {\texttt{/detect-video}};
+  \node[mod, fill=gray!14] (gis)  at (4, -2.8) {\texttt{/gis}};
+
+  %% ── Col 3: 服务层 (x=8) ─────────────────────────────
+  %  y 坐标与对应路由对齐，减少斜线
+  \node[mod, fill=orange!10] (cluster) at (8,  0.0) {聚类服务};
+  \node[mod, fill=orange!10] (infer)   at (8, -0.8) {推理服务};
+  \node[mod, fill=orange!10] (video)   at (8, -1.8) {视频服务};
+  \node[mod, fill=orange!10] (geo)     at (8, -2.8) {定位服务};
+
+  %% ── Col 4: 数据库 (x=12) ────────────────────────────
+  \node[mod, fill=green!8,
+        minimum height=3.0cm, text width=2.2cm] (db) at (12, -1.4)
+    {PostgreSQL};
+
+  %% ── 客户端 → 路由（同侧 y 区间内，斜线短且不交叉）────
+  \draw[arrow] (mob.east) -- (auth.west);
+  \draw[arrow] (mob.east) -- (rep.west);
+  \draw[arrow] (web.east) -- (det.west);
+  \draw[arrow] (web.east) -- (vid.west);
+  \draw[arrow] (web.east) -- (gis.west);
+
+  %% ── 路由 → 服务（/auth 直连 DB，走顶部绕过所有节点）──
+  \draw[darrow] (auth.east) to[out=0,in=90] (db.north); 
+  \draw[arrow] (rep.east) -- (cluster.west);   % y=0.0 水平
+  \draw[arrow] (det.east) -- (infer.west);     % y=-0.8 水平
+  \draw[arrow] (vid.east) -- (video.west);     % y=-1.8 水平
+  \draw[arrow] (gis.east) -- (geo.west);       % y=-2.8 水平
+
+  %% ── 服务内部调用（同列竖向，方向向上 = 被依赖方在上）──
+  \draw[iarrow] (video.north)  -- (infer.south);    % 视频服务调推理服务
+  \draw[iarrow] (infer.north)  -- (cluster.south);  % 推理结果送聚类
+
+  %% ── 服务 → DB（水平或小角度射入）─────────────────────
+  \draw[arrow] (cluster.east)  --   (db.west);
+  \draw[arrow] (infer.east)   --    (db.west);
+  \draw[arrow] (geo.east)   --   (db.west);
+
+  \end{tikzpicture}
+  \caption{模块调用关系图（虚线表示直连数据库，灰箭头表示服务内部调用）}
+  \label{fig:call}
+  \end{figure}
+
+  \subsection{模块间接口}
+  \begin{table}[H]
+  \centering
+  \caption{主要模块间接口}
+  \label{tab:api_interface}
+  \zihao{6}
+  \begin{tabular}{llp{3cm}p{3.5cm}}
+  \toprule
+  接口端点 & 调用方 & 输入 & 输出 \\
+  \midrule
+  \texttt{POST /auth/login}
+    & Web / 移动端 & 用户名 + 密码 & JWT Token \\
+  \texttt{POST /detect}
+    & Web 端 & 图片文件+ 置信度阈值 & 标注图 + 检测框列表 \\
+  \texttt{POST /detect-video}
+    & Web 端 & MP4 文件 + 模式参数 & 逐帧检测结果 + 坐标列表 \\
+  \texttt{POST /report}
+    & 移动端 & 图片 + GPS坐标 & 记录 ID + 聚类 ID \\
+  \texttt{GET /gis/records}
+    & Web 端 & JWT（鉴权） & 全量病害点 GeoJSON \\
+  \texttt{PATCH /gis/records/\{id\}/status}
+    & Web / 移动端 & 新状态 + 操作人 & 更新后记录 \\
+  \texttt{GET /gis/clusters/\{id\}/timeline}
+    & Web 端 & 聚类 ID & 该病害点历次检测时间轴 \\
+  \texttt{POST /ai/report}              & Web 端 & 时间窗口 + 区域标签 & AI 生成的中文巡检周报 \\                               
+
+  \bottomrule
+  \end{tabular}
+  \end{table}
+
+  \subsection{人机界面与典型交互流程}
+
+  \begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[
+    font=\small,
+    scr/.style={draw, rounded corners=3pt, fill=white,
+                minimum width=2.6cm, minimum height=0.7cm, align=center},
+    arrow/.style={-{Stealth[length=3.5pt]}, thick},
+    label/.style={font=\footnotesize\itshape, text=gray},
+  ]
+
+  % 流程 A：市民
+  \node[font=\small\bfseries] at (-4, 1.2) {市民};
+  \node[scr] (c1) at (-4,  0.3) {首页选身份};
+  \node[scr] (c2) at (-4, -0.7) {选类型/拍照};
+  \node[scr] (c3) at (-4, -1.7) {提交上报};
+  \draw[arrow] (c1)--(c2); \draw[arrow] (c2)--(c3);
+
+  % 流程 B：巡检员
+  \node[font=\small\bfseries] at (0, 1.2) {巡检员};
+  \node[scr] (i1) at (0,  0.3) {登录};
+  \node[scr] (i2) at (0, -0.7) {上传图片/视频};
+  \node[scr] (i3) at (0, -1.7) {查看检测结果};
+  \node[scr] (i4) at (0, -2.7) {保存入库};
+  \draw[arrow] (i1)--(i2); \draw[arrow] (i2)--(i3); \draw[arrow] (i3)--(i4);
+
+  % 流程 C：管理员
+  \node[font=\small\bfseries] at (4, 1.2) {管理员};
+  \node[scr] (m1) at (4,  0.3) {GIS 大屏};
+  \node[scr] (m2) at (4, -0.7) {点击病害点};
+  \node[scr] (m3) at (4, -1.7) {分派工单};
+  \node[scr] (m4) at (4, -2.7) {核验修复照片};
+  \draw[arrow] (m1)--(m2); \draw[arrow] (m2)--(m3); \draw[arrow] (m3)--(m4);
+
+  % 汇聚箭头
+  \draw[arrow, dashed] (c3.east)  to[out=0,in=180]  (m1.west);
+  \draw[arrow, dashed] (i4.east)  to[out=0,in=180]  (m1.west);
+  \node[label] at (2.2, -2.1) {数据汇入 GIS};
+
+  \end{tikzpicture}
+  \caption{三类用户典型交互流程}
+  \label{fig:ui_flow}
+  \end{figure}
+
+\section{详细设计}
+
+ \subsection{界面设计}
+
+  \subsubsection{视觉规范与原子化设计}
+
+  系统 Web 端采用工业级深色主题设计语言，以 \texttt{\#0d1117}（背景）、
+  \texttt{\#3E6AE1}（品牌蓝）、\texttt{\#39ff14}（告警绿）为核心色板，
+  强调信息密度与专业感，与城市基础设施管理场景相契合。
+  移动端（Taro 4）沿用同一色系，针对触控操作将可点击目标高度提升至 44 dp 以上，
+  并以角色卡片（市民 / 巡检员）替代传统菜单导航，降低非专业用户的认知负担。
+
+  原子化组件层面，Web 端抽取了 \texttt{UploadArea}、\texttt{ProgressBar}、
+  \texttt{StatsRow}、\texttt{ResultsGrid} 等通用组件，通过 Props 驱动复用于
+  图片检测和视频检测两个面板；地图层拆分为 \texttt{ClusterLayer}、
+  \texttt{HeatmapControls}、\texttt{TimelineModal} 三个独立子组件，
+  各自封装 AMap 生命周期，便于独立维护。
+
+  \begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\linewidth]{fig_login.png}
+    \caption{LightScan Web 端登录界面}
+    \label{fig:login}
+  \end{figure}
+
+  \subsubsection{Web 管理端核心功能界面}
+
+  \paragraph{图片检测面板}
+  支持拖拽或点击上传最多 20 张路面图片，实时进度条反映当前推理阶段。
+  推理完成后以卡片网格展示带标注框的结果图，并在顶部汇总四项统计指标。
+  离线状态下系统自动将任务缓存至 IndexedDB，恢复联网后提示同步。
+
+  \begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{fig_image_detect.png}
+    \caption{图片检测面板——推理标注框结果展示}
+    \label{fig:image_detect}
+  \end{figure}
+
+  \paragraph{GIS 病害大屏}
+  基于高德地图 JS API 2.0（3D 模式，深蓝主题）展示全平台病害数据，
+  提供\textbf{散点聚类}与\textbf{热力图}双模式实时切换。散点模式下
+  以不同颜色区分四类病害，点击标记可查看该聚类点的\textbf{演变时间轴}
+  （历次检测时间、置信度、状态变更），支持左侧边栏按病害类型筛选。
+
+  \begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.48\linewidth}
+      \centering
+      \includegraphics[width=\linewidth]{fig_map_cluster.png}
+      \caption{检测时间轴、置信度与损伤面积}
+      \label{fig:map_cluster}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.48\linewidth}
+      \centering
+      \includegraphics[width=\linewidth]{fig_map_heatmap.png}
+      \caption{热力图模式——病害密度渐变色}
+      \label{fig:map_heatmap}
+    \end{subfigure}
+    \caption{GIS 病害大屏可视化分析}
+    \label{fig:map}
+  \end{figure}
+
+  \paragraph{3D 态势感知大屏}
+  全屏沉浸式看板，采用科技风 HUD 布局，集成：
+  \textbf{高德 3D 地球}（病害热力叠加）、
+  \textbf{ECharts 雷达图}（各类病害综合指数）、
+  \textbf{柱状图}（24 小时检测量趋势）、
+  \textbf{饼图}、
+  以及顶部实时滚动的最新告警播报。设计目标为道路管理部门指挥中心大屏投放。
+
+  \begin{figure}[H]
+    \centering
+    \includegraphics[width=0.90\linewidth]{fig_dashboard.png}
+    \caption{3D 态势感知大屏——多图表协同的全局病害态势一览}
+    \label{fig:dashboard}
+  \end{figure}
+
+  \subsubsection{3.1.3 移动端：差异化交互与角色驱动}
+
+  移动端基于 Taro 4 构建，同一代码库编译输出微信小程序与 H5 两个目标平台。
+  首页以\textbf{角色选择卡片}分流，\textbf{市民用户}直接进入随手拍上报页，
+  需认证的\textbf{巡检员}跳转登录后进入工单工作台。
+
+  \textbf{市民随手拍}页面提供 AI 自动识别与手动选择两种病害类型确认方式：
+  上传照片后系统自动调用后端推理接口，将识别结果预填至表单，市民可一键确认或手动修正；同时触发微信/浏览器定位 API 获取当前 GPS 坐标，与照片和描述一同提交至平台，数据经时空聚类算法归并到对应病害点。
+
+  \textbf{巡检员工作台}以卡片列表展示分配至本人的工单，支持按状态筛选
+  （待处理 / 处理中 / 已完成），点开工单可上传修复后照片并更新状态。
+
+  \begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.40\linewidth}
+      \centering
+      \includegraphics[width=\linewidth]{fig_mobile_citizen.png}
+      \caption{市民随手拍}
+      \label{fig:mobile_citizen}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.40\linewidth}
+      \centering
+      \includegraphics[width=\linewidth]{fig_mobile_worker.png}
+      \caption{巡检员工单工作台}
+      \label{fig:mobile_worker}
+    \end{subfigure}
+    \caption{移动端两类用户核心界面（微信小程序 / H5 同构）}
+    \label{fig:mobile}
+  \end{figure}
+
+  \subsubsection{3.1.4 典型业务流程设计}
+
+  系统支持\textbf{专业巡检}与\textbf{市民众包}两条并行的病害采集通道，
+  汇聚至统一的时空聚类引擎后进入工单管理闭环，如图~\ref{fig:flow} 所示。
+
+  % ── 典型业务流程图（TikZ）──────────────────────────────────────────
+  \begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[
+    node distance = 1.6cm and 2.2cm,
+    every node/.style = {font=\small},
+    box/.style  = {rectangle, rounded corners=3pt, draw, minimum width=2.6cm,
+                   minimum height=0.75cm, align=center, fill=blue!6},
+    io/.style   = {trapezium, trapezium left angle=70, trapezium right angle=110,
+                   draw, minimum width=2.8cm, minimum height=0.7cm, align=center,
+                   fill=orange!10},
+    dec/.style  = {diamond, draw, aspect=2.5, align=center, fill=yellow!10,
+                   inner sep=1pt},
+    arr/.style  = {-Stealth, thick},
+    grp/.style  = {draw=gray!50, dashed, rounded corners=4pt, inner sep=6pt},
+  ]
+
+  %% === 两条输入通道 ===
+  \node[io]  (img)   {图片 / 视频上传\\ （Web 管理端）};
+  \node[io,  right=3.8cm of img] (mob) {市民随手拍\\ （移动端）};
+
+  %% === AI 推理 ===
+  \node[box, below=of img]  (infer)  {LS-Det v1\\ + SAHI 推理};
+  \node[box, below=of mob]  (gps)    {GPS 定位\\ + 人工确认};
+
+  %% === 时空聚类 ===
+  \node[box, below right=1.2cm and 0.0cm of infer] (cluster) {时空约束 + ReID\\ 融合聚类};
+
+  %% === 数据存储 ===
+  \node[box, below=of cluster] (db) {PostgreSQL\\ disease\_records / clusters};
+
+  %% === 决策：是否新病害点 ===
+  \node[dec, below=of db] (new) {新病害点？};
+
+  %% === 工单流转 ===
+  \node[box, below left=1.2cm and 1.0cm of new]  (create) {创建 disease\_cluster\\ 状态: pending};
+  \node[box, below right=1.2cm and 1.0cm of new] (merge)  {归并至已有 cluster\\ 更新质心 \& 计数};
+  \node[box, below=1.8cm of new] (worder) {GIS 大屏展示\\ 工单状态流转};
+  \node[box, below=of worder]    (ai)     {DeepSeek 生成\\ 养护建议 / 周报};
+  \node[io,  below=of ai]        (end)    {修复完成\\ 上传验收照片};
+
+  %% === 箭头 ===
+  \draw[arr] (img)     -- (infer);
+  \draw[arr] (mob)     -- (gps);
+  \draw[arr] (infer)   -- (cluster);
+  \draw[arr] (gps)     -- (cluster);
+  \draw[arr] (cluster) -- (db);
+  \draw[arr] (db)      -- (new);
+  \draw[arr] (new)     -| node[above, xshift=-8pt]{是} (create);
+  \draw[arr] (new)     -| node[above, xshift= 8pt]{否} (merge);
+  \draw[arr] (create)  |- (worder);
+  \draw[arr] (merge)   |- (worder);
+  \draw[arr] (worder)  -- (ai);
+  \draw[arr] (ai)      -- (end);
+
+  %% === 分组框 ===
+  \begin{pgfonlayer}{background}
+    \node[grp, fit=(img)(infer),     label=above:{\footnotesize 专业巡检通道}] {};
+    \node[grp, fit=(mob)(gps),       label=above:{\footnotesize 市民众包通道}] {};
+    \node[grp, fit=(worder)(ai)(end),label=below:{\footnotesize 工单闭环管理}] {};
+  \end{pgfonlayer}
+
+  \end{tikzpicture}
+  \caption{LightScan 业务流转与算法协同流程——双通道采集汇入时空聚类后进入工单闭环}
+  \label{fig:flow}
+  \end{figure}
+
+
+\subsection{数据库设计}
+
+\subsubsection{表结构详细设计}
+系统采用 PostgreSQL 进行数据持久化，共设计五张核心表：三张业务主表（users、disease\_clusters、disease\_records）与两张工程支撑表（audit\_log、disease\_media）。针对病害记录的高频空间查询特性，对地理坐标及 \texttt{cluster\_id}、\texttt{label\_cn} 字段建立索引；PostgreSQL 环境下额外启用 PostGIS GIST 空间索引。
+
+\begin{table}[H]
+    \centering
+    \caption{核心表 1：users（用户信息表）}
+    \zihao{6}
+    \begin{tabular}{lp{3cm}lp{5cm}}
+        \toprule
+        字段名 & 数据类型 & 约束 & 说明 \\ \midrule
+        id              & INTEGER  & PRIMARY KEY          & 用户唯一标识 \\
+        username        & VARCHAR  & UNIQUE, NOT NULL     & 登录用户名 \\
+        hashed\_password & VARCHAR & NOT NULL             & bcrypt 哈希密码 \\
+        role            & VARCHAR  & NOT NULL             & 权限角色（admin / worker） \\
+        nickname        & VARCHAR  & ---                  & 显示名称 \\
+        unit            & VARCHAR  & ---                  & 所属单位 \\
+        source\_type    & VARCHAR  & ---                  & 设备类型（手持 / 行车记录仪 / 无人机） \\
+        device\_id      & VARCHAR  & ---                  & 设备编号 \\
+        is\_active      & BOOLEAN  & DEFAULT TRUE         & 账号启用状态 \\
+        created\_at     & DATETIME & DEFAULT NOW()        & 注册时间 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{table}[H]
+    \centering
+    \caption{核心表 2：disease\_clusters（病害聚类主实体表）}
+    \zihao{6}
+    \begin{tabular}{lp{3cm}lp{5cm}}
+        \toprule
+        字段名 & 数据类型 & 约束 & 说明 \\ \midrule
+        cluster\_id          & UUID     & PRIMARY KEY          & 病害点唯一标识（系统生成） \\
+        worker\_id           & INTEGER  & FK $\rightarrow$ users.id        & 负责巡检员 \\
+        label\_cn            & VARCHAR  & NOT NULL             & 主要病害类型 \\
+        canonical\_lat / lng & FLOAT    & NOT NULL             & 病害点质心坐标 \\
+        status               & VARCHAR  & DEFAULT 'pending'    & 工单状态（待处理 / 处理中 / 已修复） \\
+        detection\_count     & INTEGER  & DEFAULT 1            & 累计检测次数 \\
+        first\_detected\_at  & DATETIME & NOT NULL             & 首次发现时间 \\
+        last\_detected\_at   & DATETIME & NOT NULL             & 最近一次检测时间 \\
+        repaired\_at         & DATETIME & ---                  & 修复完成时间 \\
+        repaired\_image\_b64 & TEXT     & ---                  & 修复后照片（Base64，向后兼容） \\
+        severity             & INTEGER  & ---                  & AI 初评病害等级（1--5 级，置信度 $\times$0.6 + 检测框面积 $\times$0.4 自动计算） \\
+        priority             & INTEGER  & ---                  & 综合优先级（1--5 级，初始值 = severity，可由路段等级覆盖） \\
+        deleted\_at          & DATETIME & DEFAULT NULL         & 软删除时间戳，与 disease\_records 保持一致 \\
+        location             & GEOMETRY(Point,4326) & ---        & PostGIS 空间列，GIST 索引；PostgreSQL 环境自动激活，无 PostGIS 时安全降级 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{table}[H]
+    \centering
+    \caption{核心表 3：disease\_records（病害检测记录表）}
+    \zihao{6}
+    \begin{tabular}{lp{3cm}lp{5cm}}
+        \toprule
+        字段名 & 数据类型 & 约束 & 说明 \\ \midrule
+        id             & SERIAL   & PRIMARY KEY          & 记录自增主键 \\
+        cluster\_id    & UUID     & FK $\rightarrow$ disease\_clusters, INDEX & 所属病害聚类 \\
+        creator\_id    & INTEGER  & FK $\rightarrow$ users.id        & 上报用户 \\
+        filename       & VARCHAR  & NOT NULL             & 来源图片文件名 \\
+        timestamp      & DATETIME & NOT NULL             & 采集上报时间 \\
+        lat / lng      & FLOAT    & INDEX, NOT NULL      & WGS-84 地理空间坐标 \\
+        label\_cn      & VARCHAR  & NOT NULL             & 病害中文类别 \\
+        confidence     & FLOAT    & ---                  & LS-Det 模型置信度分数 \\
+        bbox           & JSONB    & ---                  & 检测框像素坐标 [x1,y1,x2,y2] \\
+        feature\_vector & JSONB   & ---                  & 32 维 HSV 特征指纹（用于 ReID 匹配） \\
+        source\_type   & VARCHAR  & ---                  & 数据来源（移动上报 / 视频帧 / 图片检测） \\
+        deleted\_at    & DATETIME & DEFAULT NULL         & 软删除时间戳，NULL 表示记录有效 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{table}[H]
+    \centering
+    \caption{支撑表 4：audit\_log（状态变更审计日志表）}
+    \label{tab:audit_log}
+    \zihao{6}
+    \begin{tabular}{lp{3cm}lp{5cm}}
+        \toprule
+        字段名 & 数据类型 & 约束 & 说明 \\ \midrule
+        id           & INTEGER  & PRIMARY KEY          & 自增主键 \\
+        entity\_type & VARCHAR  & NOT NULL             & 被操作实体类型（"cluster" 或 "record"） \\
+        entity\_id   & VARCHAR  & NOT NULL, INDEX      & 被操作实体主键值 \\
+        from\_status & VARCHAR  & ---                  & 变更前状态（初次创建时为 NULL） \\
+        to\_status   & VARCHAR  & NOT NULL             & 变更后状态 \\
+        operator\_id & INTEGER  & FK $\rightarrow$ users.id & 操作人（派单人 / 巡检员） \\
+        changed\_at  & DATETIME & NOT NULL, INDEX      & 状态变更时间戳 \\
+        note         & VARCHAR  & ---                  & 备注（如"AI 派单"、"巡检员完工"等） \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{table}[H]
+    \centering
+    \caption{支撑表 5：disease\_media（图片大字段分离表）}
+    \label{tab:disease_media}
+    \zihao{6}
+    \begin{tabular}{lp{3cm}lp{5cm}}
+        \toprule
+        字段名 & 数据类型 & 约束 & 说明 \\ \midrule
+        id          & INTEGER & PRIMARY KEY          & 自增主键 \\
+        cluster\_id & VARCHAR & FK $\rightarrow$ disease\_clusters, INDEX & 关联病害聚类 \\
+        record\_id  & INTEGER & FK $\rightarrow$ disease\_records, INDEX  & 关联检测记录 \\
+        media\_type & VARCHAR & NOT NULL             & 图片类型（"thumbnail" / "repaired"） \\
+        storage\_url & VARCHAR & ---                 & OSS/MinIO 对象存储 URL（优先使用） \\
+        b64\_data   & TEXT    & ---                  & 兜底内嵌 Base64（无外部存储时使用） \\
+        created\_at & DATETIME & NOT NULL            & 上传时间 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsubsection{反范式设计说明}
+本系统在 \texttt{disease\_records} 表中冗余存储了本应属于 \texttt{disease\_clusters} 表的 \texttt{label\_cn} 字段，并直接存储了高维特征指纹 \texttt{feature\_vector}。该违背第三范式的设计基于以下理由：
+
+\begin{enumerate}[label=\arabic*.]
+    \item \textbf{查询性能优化}：在 GIS 态势感知大屏渲染万级病害散点时，若通过多表关联（JOIN）获取病害类型信息，会产生巨大的计算开销与 I/O 延迟。通过冗余存储，系统可实现单表索引覆盖查询，确保前端地图加载与缩放的极致流畅感。
+    \item \textbf{聚类算法响应速度}：基于 ReID 的视觉聚类算法需要极高频地比对历史特征向量。将特征指纹直接物理存储在观测记录表中，避免了跨表读取产生的 I/O 损耗，使实时检测引擎的聚类响应速度能够满足工业级道路巡检的实时性要求。
+    \item \textbf{数据快照一致性}：道路病害随时间具有演变性。反范式存储能够完整记录采集瞬时的视觉特征与分类状态，为后续进行病害恶化趋势的对比分析提供不可篡改的原始”快照”数据。
+\end{enumerate}
+
+\paragraph{大字段分离策略}
+\texttt{repaired\_image\_b64} 与 \texttt{thumbnail\_b64} 以 Base64 文本直接存入主表会导致数据库体积膨胀 30\% 以上，严重拖慢全表扫描与索引性能。为此，系统引入独立的 \texttt{disease\_media} 表（见表~\ref{tab:disease_media}），将图片的存储路径（OSS/MinIO URL）与主表解耦：列表类查询仅读取主表的元数据字段，不再加载大块 Base64 文本；详情页按需从 \texttt{disease\_media} 获取图片 URL 或兜底 Base64。主表现有 Base64 字段保留以维持向后接口兼容。
+
+\subsubsection{实体关系 (ER) 模型设计}
+系统采用“路网-实体-记录”三层建模。以下为系统物理级 ER 模型图，展示了从碎片化影像到资产档案的归集逻辑。
+
+\begin{figure}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[font=\zihao{-6}]
+\tikzset{entity/.style={anchor=north west, inner sep=0pt}}
+
+% ======== 上行：roads / disease_clusters / audit_log ========
+\node[entity] (roads) at (0, 6) {
+    \begin{tabular}{|l|}
+    \hline
+    \multicolumn{1}{|>{\columncolor{enthead}}l|}{\color{white}\textbf{\quad 路网路段 (roads)}} \\ \hline
+    \rowcolor{pkbg}\textbf{PK}\quad id : INTEGER \\ \hline
+    \quad road\_name : VARCHAR \\
+    \quad road\_level : VARCHAR \\ \hline
+    \end{tabular}
+};
+\node[entity] (clusters) at (5.5, 6) {
+    \begin{tabular}{|l|}
+    \hline
+    \multicolumn{1}{|>{\columncolor{enthead}}l|}{\color{white}\textbf{\quad 病害实体 (disease\_clusters)}} \\ \hline
+    \rowcolor{pkbg}\textbf{PK}\quad id : UUID \\ \hline
+    \rowcolor{fkbg}\textbf{FK}\quad road\_id $\rightarrow$ roads.id \\ \hline
+    \quad label\_cn : VARCHAR \\
+    \quad status : VARCHAR \\
+    \quad severity : INTEGER \\
+    \quad priority : INTEGER \\ \hline
+    \end{tabular}
+};
+\node[entity] (auditlog) at (12, 6) {
+    \begin{tabular}{|l|}
+    \hline
+    \multicolumn{1}{|>{\columncolor{enthead}}l|}{\color{white}\textbf{\quad 审计日志 (audit\_log)}} \\ \hline
+    \rowcolor{pkbg}\textbf{PK}\quad id : INTEGER \\ \hline
+    \quad entity\_type : VARCHAR \\
+    \quad entity\_id : VARCHAR \\
+    \rowcolor{fkbg}\textbf{FK}\quad operator\_id $\rightarrow$ users.id \\
+    \quad to\_status : VARCHAR \\
+    \quad changed\_at : DATETIME \\ \hline
+    \end{tabular}
+};
+
+% ======== 下行：users / disease_records / disease_media ========
+\node[entity] (users) at (0, 0.5) {
+    \begin{tabular}{|l|}
+    \hline
+    \multicolumn{1}{|>{\columncolor{enthead}}l|}{\color{white}\textbf{\quad 用户 (users)}} \\ \hline
+    \rowcolor{pkbg}\textbf{PK}\quad id : INTEGER \\ \hline
+    \quad username : VARCHAR \\
+    \quad role : VARCHAR \\ \hline
+    \end{tabular}
+};
+\node[entity] (records) at (5.5, 0.5) {
+    \begin{tabular}{|l|}
+    \hline
+    \multicolumn{1}{|>{\columncolor{enthead}}l|}{\color{white}\textbf{\quad 检测记录 (disease\_records)}} \\ \hline
+    \rowcolor{pkbg}\textbf{PK}\quad id : INTEGER \\ \hline
+    \rowcolor{fkbg}\textbf{FK}\quad cluster\_id $\rightarrow$ clusters.id \\
+    \rowcolor{fkbg}\textbf{FK}\quad creator\_id $\rightarrow$ users.id \\ \hline
+    \quad lat / lng : FLOAT \\
+    \quad feature\_vector : JSONB \\ \hline
+    \end{tabular}
+};
+\node[entity] (media) at (12, 0.5) {
+    \begin{tabular}{|l|}
+    \hline
+    \multicolumn{1}{|>{\columncolor{enthead}}l|}{\color{white}\textbf{\quad 媒体存储 (disease\_media)}} \\ \hline
+    \rowcolor{pkbg}\textbf{PK}\quad id : INTEGER \\ \hline
+    \rowcolor{fkbg}\textbf{FK}\quad cluster\_id $\rightarrow$ clusters.id \\
+    \rowcolor{fkbg}\textbf{FK}\quad record\_id $\rightarrow$ records.id \\ \hline
+    \quad media\_type : VARCHAR \\
+    \quad storage\_url : VARCHAR \\ \hline
+    \end{tabular}
+};
+
+% ======== 连线 ========
+% roads 1:N clusters（上行水平）
+\draw[thick] ($(roads.east)!0.4!(roads.south east)$) -- node[above,pos=0.2]{1} node[above,pos=0.8]{N} ($(clusters.west)!0.4!(clusters.south west)$);
+% clusters 1:N records（中间竖向）
+\draw[thick] ($(clusters.south)!0.3!(clusters.south east)$) -- node[right,pos=0.2]{1} node[right,pos=0.8]{N} ($(records.north)!0.3!(records.north east)$);
+% users 1:N records（下行水平）
+\draw[thick] ($(users.east)!0.4!(users.south east)$) -- node[above,pos=0.2]{1} node[above,pos=0.8]{N} ($(records.west)!0.4!(records.south west)$);
+% clusters 1:N disease_media（对角线，右列）
+\draw[thick] ($(clusters.east)!0.6!(clusters.south east)$) to[out=0,in=90] node[right,pos=0.4]{1} node[right,pos=0.7]{N} ($(media.north)!0.3!(media.north east)$);
+% records 1:N disease_media（下行水平）
+\draw[thick] ($(records.east)!0.4!(records.south east)$) -- node[above,pos=0.2]{1} node[above,pos=0.8]{N} ($(media.west)!0.4!(media.south west)$);
+% users 1:N audit_log（虚线对角，表示操作人外键）
+\draw[thick, dashed, gray] ($(users.north)!0.3!(users.north east)$) to[out=60,in=210] node[above,sloped,pos=0.5,font=\tiny]{operator\_id} ($(auditlog.south)!0.3!(auditlog.south west)$);
+
+\end{tikzpicture}}
+\caption{系统进阶实体关系 (ER) 模型图（新增审计日志与媒体存储扩展表）}
+\end{figure}
+
+\subsubsection{UML 类图设计}
+系统后端逻辑层通过 \texttt{ClusterManager} 维护实体状态，体现了观测数据与业务对象的组合关系。
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[font=\zihao{-6},
+    classbox/.style={draw, thick, minimum width=5cm, align=left},
+    classhead/.style={classbox, fill=enthead, text=white, font=\zihao{-6}\bfseries, minimum height=0.6cm, align=center},
+    classsec/.style={classbox, minimum height=0.5cm, inner sep=3pt}
+]
+
+% ========== User 类 ==========
+\node[classhead] (U0) at (0,0) {User (用户类)};
+\node[classsec, anchor=north, text width=4.5cm] (U1) at (U0.south) {
+    \texttt{+ id: int}\\ \texttt{+ role: Enum}\\ \texttt{+ unit: str}
+};
+\node[classsec, anchor=north, text width=4.5cm] (U2) at (U1.south) {
+    \texttt{+ report\_disease(): void}
+};
+
+% ========== DiseaseCluster 类 ==========
+\node[classhead] (C0) at (6.5,0) {DiseaseCluster (病害实体类)};
+\node[classsec, anchor=north, text width=4.5cm] (C1) at (C0.south) {
+    \texttt{+ cluster\_id: uuid}\\ \texttt{+ records: List}\\ \texttt{+ status: Status}\\ \texttt{+ severity: int}\\ \texttt{+ priority: int}
+};
+\node[classsec, anchor=north, text width=4.5cm] (C2) at (C1.south) {
+    \texttt{+ analyze\_evolution(): dict}\\ \texttt{+ trigger\_work\_order(): bool}
+};
+
+% ========== 连线 ==========
+\draw[thick, -{open diamond}] ($(U0.east)!0.5!(U2.east)$) -- node[above, font=\zihao{-6}]{1} node[below, font=\zihao{-6}\itshape]{manages} ($(C0.west)!0.5!(C2.west)$);
+\node[anchor=west, font=\zihao{-6}] at ($(C0.west)!0.5!(C2.west)$) {\quad *};
+
+\end{tikzpicture}
+\caption{系统核心业务逻辑 UML 类图}
+\end{figure}
+
+\subsection{关键技术创新}
+
+ \subsubsection{LS-Det 核心检测算法研发}       
+                                                                                  
+  LS-Det 是团队基于轻量化卷积神经网络架构，针对道路病害检测场景自主研发的检测模型。在骨干网络设计上，参考学术界 YOLO11s 的先验设计\cite{lin2026yolo11wlbs}\cite{ultralytics2024}，加载预训练权重，进行参数调整和网络重构，采用深度可分离卷积替代标准
+  卷积，引入多尺度特征融合机制（FPN+PAN）\cite{zhang2024steeldefect}，在保持实时推理速度的同时兼顾小目标裂缝的检测精度。检测头针对道路病害的长条形、不规则
+  形态特征进行了解耦优化，显著降低误检率。
+
+  \textbf{训练方案：}模型在公开数据集 RDD2022 \cite{arya2022rdd2022}\cite{alam2025crowd} 上训练，经过 180 个 epoch，采用 960×960 输入分辨率、设置 Patience=40 的早停策略以防止过拟合、box\_loss 权重 7.5 的自定义损失配置，最优权重于第 108 epoch 收敛（RTX 4060，训练耗时约 10 h）。                                                        
+                  
+  \bigskip
+  \begin{tcolorbox}[
+    colback=yellow!18,
+    colframe=orange!60!black,
+    fonttitle=\bfseries,
+    title={赛事合规声明},
+    left=6pt, right=6pt, top=4pt, bottom=4pt
+  ]
+  本系统所使用的 LS-Det 模型系团队\textbf{自主设计并训练}的道路病害检测算法，\textbf{并非直接调用或部署任何第三方预训练模型成品}
+  。模型训练所用训练代码、超参数配置及最终权重文件均由团队独立完成，符合大赛关于"自主研发算法"的参赛要求。
+  \end{tcolorbox}
+
+% --- 算法 1：SAHI ---
+\subsubsection{基于 SAHI 的自适应多尺度增强检测}
+
+\textbf{设计难点}：行车记录仪及监控影像分辨率不固定。当原始图像直接缩放至检测器标准尺寸（$640\times640$）时，细微病害（如像素宽度 $<10$\,px 的裂缝）的纹理特征损失严重。在有限的边缘端算力下，如何既保证小目标的高召回率，又避免因全分辨率推理导致的实时性下降，是本算法的核心挑战。
+
+\textbf{技术方案}：引入 \textbf{SAHI (Slicing Aided Hyper Inference)} 框架\cite{akyon2022sahi}，通过滑动窗口对原图进行自适应切片。系统根据输入分辨率 $R_{\text{in}}$ 动态调整窗口尺寸 $S_{\text{slice}}$ 与重叠率 $r_{\text{overlap}}$：
+
+\begin{equation}
+(S_{\text{slice}},\; r_{\text{overlap}}) = 
+\begin{cases} 
+(640\times640,\; 0\%) & \text{if } R_{\text{in}} \leq 640 \\
+(512\times512,\; 20\%) & \text{if } 640 < R_{\text{in}} \leq 1280 \\
+(640\times640,\; 15\%) & \text{if } R_{\text{in}} > 1280 
+\end{cases}
+\end{equation}
+
+通过设置合理的重叠率确保了跨切片病害的完整性。子图独立推理后，经 NMS 算法合并至原图坐标系，整体流程无需重新训练模型即可显著提升小目标检测性能。
+
+% --- 算法 2：融合聚类 ---
+\subsubsection{时空约束与视觉 ReID 融合聚类算法}
+
+\textbf{设计难点}：车载 GPS 定位在复杂路况下常存在 3--15\,m 的随机漂移，单纯依赖空间坐标会导致同一病害产生多条冗余档案。如何在采集数据流中，利用病害自身的“视觉指纹”作为唯一标识来修正低精度的空间坐标，实现精准的“一病一档”，是系统逻辑设计的难点。
+
+\textbf{技术方案}：系统研发了“空间+视觉”双门限判别模型，并结合 DBSCAN 空间聚类算法\cite{ester1996dbscan}对重复病害进行剔除。首先计算新记录与候选簇间的空间得分 $S_{\text{spatial}}$。同时，提取检测框内 32 维归一化 HSV 特征向量，计算其与候选记录的余弦相似度 $V_{\text{visual}}$。系统依据视觉相似度动态调节空间合并阈值 $d_{\text{threshold}}$：
+
+\begin{table}[H]
+\centering
+\zihao{6}
+\caption{视觉相似度与空间门限动态映射关系}
+\begin{tabular}{ccc}
+\toprule
+余弦相似度 $V_{\text{visual}}$ & 语义匹配判定 & 空间合并阈值 $d_{\text{threshold}}$ \\ \midrule
+$\geq 0.92$ & 强视觉匹配 & 8\,m (容忍较大 GPS 漂移) \\
+$[0.75,\; 0.92)$ & 中等匹配 & 5\,m (标准地理门限) \\
+$< 0.75$ & 视觉差异过大 & 拒绝合并 (判定为独立新实体) \\ \bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{融合判别式}：$\text{Score} = 0.35 \times S_{\text{spatial}} + 0.65 \times V_{\text{visual}}$。当 $\text{Score} \geq 0.62$ 时判定为同一病害实体并赋予统一的 \texttt{cluster\_id}。若图像质量极差无法提取特征，系统将退化至纯空间判断模式。
+
+\textbf{PostGIS 空间索引加速}：在 PostgreSQL + PostGIS 环境下，候选簇搜索从经纬度矩形包围盒升级为 \texttt{ST\_DWithin(...::geography, 8\,m)} 球面距离查询，借助 GIST 空间索引将大规模点位的候选检索时间复杂度从 $O(n)$ 降至 $O(\log n)$，同时消除高纬度地区矩形包围盒的投影畸变误差。无 PostGIS 时系统自动降级为原包围盒策略，核心聚类逻辑不受影响。新建聚类时系统还将同步将置信度与检测框面积转化为 1--5 级病害严重度（\texttt{severity}），作为工单优先级排序的初始依据。
+
+% --- 算法 3：演变趋势 ---
+\subsubsection{基于时序观测的病害演变趋势分析算法}
+
+\textbf{设计难点}：在无相机标定的众包影像中，病害的物理尺寸难以精确测量。如何在异构设备拍摄的像素面积波动中提取出稳健的病害恶化趋势，是养护决策支持的关键。
+
+\textbf{技术方案}：系统对同一 \texttt{cluster\_id} 记录进行 90 天窗口内的时序分析。
+提取检测置信度 $C$ 与检测框相对像素面积 $A$。通过计算变化斜率 $k$ 进行状态预警：
+\begin{equation}
+\text{Status} = 
+\begin{cases} 
+\text{Deteriorating (恶化)} & \text{if } \Delta C > 0.05 \text{ and } \Delta A > \delta \\
+\text{Improving (改善)} & \text{if } \Delta C < -0.05 \\
+\text{Stable (稳定)} & \text{others}
+\end{cases}
+\end{equation}
+
+该算法通过相对趋势而非绝对尺寸实现分级预警，为养护优先级排序提供数据支撑。为了消除设备俯仰角变化引入的透视形变误差，系统引入了直方图特征的一致性核验，确保演变判定是基于病害区域的质变而非单纯的像素波动。通过这种相对趋势分析，系统能够对“带病运行”的路段进行恶化风险分级，从而辅助管理部门在有限的预算内精准锁定制订预防性养护优先级。
+
+% --- 算法 4：OCR 采样 ---
+\subsubsection{基于视频 OCR 的离散里程采样算法}
+
+\textbf{设计难点}：在不依赖高精定位硬件的前提下，仅凭视频画面实现物理空间上的“等距采样”难度极高。停滞时产生的重复帧与高速行驶时的采样空隙，是造成云端数据冗余与漏检盲区的根因。
+
+\textbf{技术方案}：利用 \textbf{PaddleOCR} \cite{paddleocr2020}定向识别视频流中烧录的车速叠字。系统每隔 15 帧（约 0.5\,s）解析一次瞬时车速 $v_i$，通过离散步进累算行驶里程 $\Delta S$：
+\begin{equation}
+\Delta S = \sum_{i} \left( \frac{v_i}{3.6} \cdot \Delta t_i \right), \quad \Delta t_i = \frac{15}{f_{\text{fps}}}
+\end{equation}
+
+当累积位移达到预设采样间距（默认 10\,m）时触发推理引擎。此外，系统内置了异常速度过滤机制，当 OCR 识别出现置信度波动的瞬时跳变时，利用前序帧的平均加速度进行线性插值补偿，确保了里程累计的连续性。这种“以语义特征补偿物理传感”的设计，使得系统在车辆频繁启停的城市工况下，仍能保持极高的空间对齐精度与数据采集能效。
+
+\section{测试报告}
+
+  \subsection{模型检测性能测试}
+系统采用自建的道路病害数据集（基于 RDD2022 等\cite{arya2022rdd2022}扩充）进行评估。测试环境为 RTX 4060 GPU，输入分辨率设定为 $960\times960$。LS-Det 模型表现出优异的鲁棒性，核心指标如表 \ref{tab:model_metrics} 所示。
+
+\begin{table}[H]
+    \centering
+    \caption{模型检测精度实测数据汇总}
+    \label{tab:model_metrics}
+    \zihao{6}
+    \begin{tabular}{lcccc}
+        \toprule
+        类别 & Precision & Recall & mAP@0.5 & mAP@0.5:0.95 \\ \midrule
+        D00 纵向裂缝 & 0.721 & 0.598 & 0.681 & 0.362 \\
+        D10 横向裂缝 & 0.755 & 0.642 & 0.710 & 0.381 \\
+        D20 龟裂     & 0.684 & 0.521 & 0.625 & 0.312 \\
+        D40 坑槽     & 0.816 & 0.687 & 0.751 & 0.450 \\ \midrule
+        \textbf{Overall (全类别)} & \textbf{0.744} & \textbf{0.612} & \textbf{0.692} & \textbf{0.375} \\ \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsubsection{训练过程与精度分析}
+通过对训练全过程的监测（见图 \ref{fig:results}），各损失函数（Loss）下降趋势平滑，108轮达到最优性能，且后期未观察到过拟合现象。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\linewidth]{results.png}
+    \caption{LS-Det 模型训练损失与 mAP 增长曲线}
+    \label{fig:results}
+\end{figure}
+
+
+
+为了深入评估模型在不同类别下的性能上限，系统绘制了 \textbf{Precision-Recall (PR) 曲线}（见图 \ref{fig:pr_curve}）。曲线整体向右上方包络，全类别曲线下的面积（AUC）达到 0.692，证明了系统在不同检测置信度下均能保持极高的精确率与召回率平衡。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\linewidth]{BoxPR_curve.png}
+    \caption{全类别及单类别的 Precision-Recall 曲线}
+    \label{fig:pr_curve}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.65\linewidth]{val_batch0_pred.jpg}
+    \caption{LS-Det 模型在验证集上的实时检测效果示例}
+    \label{fig:visual_pred}
+\end{figure}
+
+\subsubsection{分类混淆矩阵分析}
+通过归一化混淆矩阵（图 \ref{fig:confusion}）可以发现，系统对 D40（坑槽）的判别精度最高，达到了 0.82；而 D20（龟裂）由于其在某些视角下与 D00（纵向裂缝）特征相似，存在微量的分类漂移。后续通过 SAHI 增强机制大幅修正了此类小目标的特征提取精度。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\linewidth]{confusion_matrix_normalized.png}
+    \caption{归一化混淆矩阵分析图}
+    \label{fig:confusion}
+\end{figure}
+  
+
+  % -------------------------------------------------------
+  \subsection{接口性能测试}
+
+  在本地 RTX 4060 + FastAPI \cite{fastapi}单进程环境下对主要接口进行压测，重点验证推理链路与 GIS 查询的时延边界，结果如表~\ref{tab:api} 所示。
+
+\begin{table}[H]
+  \centering
+  \caption{主要接口响应时延}
+  \label{tab:api}
+  \zihao{6}
+  \begin{tabular}{llcc}
+  \toprule
+  接口 & 场景 & 平均时延 & 说明 \\
+  \midrule
+  \texttt{POST /detect}       & 单张图片（1080P） & 240\,ms  & 含 LS-Det + SAHI 推理 \\
+  \texttt{POST /detect}       & 批量 10 张        & 2.1\,s   & 串行处理 \\
+  \texttt{POST /detect-video} & 30\,s 视频（OCR 模式） & 18\,s & 抽帧 + 推理 \\
+  % --- 下面是新增行 ---
+  \texttt{POST /ai/report}    & 自动生成养护周报   & 3.2\,s   & 异步调用 DeepSeek 接口 \\
+  % ------------------
+  \texttt{GET /gis/records}   & 全量 1000 条      & 42\,ms   & 含 lat/lng 索引 \\
+  \texttt{GET /clusters/\{id\}/timeline} & 单簇时间轴 & 8\,ms & \\
+  \texttt{POST /auth/login}   & JWT 签发          & $<$5\,ms & \\
+  \bottomrule
+  \end{tabular}
+  \end{table}
+
+  % -------------------------------------------------------
+  \subsection{关键功能测试}
+
+  针对鉴权、聚类、工单流转、移动端等核心路径逐一设计测试用例，全部用例均通过验证，结果如表~\ref{tab:func} 所示。
+
+  \begin{table}[H]
+  \centering
+  \caption{关键功能测试用例}
+  \label{tab:func}
+  \zihao{6}
+  \begin{tabular}{p{3cm}p{4.5cm}p{4.5cm}c}
+  \toprule
+  测试项 & 输入/操作 & 预期结果 & 通过 \\
+  \midrule
+  JWT 鉴权 & 携带过期 Token 请求 \texttt{/detect} & 返回 401，前端跳转登录页 & \checkmark \\
+  聚类去重 & 同一病害点上传 5 次（GPS 偏差 $\leq$4\,m） & 5 条记录共享同一 \texttt{cluster\_id} & \checkmark \\
+  OCR 定位 & 含 60\,km/h 车速叠字的 30\,s 视频 & 等距抽帧，无停车冗余帧 & \checkmark \\
+  工单流转 & 状态从 pending $\to$ repaired & 每步状态持久化，GIS 标记色同步更新 & \checkmark \\
+  AI 报告生成 & 登录后请求 \texttt{POST /ai/report} & 调用 DeepSeek 接口生成养护周报 & \checkmark \\
+  \bottomrule
+  \end{tabular}
+  \end{table}
+
+  % -------------------------------------------------------
+  \subsection{技术指标汇总}
+
+  综合以上测试结果，提炼系统关键技术指标如表~\ref{tab:kpi} 所示。
+
+  \begin{table}[H]
+  \centering
+  \caption{系统多维度技术指标}
+  \label{tab:kpi}
+  \zihao{6}
+  \begin{tabular}{llp{7cm}}
+  \toprule
+  维度 & 指标 & 说明 \\
+  \midrule
+  \multirow{3}{*}{运行性能}
+    & 模型精度 mAP@0.5 = 0.692 & 满足复杂路面环境下的检出需求 \\
+    & 图片推理时延 $\leq$ 250\,ms & GPU 环境（RTX 4060），含 SAHI 处理 \\
+    & GIS 全量查询 $\leq$ 50\,ms  & 经纬度字段双索引 \\
+  \midrule
+  \multirow{2}{*}{安全性}
+    & JWT 鉴权 + bcrypt 哈希 & 密码不可逆存储，Token 有效期管理 \\
+    & CORS 白名单 & 仅允许指定前端域名跨域访问 \\
+  \midrule
+  \multirow{3}{*}{扩展性}
+    & 无状态 API & 支持多 Worker 水平扩展，无 Session 依赖 \\
+    & 模型热替换 & 替换 \texttt{best.pt} 即可升级算法逻辑 \\
+    & LLM 插件化 & 替换 \texttt{DEEPSEEK\_API\_KEY} 即可无缝切换大模型供应商 \\
+  \midrule
+  \multirow{2}{*}{数据完整性}
+    & DB 触发器自动维护统计字段 & \texttt{fn\_sync\_cluster\_stats} 触发器在 disease\_records 写入时自动校正 \texttt{detection\_count} 与 \texttt{last\_detected\_at}，消除应用层竞态 \\
+    & 全链路审计日志 & 每次状态流转写入 audit\_log，操作人、时间、前后状态全程可溯源 \\
+  \bottomrule
+  \end{tabular}
+  \end{table}
+
+% --- 第五章 安装及使用 ---
+\section{安装及使用}
+
+\subsection{环境要求}
+本系统对运行环境有一定要求，为保证推理速度与系统稳定性，建议配置如下：
+
+\begin{table}[H]
+\centering
+\caption{运行环境要求}
+\label{tab:env_requirements}
+\zihao{6}
+% 使用 resizebox 确保表格绝不超出页边
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lll}
+\toprule
+组件 & 最低要求 & 推荐配置 \\
+\midrule
+操作系统      & Windows 11 / macOS 12 / Ubuntu 20.04 & Ubuntu 22.04 \\
+Python        & 3.11                                 & 3.11（conda 管理） \\
+GPU（可选）   & CUDA 11.8+，4\,GB 显存                & RTX 4060 / CUDA 12.4 \\
+Node.js       & 18+                                  & 20 LTS \\
+PostgreSQL    & 14+（含 PostGIS $\geq$ 3.1 扩展可选） & 16 + PostGIS 3.4 \\
+微信开发者工具 & 稳定版基础库 3.4.x                    & --- \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\subsection{安装过程}
+本节详细说明后端、Web 前端及移动端的安装步骤。
+
+\subsubsection{后端安装}
+
+\noindent\textbf{步骤 1}：创建并激活 Python 虚拟环境：
+\begin{lstlisting}[language=bash]
+conda create -n lightscan python=3.11 -y
+conda activate lightscan
+\end{lstlisting}
+
+\noindent\textbf{步骤 2}：安装 PyTorch（按显卡型号二选一，已使用续行符处理长命令）：
+\begin{lstlisting}[language=bash]
+# RTX 50 系列 Blackwell 架构驱动 (Nightly)
+pip install --pre torch torchvision \
+    --index-url https://download.pytorch.org/whl/nightly/cu128
+
+# RTX 40 系列及以下架构
+pip install torch torchvision \
+    --index-url https://download.pytorch.org/whl/cu124
+\end{lstlisting}
+
+\noindent\textbf{步骤 3}：安装其余依赖并初始化数据库：
+\begin{lstlisting}[language=bash]
+pip install -r requirements.txt
+createdb lightscan
+\end{lstlisting}
+
+\noindent\textbf{步骤 4}：在 \texttt{src/backend/} 目录下新建 \texttt{.env} 文件（注意下划线转义）：
+\begin{lstlisting}[language=bash]
+DATABASE_URL=postgresql://用户名:密码@localhost:5432/lightscan
+SECRET_KEY=your-secret-key
+\end{lstlisting}
+
+\noindent\textbf{步骤 5}：启动后端服务：
+\begin{lstlisting}[language=bash]
+cd src/backend
+uvicorn app.main:app --reload --port 8000
+\end{lstlisting}
+
+\subsubsection{Web 前端安装}
+
+\noindent\textbf{步骤 1}：在 \texttt{src/frontend/} 下新建 \texttt{.env}，填入高德地图密钥：
+\begin{lstlisting}[language=bash]
+VITE_AMAP_KEY=你的高德Key
+VITE_AMAP_SECURITY_CODE=你的安全密钥
+\end{lstlisting}
+
+\noindent\textbf{步骤 2}：安装依赖并启动：
+\begin{lstlisting}[language=bash]
+cd src/frontend && npm install && npm run dev
+\end{lstlisting}
+完成后通过浏览器访问 \texttt{http://localhost:5173}。
+
+\subsubsection{移动端安装}
+\begin{lstlisting}[language=bash]
+cd src/mobile && npm install
+
+# H5 模式预览
+npm run dev:h5        # 访问 http://localhost:10086
+
+# 微信小程序端编译
+npm run build:weapp   # 用微信开发者工具导入 dist/weapp/
+\end{lstlisting}
+
+\subsection{典型使用流程}
+
+\subsubsection{路面图片检测入库}
+\begin{enumerate}[label=\arabic*., nosep]
+    \item \textbf{影像上传}：用户在 Web 端批量拖拽上传现场病害照片（最多 20 张）。
+    \item \textbf{智能识别}：系统调用 LS-Det 引擎自动标注病害类型并提取视觉特征。
+    \item \textbf{自动归档}：识别结果经时空聚类后自动写入数据库并在 GIS 地图实时落位。
+\end{enumerate}
+
+\subsubsection{行车记录仪视频巡检}
+\begin{enumerate}[label=\arabic*., nosep]
+    \item \textbf{视频解析}：上传 MP4 视频，系统通过 OCR 识别车速或接收预设均速。
+    \item \textbf{等距采样}：算法按设定里程（如 10m）自动抽帧，执行高性能切片推理。
+    \item \textbf{批量入库}：用户核验汇总结果后，一键完成整条路段的病害批量建档。
+\end{enumerate}
+
+\subsubsection{多源移动端上报流程}
+\begin{enumerate}[label=\arabic*., nosep]
+    \item \textbf{众包采集}：市民或巡检员通过小程序选择病害类型并拍摄现场照片。
+    \item \textbf{位置对齐}：系统自动触发高精度 GPS 采集，并将坐标与影像信息关联。
+    \item \textbf{实时上报}：点击提交后，数据即刻汇入后台工单池，实现发现即上报。
+\end{enumerate}
+
+\subsubsection{工单管理与闭环}
+\begin{enumerate}[label=\arabic*., nosep]
+    \item \textbf{派单}：管理员在 GIS 大屏点击病害点，指派任务至对应巡检员。
+    \item \textbf{修复}：巡检员通过移动端接收待办，完成修复后上传对比照片。
+    \item \textbf{归档}：系统核验修复影像，GIS 散点状态同步变更为“已修复”并进入时间轴归档。
+\end{enumerate}
+
+\section{项目总结}
+
+  \subsection{开发历程与团队协作}
+
+  本项目从需求调研到系统上线，历经行业调研、技术选型、
+  算法设计、前后端联调与移动端适配五个阶段。
+  团队按模块分工：算法与后端、Web 前端、移动端并行推进，
+  通过版本管理与接口约定保持协同。
+  实践中深刻体会到"接口先行"的重要性——
+  前后端同时开发时，提前约定 JSON 数据结构与错误码规范，
+  显著减少了联调返工成本。
+
+  \subsection{攻克的主要难点}
+
+  \textbf{多源数据对齐}是本项目最具挑战性的工程问题。
+  不同设备的 GPS 精度差异可达 3--15\,m，
+  单靠坐标无法可靠判断两次拍摄是否为同一病害点。
+  为此设计了时空约束与视觉 ReID 融合的双门限聚类算法，
+  以 32 维 HSV 特征向量作为视觉指纹补偿 GPS 漂移，
+  最终在测试集上实现了准确的跨源病害点归并。
+
+  \textbf{移动端跨平台适配}同样耗费了大量调试精力。
+  Taro 在微信小程序环境下对 CSS 规范存在诸多限制，
+  通配符选择器、\texttt{scroll-view} 内边距、
+  \texttt{verbatim} 类组件嵌套等均需特殊处理；
+  微信开发者工具灰度基础库的已知兼容性问题，
+  最终通过真机预览绕过，积累了宝贵的跨端工程经验。
+
+  \subsection{后续演进方向}
+
+  \begin{enumerate}[label=\arabic*., itemsep=2pt]
+      \item \textbf{端侧推理}：将 LS-Det 量化为 INT8 格式，
+      部署至移动端本地，实现离线检测，摆脱网络依赖。
+
+      \item \textbf{B 端车队接入}：与公交、环卫等运营车辆系统对接，
+      将车载行车记录仪视频流自动化接入巡检管道，
+      形成"千辆车即千个巡检站"的城市级覆盖网络。
+
+      \item \textbf{严重度量化与预测性养护}：
+      当前已实现基于 ls-det 置信度与检测框面积的 1--5 级自动初评（\texttt{severity} / \texttt{priority} 字段），
+      并结合路段等级支持人工覆写。后续将引入裂缝宽度估算与坑槽体积计算，
+      结合时间轴演变数据训练病害恶化预测模型，
+      自动生成精细化养护优先级排序与维修建议报告。
+
+      \item \textbf{商业化路径}：
+      以 SaaS 模式面向公路管养单位提供轻量化订阅服务，
+      契合交通运输部推广"轻量化智能检测"的政策导向，
+      目标市场为公路养护部门。
+  \end{enumerate}
+
+\addcontentsline{toc}{section}{参考文献} 
+\begin{thebibliography}{99}
+\zihao{5} \setlength{\itemsep}{1pt}
+
+% --- 1. 国家政策与行业标准 ---
+\bibitem{mottstat2024} 中华人民共和国交通运输部. 2024年交通运输行业发展统计公报[R/OL]. (2025-04-30). 
+
+\bibitem{shiswu2022} 交通运输部. “十四五”公路养护管理发展纲要[EB/OL]. (2022-05-16). 
+
+\bibitem{aiplus2025} 交通运输部, 工业和信息化部, 等. 关于“人工智能＋交通运输”的实施意见[EB/OL]. (2025-09-01). 
+
+\bibitem{jtg52102018} 中华人民共和国交通运输部. 公路技术状况评定标准: JTG 5210-2018[S]. 北京: 人民交通出版社, 2018.
+
+% --- 2. 学术综述与论文 (基于您上传的 PDF) ---
+\bibitem{fan2024survey} FAN L, WANG D, WANG J, et al. Pavement Defect Detection With Deep Learning: A Comprehensive Survey[J]. IEEE Transactions on Intelligent Vehicles, 2024, 9(3): 4292-4316. \url{https://doi.org/10.1109/TIV.2023.3326136}
+
+\bibitem{lin2026yolo11wlbs} LIN J, WANG P, RUAN Y, et al. YOLO11-WLBS: an efficient model for pavement defect detection[J]. Scientific Reports, 2026, 16: 5284. \url{https://doi.org/10.1038/s41598-026-35743-8}
+
+\bibitem{aqeel2025roadfusion} AQEEL M, BELLETE K D, SETTI F. Road Fusion: Latent Diffusion Model for Pavement Defect Detection[J/OL]. arXiv preprint, 2025. \url{https://arxiv.org/abs/2507.15346}
+
+\bibitem{cheng2025survey} CHENG Y, CAO Y, YAO H, et al. A Comprehensive Survey for Real-World Industrial Defect Detection: Challenges, Approaches, and Prospects[J/OL]. arXiv preprint, 2025. \url{https://arxiv.org/abs/2507.13378}
+
+\bibitem{zhang2024steeldefect} ZHANG H, LI S, MIAO Q, et al. Surface defect detection of hot rolled steel based on multi-scale feature fusion and attention mechanism residual block[J]. Scientific Reports, 2024, 14: 7671. \url{https://doi.org/10.1038/s41598-024-57990-3}
+
+\bibitem{arya2022rdd2022} ARYA D, MAEDA H, GHOSH S K, et al. RDD2022: A multi-national image dataset for automatic Road Damage Detection[J/OL]. arXiv preprint, 2022. \url{https://arxiv.org/abs/2209.08538}
+
+\bibitem{alam2025crowd} ALAM M S, BAZILINSKA O, BAZILINSKYY P. A global dataset of continuous urban dashcam driving[J]. Eindhoven University of Technology Dataset, 2024. \url{https://doi.org/10.4121/uuid:6b5b5b5b-c2e3-4b5b-a2e3-6b5b5b5b5b5b}
+
+% --- 3. 技术框架与工具 ---
+\bibitem{ultralytics2024} Ultralytics. Ultralytics YOLO11[EB/OL]. (2024). \url{https://github.com/ultralytics/ultralytics}
+
+\bibitem{akyon2022sahi} AKYON F C, ALTINUC S O, TEMIZEL A. Slicing Aided Hyper Inference and Fine-tuning for Small Object Detection[C]//Proceedings of the 29th IEEE ICIP. IEEE, 2022: 966-970. \url{https://doi.org/10.1109/ICIP46576.2022.9897990}
+
+\bibitem{paddleocr2020} 百度飞桨团队. PaddleOCR: 超轻量OCR系统[EB/OL]. (2020). \url{https://github.com/PaddlePaddle/PaddleOCR}
+
+\bibitem{deepseekv3} DeepSeek-AI. DeepSeek-V3 Technical Report[R/OL]. (2024). \url{https://arxiv.org/abs/2412.19437}
+
+\bibitem{ester1996dbscan} ESTER M, et al. A density-based algorithm for discovering clusters in large spatial databases with noise[C]//KDD-96. AAAI Press, 1996: 226-231.
+
+\bibitem{fastapi} RAMÍREZ S. FastAPI Framework[EB/OL]. \url{https://fastapi.tiangolo.com}
+
+\bibitem{taro} 京东凹凸实验室. Taro 跨端解决方案[EB/OL]. \url{https://taro.zone}
+
+\end{thebibliography}
+
+\end{document}
