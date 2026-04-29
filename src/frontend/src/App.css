@@ -1,9 +1,9 @@
 .fullscreen-map {
   position: fixed;
-  top: 60px; 
+  top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 10;
+  z-index: 10000;
   background: #000; 
 }

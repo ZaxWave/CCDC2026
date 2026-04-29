@@ -87,21 +87,24 @@ export default function App() {
   }
 
   const isFullscreen = FULLSCREEN_TABS.includes(tab);
+  const isDashboard = tab === 'dashboard';
   const showHero = !isFullscreen && tab !== 'about';
 
   return (
     <ToastProvider>
       <NetworkProvider>
       <TaskProvider>
-      <Nav
-        onBackToDetect={() => handleTabChange('image')}
-        onLogout={handleLogout}
-        onTabChange={handleTabChange}
-        onTaskCenterClick={() => setTaskDrawerOpen(true)}
-        themeMode={themeMode}
-        effectiveTheme={effectiveTheme}
-        onThemeModeChange={setThemeMode}
-      />
+      {!isDashboard && (
+        <Nav
+          onBackToDetect={() => handleTabChange('image')}
+          onLogout={handleLogout}
+          onTabChange={handleTabChange}
+          onTaskCenterClick={() => setTaskDrawerOpen(true)}
+          themeMode={themeMode}
+          effectiveTheme={effectiveTheme}
+          onThemeModeChange={setThemeMode}
+        />
+      )}
 
       {/* 只有在检测页面（image, video, records）才显示 Hero */}
       {showHero && (
@@ -111,8 +114,8 @@ export default function App() {
         />
       )}
 
-      {/* 只有不是关于页面时，才显示 TabBar */}
-      {tab !== 'about' && <TabBar active={tab} onChange={handleTabChange} />}
+      {/* 大屏/地图模式不显示总览 TabBar，避免遮挡全屏视图 */}
+      {tab !== 'about' && !isFullscreen && <TabBar active={tab} onChange={handleTabChange} />}
 
       <div className={isFullscreen ? `content-wrapper fullscreen-map` : 'content-wrapper'}>
         <Suspense fallback={<PanelFallback />}>
