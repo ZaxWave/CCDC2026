@@ -272,12 +272,15 @@ async def check_exif(file: UploadFile = File(...)):
         raw_gps = {GPSTAGS.get(k, k): str(v) for k, v in gps_ifd.items()} if gps_ifd else {}
 
         exif_lat, exif_lng = extract_gps_strict(img_bytes)
+        capture_time = extract_capture_time(img_bytes)
         return {
             "has_exif": True,
             "has_gps": exif_lat is not None,
+            "has_capture_time": capture_time is not None,
+            "capture_time": capture_time.isoformat() if capture_time else None,
             "raw_gps_tags": raw_gps,
             "parsed_wgs84": None if exif_lat is None else {"lat": exif_lat, "lng": exif_lng},
             "reason": "成功读取 GPS" if exif_lat is not None else "EXIF 存在但无 GPSLatitude/GPSLongitude，请在手机相机设置中开启位置标记",
         }
     except Exception as e:
-        return {"has_exif": False, "has_gps": False, "reason": str(e)}
+        return {"has_exif": False, "has_gps": False, "has_capture_time": False, "capture_time": None, "reason": str(e)}

@@ -25,6 +25,13 @@ const SOURCE_OPTS = [
   { v: 'manual', l: '手动' },
 ];
 
+const RANGE_PRESETS = [
+  { label: '今天', days: 1 },
+  { label: '近3天', days: 3 },
+  { label: '近7天', days: 7 },
+  { label: '近30天', days: 30 },
+];
+
 function parseRecordTime(record) {
   const raw = record.captured_at || record.timestamp;
   if (!raw) return null;
@@ -322,6 +329,15 @@ export default function MapPanel({ onBackToDetect }) {
     setSliderVal(100);
   };
 
+  const applyDateRange = (days) => {
+    const end = new Date();
+    const start = new Date();
+    start.setDate(end.getDate() - (days - 1));
+    const fmt = (d) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+    setFDateFrom(fmt(start));
+    setFDateTo(fmt(end));
+  };
+
   const filterButtonLeft = isSidebarOpen ? 380 : 20;
   const filterPanelLeft = isSidebarOpen ? 380 : 20;
 
@@ -448,6 +464,13 @@ export default function MapPanel({ onBackToDetect }) {
                 {SOURCE_OPTS.map(opt => <option key={opt.v} value={opt.v}>{opt.l}</option>)}
               </select>
             </label>
+            <div className={s.filterQuickRange}>
+              {RANGE_PRESETS.map(preset => (
+                <button key={preset.days} onClick={() => applyDateRange(preset.days)}>
+                  {preset.label}
+                </button>
+              ))}
+            </div>
             <label className={s.filterLabel}>
               日期从
               <input type="date" value={fDateFrom} onChange={e => setFDateFrom(e.target.value)} className={s.filterInput} />

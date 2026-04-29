@@ -6,7 +6,7 @@ import StatsRow from '../components/StatsRow'
 import ResultsGrid from '../components/ResultsGrid'
 import FusionModal from '../components/map/FusionModal'
 import MapPicker from '../components/MapPicker'
-import { detectImages } from '../api/client'
+import { checkImageExif, detectImages } from '../api/client'
 import { useToast } from '../context/ToastContext'
 import { useNetwork } from '../context/NetworkContext'
 import { saveOfflineTask } from '../utils/offlineDB'
@@ -69,6 +69,7 @@ export default function ImagePanel() {
   const [gpsLocating,    setGpsLocating]    = useState(false)
   const [showMapPicker,  setShowMapPicker]  = useState(false)
   const [manualCapturedAt, setManualCapturedAt] = useState('')
+  const [captureModal, setCaptureModal] = useState({ visible: false, files: [], value: '' })
 
   const toast = useToast()
   const { isOnline, refreshCount } = useNetwork()
@@ -88,7 +89,18 @@ export default function ImagePanel() {
     return () => window.removeEventListener('keydown', onKey)
   }, [fusionRecordId])
 
-  async function handleFiles(files) {
+  function getLocalDateTimeValue(date = new Date()) {
+    return new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+      .toISOString()
+      .slice(0, 16)
+  }
+
+  async function hasAnyExifCaptureTime(images) {
+    const results = await Promise.allSettled(images.slice(0, 5).map(file => checkImageExif(file)))
+    return results.some(r => r.status === 'fulfilled' && r.value?.has_capture_time)
+  }
+
+  async function handleFiles(files, capturedAtOverride = manualCapturedAt) {
     const images = files.filter(f => ALLOWED.includes(f.type))
     if (!images.length) {
       alert('请上传图片文件（JPG / PNG / WEBP / BMP）')
@@ -116,11 +128,24 @@ export default function ImagePanel() {
       return
     }
 
+    if (!capturedAtOverride) {
+      let hasExifTime = false
+      try {
+        hasExifTime = await hasAnyExifCaptureTime(images)
+      } catch {
+        hasExifTime = false
+      }
+      if (!hasExifTime) {
+        setCaptureModal({ visible: true, files: images, value: getLocalDateTimeValue() })
+        return
+      }
+    }
+
     // ── 联网路径 ──────────────────────────────────────────────
     setProgress({ visible: true, text: '正在上传并推理…', pct: 0 })
     let results
     try {
-      results = await detectImages(images, sourceType, gpsOverride, manualCapturedAt)
+      results = await detectImages(images, sourceType, gpsOverride, capturedAtOverride)
     } catch (e) {
       setProgress(p => ({ ...p, visible: false }))
       if (!navigator.onLine) {
@@ -354,11 +379,7 @@ export default function ImagePanel() {
             <button
               className={s.captureNowBtn}
               onClick={() => {
-                const now = new Date()
-                const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
-                  .toISOString()
-                  .slice(0, 16)
-                setManualCapturedAt(local)
+                setManualCapturedAt(getLocalDateTimeValue())
               }}
             >
               使用当前时间
@@ -449,6 +470,44 @@ export default function ImagePanel() {
           recordId={fusionRecordId}
           onClose={() => setFusionRecordId(null)}
         />
+      )}
+      {captureModal.visible && (
+        <div className={s.captureModalOverlay}>
+          <div className={s.captureModal}>
+            <div className={s.captureModalTitle}>未读取到 EXIF 拍摄时间</div>
+            <div className={s.captureModalText}>
+              图片可能经过微信、蓝牙或压缩传输，EXIF 时间已丢失。请选择本批图片的拍摄时间后继续上传。
+            </div>
+            <input
+              type="datetime-local"
+              value={captureModal.value}
+              onChange={e => setCaptureModal(m => ({ ...m, value: e.target.value }))}
+              className={s.captureModalInput}
+              autoFocus
+            />
+            <div className={s.captureModalActions}>
+              <button
+                className={s.captureModalSecondary}
+                onClick={() => setCaptureModal({ visible: false, files: [], value: '' })}
+              >
+                取消
+              </button>
+              <button
+                className={s.captureModalPrimary}
+                disabled={!captureModal.value}
+                onClick={() => {
+                  const filesToUpload = captureModal.files
+                  const capturedAt = captureModal.value
+                  setManualCapturedAt(capturedAt)
+                  setCaptureModal({ visible: false, files: [], value: '' })
+                  handleFiles(filesToUpload, capturedAt)
+                }}
+              >
+                继续上传
+              </button>
+            </div>
+          </div>
+        </div>
       )}
       {showMapPicker && (
         <MapPicker

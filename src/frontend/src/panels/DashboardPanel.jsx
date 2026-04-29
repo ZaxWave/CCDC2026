@@ -82,7 +82,9 @@ export default function DashboardPanel({ onExit }) {
   const [tickIdx,     setTickIdx]     = useState(0);
   const [rtspModal,   setRtspModal]   = useState(false);
   const [rtspSuccess, setRtspSuccess] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
+  const screenRef  = useRef(null);
   const mapRef     = useRef(null);
   const mapObjRef  = useRef(null);
   const heatmapRef = useRef(null);
@@ -92,6 +94,24 @@ export default function DashboardPanel({ onExit }) {
     const t = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(t);
   }, []);
+
+  useEffect(() => {
+    const onFullscreenChange = () => setIsFullscreen(Boolean(document.fullscreenElement));
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
+  }, []);
+
+  const toggleFullscreen = async () => {
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      } else {
+        await screenRef.current?.requestFullscreen();
+      }
+    } catch (e) {
+      console.error('fullscreen failed:', e);
+    }
+  };
 
   // 数据加载（30s 自动刷新）
   const load = () => {
@@ -453,7 +473,7 @@ export default function DashboardPanel({ onExit }) {
       fontFamily: '-apple-system, "PingFang SC", "SF Mono", monospace',
       overflow: 'hidden',
       color: '#fff',
-    }}>
+    }} ref={screenRef}>
 
       {/* ────────── 顶部栏 ────────── */}
       <div style={{
@@ -507,6 +527,20 @@ export default function DashboardPanel({ onExit }) {
           }}>
             {now.toLocaleString('zh-CN', { hour12: false })}
           </span>
+          <button
+            onClick={toggleFullscreen}
+            style={{
+              height: 26, padding: '0 12px',
+              background: isFullscreen ? 'rgba(0,212,255,0.12)' : 'transparent',
+              border: `1px solid ${isFullscreen ? BLUE : 'rgba(255,255,255,0.15)'}`,
+              color: isFullscreen ? BLUE : 'rgba(255,255,255,0.4)',
+              fontSize: 11, fontWeight: 500,
+              cursor: 'pointer',
+              letterSpacing: '0.06em',
+            }}
+          >
+            {isFullscreen ? '退出全屏' : '全屏'}
+          </button>
           <button
             onClick={onExit}
             style={{

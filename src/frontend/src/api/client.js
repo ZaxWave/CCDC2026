@@ -40,6 +40,12 @@ export function detectImages(files, sourceType, gps, capturedAt) {
   return request('/api/v1/detect', form)
 }
 
+export function checkImageExif(file) {
+  const form = new FormData()
+  form.append('file', file)
+  return request('/api/v1/check-exif', form)
+}
+
 export function getFirstFrame(file) {
   const form = new FormData()
   form.append('file', file)
