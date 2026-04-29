@@ -4,10 +4,29 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LightScan · 轻巡智维</title>
-    <script type="module" crossorigin src="/assets/index-Bjx6nvM_.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-CdO6VjND.css">
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="shortcut icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#3E6AE1" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="LightScan" />
+    <link rel="apple-touch-icon" href="/icon-192.svg" />
+    <script type="module" crossorigin src="/assets/index-BHcErQqg.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-BatKE75m.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CKCGLJrl.css">
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        });
+      }
+    </script>
   </body>
 </html>

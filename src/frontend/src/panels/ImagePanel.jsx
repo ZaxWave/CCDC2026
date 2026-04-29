@@ -68,6 +68,7 @@ export default function ImagePanel() {
   const [gpsOverride,    setGpsOverride]    = useState(null)   // {lat, lng} | null
   const [gpsLocating,    setGpsLocating]    = useState(false)
   const [showMapPicker,  setShowMapPicker]  = useState(false)
+  const [manualCapturedAt, setManualCapturedAt] = useState('')
 
   const toast = useToast()
   const { isOnline, refreshCount } = useNetwork()
@@ -119,7 +120,7 @@ export default function ImagePanel() {
     setProgress({ visible: true, text: '正在上传并推理…', pct: 0 })
     let results
     try {
-      results = await detectImages(images, sourceType, gpsOverride)
+      results = await detectImages(images, sourceType, gpsOverride, manualCapturedAt)
     } catch (e) {
       setProgress(p => ({ ...p, visible: false }))
       if (!navigator.onLine) {
@@ -306,6 +307,11 @@ export default function ImagePanel() {
               className={s.gpsLocateBtn}
               disabled={gpsLocating}
               onClick={() => {
+                if (!window.isSecureContext) {
+                  alert('当前 HTTP 访问不支持浏览器定位，请使用“选择位置”手动选点。上线 HTTPS 后可直接获取当前位置。')
+                  setShowMapPicker(true)
+                  return
+                }
                 if (!navigator.geolocation) { alert('浏览器不支持定位'); return }
                 setGpsLocating(true)
                 navigator.geolocation.getCurrentPosition(
@@ -330,6 +336,36 @@ export default function ImagePanel() {
             </button>
           </div>
         )}
+      </div>
+
+      {/* ── 拍摄时间兜底 ── */}
+      <div className={s.captureRow}>
+        <span className={s.sourceLabel}>拍摄时间</span>
+        <div className={s.captureControl}>
+          <input
+            type="datetime-local"
+            value={manualCapturedAt}
+            onChange={e => setManualCapturedAt(e.target.value)}
+            className={s.captureInput}
+          />
+          {manualCapturedAt ? (
+            <button className={s.captureClearBtn} onClick={() => setManualCapturedAt('')}>清除</button>
+          ) : (
+            <button
+              className={s.captureNowBtn}
+              onClick={() => {
+                const now = new Date()
+                const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+                  .toISOString()
+                  .slice(0, 16)
+                setManualCapturedAt(local)
+              }}
+            >
+              使用当前时间
+            </button>
+          )}
+          <span className={s.captureHint}>仅在图片无 EXIF 时间时使用</span>
+        </div>
       </div>
 
       <UploadArea

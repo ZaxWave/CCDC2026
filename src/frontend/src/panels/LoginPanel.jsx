@@ -7,6 +7,7 @@ export default function LoginPanel({ onLoginSuccess }) {
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -19,7 +20,8 @@ export default function LoginPanel({ onLoginSuccess }) {
       const data = await loginUser(username, password);
       localStorage.setItem('token', data.access_token);
       localStorage.setItem('username', username);
-      localStorage.setItem('login_time', Date.now());
+      if (rememberMe) localStorage.setItem('login_time', Date.now());
+      else localStorage.removeItem('login_time');
       onLoginSuccess();
     } catch (err) {
       setError(err.message || 'AUTH_REJECTED');
@@ -30,77 +32,101 @@ export default function LoginPanel({ onLoginSuccess }) {
 
   return (
     <div className={styles.container}>
-      {/* 视觉张力区 */}
-      <div className={styles.brandPanel}>
-        <div className={styles.gridOverlay}></div>
-        <div className={styles.brandContent}>
-          <div className={styles.meta}>STABLE_VERSION_0.1.4 // SECURED</div>
-          
-          <h1 className={styles.hugeTitle}>
-            <span>LIGHT</span>
-            <span className={styles.indent}>SCAN</span>
-          </h1>
-          
-          <div className={styles.divider}></div>
-          <p className={styles.slogan}>轻巡智维 · 道路病害轻量化智能巡检系统</p>
+      <div className={styles.pageHeader}>
+        <div className={styles.brandLockup}>
+          <img className={styles.brandLogo} src="/lightscan-lockup.svg" alt="LightScan" />
         </div>
+        <div className={styles.headerMeta}>道路病害智能巡检系统</div>
       </div>
 
-      {/* 登录表单区 */}
-      <div className={styles.formPanel}>
-        <div className={styles.glowDivider}></div>
+      <main className={styles.stage}>
+        <section className={styles.card} aria-label={isLoginMode ? '登录' : '注册'}>
+          <img className={styles.logoMark} src="/lightscan-mark.svg" alt="LightScan" />
 
-        <div className={styles.formWrapper}>
           <div className={styles.header}>
-            <h2 className={styles.title}>
-              {isLoginMode ? 'BOOT_SESSION' : 'REG_OPERATOR'}
-              <span className={styles.dot}>_</span>
-            </h2>
+            <h2 className={styles.title}>{isLoginMode ? '欢迎回来' : '创建账号'}</h2>
             <p className={styles.subtitle}>
-              {isLoginMode ? '请输入操作员凭证以访问受限数据' : '请提交新操作员授权申请'}
+              {isLoginMode ? '请使用下方表单登录。' : '填写账号密码后将自动登录。'}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className={styles.form}>
             <div className={styles.inputGroup}>
-              <label className={styles.label}>Operator_ID // 账户</label>
+              <label className={styles.label}>账号</label>
               <input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className={styles.input}
-                placeholder="ID_SEQUENCE"
+                placeholder="operator@example.com"
                 required
               />
             </div>
-            
+
             <div className={styles.inputGroup}>
-              <label className={styles.label}>Access_Key // 密钥</label>
+              <div className={styles.labelRow}>
+                <label className={styles.label}>密码</label>
+                {isLoginMode && (
+                  <button
+                    type="button"
+                    className={styles.textButton}
+                    onClick={() => setError('请联系管理员重置密码')}
+                  >
+                    忘记密码？
+                  </button>
+                )}
+              </div>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className={styles.input}
-                placeholder="TOKEN_REQUIRED"
+                placeholder="Password"
                 required
               />
             </div>
-            
-            {error && <div className={styles.error}>[ ERROR: {error} ]</div>}
+
+            {isLoginMode && (
+              <label className={styles.rememberRow}>
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                />
+                <span>保持登录状态</span>
+              </label>
+            )}
+
+            {error && <div className={styles.error}>{error}</div>}
 
             <button type="submit" disabled={loading} className={styles.submitBtn}>
-              {loading ? 'WAIT...' : isLoginMode ? 'INITIALIZE_TERMINAL' : 'REQUEST_ACCESS'}
+              {loading ? '请稍候' : isLoginMode ? '登录' : '注册并登录'}
             </button>
           </form>
 
+          <div className={styles.divider}>
+            <span></span>
+            <em>或</em>
+            <span></span>
+          </div>
+
+          <button
+            type="button"
+            className={styles.secondaryBtn}
+            onClick={() => setError('演示入口暂未开放，请使用账号密码登录')}
+          >
+            <span className={styles.secondaryIcon}>LS</span>
+            使用演示身份进入
+          </button>
+
           <div className={styles.toggleText}>
-            {isLoginMode ? '// 尚未获得授权?' : '// 已有访问权限?'}
+            {isLoginMode ? '还没有账号？' : '已有账号？'}
             <span onClick={() => setIsLoginMode(!isLoginMode)}>
               {isLoginMode ? '申请加入' : '返回登录'}
             </span>
           </div>
-        </div>
-      </div>
+        </section>
+      </main>
     </div>
   );
 }

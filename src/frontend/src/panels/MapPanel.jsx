@@ -246,7 +246,9 @@ export default function MapPanel({ onBackToDetect }) {
   const totalCount = loading ? '-' : (stats?.total ?? records.length);
 
   const { minTs, maxTs } = useMemo(() => {
-    const ts = records.filter(r => r.timestamp).map(r => new Date(r.timestamp).getTime());
+    const ts = records
+      .map(r => parseRecordTime(r)?.getTime())
+      .filter(t => typeof t === 'number' && !Number.isNaN(t));
     if (ts.length === 0) return { minTs: 0, maxTs: Date.now() };
     return { minTs: Math.min(...ts), maxTs: Math.max(...ts) };
   }, [records]);
@@ -288,12 +290,37 @@ export default function MapPanel({ onBackToDetect }) {
     });
 
     if (sliderVal >= 100) return filtered;
-    return filtered.filter(r => !r.timestamp || new Date(r.timestamp).getTime() <= cutoffTs);
+    return filtered.filter(r => {
+      const time = parseRecordTime(r);
+      return !time || time.getTime() <= cutoffTs;
+    });
   }, [records, fType, fStatus, fSource, fDateFrom, fDateTo, fConfMin, fAreaMin, sliderVal, cutoffTs]);
 
   const cutoffLabel = sliderVal >= 100
     ? '全部数据'
     : new Date(cutoffTs).toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' });
+
+  const activeFilterCount = [
+    fType && fType !== '全部',
+    fStatus,
+    fSource,
+    fDateFrom,
+    fDateTo,
+    fConfMin !== '',
+    fAreaMin !== '',
+    sliderVal < 100,
+  ].filter(Boolean).length;
+
+  const resetFilters = () => {
+    setFType('');
+    setFStatus('');
+    setFSource('');
+    setFDateFrom('');
+    setFDateTo('');
+    setFConfMin('');
+    setFAreaMin('');
+    setSliderVal(100);
+  };
 
   const filterButtonLeft = isSidebarOpen ? 380 : 20;
   const filterPanelLeft = isSidebarOpen ? 380 : 20;
@@ -366,18 +393,41 @@ export default function MapPanel({ onBackToDetect }) {
       )}
 
       <button
-        className={s.filterToggleButton}
+        className={`${s.filterToggleButton} ${showFilterPanel || activeFilterCount ? s.filterToggleButtonActive : ''}`}
         style={{ left: filterButtonLeft }}
         onClick={() => setShowFilterPanel(v => !v)}
         title={showFilterPanel ? '收起筛选' : '打开筛选'}
       >
-        <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', fontSize: '18px' }}>☰</span>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M3 5h18M6 12h12M10 19h4"/>
+        </svg>
+        {activeFilterCount > 0 && <span className={s.filterBadge}>{activeFilterCount}</span>}
       </button>
       {showFilterPanel && (
         <div className={s.filterPanel} style={{ left: filterPanelLeft }}>
           <div className={s.filterPanelHeader}>
-            <div>地图筛选</div>
-            <button className={s.filterPanelClose} onClick={() => setShowFilterPanel(false)}>×</button>
+            <div>
+              <span className={s.filterEyebrow}>QUERY FILTER</span>
+              <strong>地图筛选</strong>
+            </div>
+            <div className={s.filterHeaderActions}>
+              <button className={s.filterResetButton} onClick={resetFilters} disabled={activeFilterCount === 0}>重置</button>
+              <button className={s.filterPanelClose} onClick={() => setShowFilterPanel(false)} aria-label="关闭筛选">×</button>
+            </div>
+          </div>
+          <div className={s.filterSummary}>
+            <div>
+              <span>当前显示</span>
+              <strong>{filteredRecords.length}</strong>
+            </div>
+            <div>
+              <span>全部记录</span>
+              <strong>{records.length}</strong>
+            </div>
+            <div>
+              <span>筛选项</span>
+              <strong>{activeFilterCount}</strong>
+            </div>
           </div>
           <div className={s.filterPanelBody}>
             <label className={s.filterLabel}>
@@ -415,7 +465,7 @@ export default function MapPanel({ onBackToDetect }) {
               <input type="number" min="0" placeholder="像素²" value={fAreaMin} onChange={e => setFAreaMin(e.target.value)} className={s.filterInput} />
             </label>
           </div>
-          <div className={s.filterPanelHint}>按拍摄时间（若有 EXIF）或上传时间回退筛选，并支持多条件组合。</div>
+          <div className={s.filterPanelHint}>按 EXIF 拍摄时间优先筛选，无 EXIF 时回退上传时间；时间回溯滑块也使用同一时间口径。</div>
         </div>
       )}
 

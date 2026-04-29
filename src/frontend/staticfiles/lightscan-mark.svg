@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-labelledby="mark-title mark-desc">
+  <title id="mark-title">LightScan mark</title>
+  <desc id="mark-desc">A centered italic Ls letter mark for LightScan.</desc>
+  <rect x="10" y="10" width="100" height="100" rx="24" fill="#f8fbff"/>
+  <text x="60" y="62"
+        text-anchor="middle"
+        dominant-baseline="middle"
+        font-family="Inter, 'SF Pro Display', 'Segoe UI', Arial, sans-serif"
+        font-size="58"
+        font-style="italic"
+        font-weight="850"
+        letter-spacing="-3"
+        fill="#111827">L<tspan fill="#2563eb">s</tspan></text>
+</svg>

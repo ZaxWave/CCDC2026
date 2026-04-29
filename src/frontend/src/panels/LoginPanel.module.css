@@ -1,254 +1,368 @@
-/* src/panels/LoginPanel.module.css */
-
 .container {
-  display: flex;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
   min-height: 100vh;
   width: 100vw;
-  background-color: #020202;
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 9999;
   overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 28%, rgba(62, 106, 225, 0.10), transparent 34%),
+    linear-gradient(180deg, #F7F9FF 0%, #FFFFFF 100%);
+  color: #171A20;
+  font-family: -apple-system, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
 }
 
-/* ================= 左侧视觉区 ================= */
-.brandPanel {
-  flex: 1.1; 
-  position: relative;
-  background: radial-gradient(circle at 100% 50%, #0d0d12 0%, #020202 100%);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding-left: 12%;
-}
-
-.gridOverlay {
+.pageHeader {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: 
-    linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
-  background-size: 60px 60px;
-  mask-image: radial-gradient(ellipse at left, black, transparent);
-  z-index: 1;
-}
-
-.meta {
-  font-family: 'Courier New', monospace;
-  color: #00d2ff;
-  font-size: 0.7rem;
-  letter-spacing: 4px;
-  margin-bottom: 20px;
-  opacity: 0.6;
-}
-
-.hugeTitle {
-  font-size: 10rem;
-  font-weight: 900;
-  line-height: 0.85;
-  color: #ffffff;
-  margin: 0;
-  letter-spacing: -0.05em;
-  font-style: italic;
-  
-  background: linear-gradient(180deg, #fff 40%, rgba(255,255,255,0.02) 100%);
-  
-  -webkit-background-clip: text; /* 兼容 Chrome/Safari */
-  background-clip: text;         
-  
-  -webkit-text-fill-color: transparent; 
-  color: transparent;                  
-
-  transform: translateX(-15px);
   z-index: 2;
-  user-select: none;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-/* 针对 Flex 布局下 clip 可能失效的特殊处理 */
-.hugeTitle span {
-  display: block;
-  -webkit-background-clip: text;
-  background-clip: text;
-}
-
-.hugeTitle .indent {
-  margin-left: 120px;
-}
-
-.divider {
-  width: 140px;
-  height: 2px;
-  background: #00d2ff;
-  margin: 40px 0;
-  box-shadow: 0 0 30px rgba(0, 210, 255, 0.5);
-}
-
-.slogan {
-  color: #4a4a5a;
-  font-size: 1.1rem;
-  letter-spacing: 4px;
-  font-weight: 500;
-  text-transform: uppercase;
-}
-
-/* ================= 右侧表单区 ================= */
-.formPanel {
-  flex: 0.9;
-  background: #050507;
-  /* border-left: 1px solid rgba(255, 255, 255, 0.02); */
+  top: 28px;
+  left: 48px;
+  right: 48px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  color: #171A20;
+}
+
+.brandLockup {
+  display: inline-flex;
+  align-items: center;
+}
+
+.brandLogo {
+  display: block;
+  width: 166px;
+  height: 46px;
+}
+
+.headerMeta {
+  color: #5C5E62;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.stage {
   position: relative;
+  z-index: 2;
+  display: flex;
+  width: min(520px, calc(100vw - 48px));
+  min-height: 100vh;
+  margin: 0 auto;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 0;
 }
 
-.glowDivider {
-  position: absolute;
-  left: 0;
-  top: 12%; 
-  bottom: 12%;
-  width: 2px;
-  background: linear-gradient(to bottom, transparent 0%, #00d2ff 50%, transparent 100%);
-  box-shadow: 0 0 15px 1px rgba(0, 210, 255, 0.4),
-              0 0 30px 3px rgba(0, 210, 255, 0.15);
-  z-index: 10;
-  opacity: 0.8;
+.card {
+  width: 430px;
+  max-width: 100%;
+  border: 1px solid rgba(208, 209, 210, 0.72);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.94);
+  padding: 40px;
+  box-shadow: 0 20px 70px rgba(23, 26, 32, 0.10);
 }
 
-.formWrapper {
-  max-width: 330px;
-  margin-left: 20px;
+.logoMark {
+  display: block;
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 18px;
 }
 
 .header {
-  margin-bottom: 50px;
+  margin-bottom: 28px;
+  text-align: center;
 }
 
 .title {
-  color: #ffffff;
-  font-size: 2.4rem;
-  margin: 0 0 12px 0;
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  margin: 0;
+  color: #171A20;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: 0;
 }
-
-.dot {
-  color: #00d2ff;
-  animation: blink 1.5s step-end infinite;
-}
-
-@keyframes blink { 50% { opacity: 0; } }
 
 .subtitle {
-  color: #3f3f4e;
-  font-size: 0.8rem;
-  font-family: 'Courier New', monospace;
-  letter-spacing: 1px;
+  margin-top: 8px;
+  color: #5C5E62;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
 }
 
 .form {
   display: flex;
   flex-direction: column;
-  gap: 36px;
+  gap: 16px;
 }
 
 .inputGroup {
   display: flex;
   flex-direction: column;
+  gap: 8px;
+}
+
+.labelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 12px;
 }
 
 .label {
-  font-size: 0.65rem;
-  color: #3f3f4e;
-  font-family: 'Courier New', monospace;
-  letter-spacing: 1.5px;
-  font-weight: bold;
+  color: #393C41;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 18px;
+}
+
+.textButton {
+  border: 0;
+  background: transparent;
+  color: #5C5E62;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  line-height: 18px;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.33s;
+}
+
+.textButton:hover {
+  color: #3E6AE1;
 }
 
 .input {
-  background: transparent;
-  border: none;
-  /* 仅保留左和下边框 */
-  border-bottom: 2px solid rgba(255, 255, 255, 0.06);
-  border-left: 2px solid rgba(255, 255, 255, 0.06);
-  padding: 14px 20px;
-  color: #ffffff;
-  font-size: 1.1rem;
-  font-family: 'Courier New', monospace;
-  transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid #D0D1D2;
+  border-radius: 6px;
+  background: #FFFFFF;
+  color: #171A20;
+  font: inherit;
+  font-size: 14px;
+  line-height: 20px;
   outline: none;
-}
-
-.input:focus {
-  border-bottom: 2px solid #00d2ff;
-  border-left: 2px solid #00d2ff;
-  background: linear-gradient(135deg, rgba(0, 210, 255, 0.04) 0%, transparent 100%);
-  box-shadow: -15px 15px 30px -10px rgba(0, 210, 255, 0.2);
+  padding: 12px 14px;
+  transition: border-color 0.33s, background-color 0.33s, box-shadow 0.25s;
 }
 
 .input::placeholder {
-  color: #1a1a22;
+  color: #8E8E8E;
+}
+
+.input:focus {
+  border-color: #3E6AE1;
+  box-shadow: #3E6AE1 0 0 0 1px inset;
+}
+
+.rememberRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: #393C41;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 18px;
+  width: fit-content;
+}
+
+.rememberRow input {
+  width: 17px;
+  height: 17px;
+  accent-color: #3E6AE1;
 }
 
 .error {
-  color: #ff3e3e;
-  font-size: 0.75rem;
-  font-family: 'Courier New', monospace;
-  padding: 12px;
-  border-left: 3px solid #ff3e3e;
-  background: rgba(255, 62, 62, 0.03);
+  color: #D93025;
+  font-size: 13px;
+  line-height: 18px;
 }
 
 .submitBtn {
-  background: #ffffff;
-  color: #000;
-  border: none;
-  padding: 20px;
-  font-size: 0.9rem;
-  font-weight: 900;
-  font-family: 'Courier New', monospace;
-  letter-spacing: 2px;
+  display: flex;
+  width: 100%;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid transparent;
+  border-radius: 6px;
+  background: #3E6AE1;
+  color: #FFFFFF;
   cursor: pointer;
-  transition: all 0.3s ease;
-  margin-top: 10px;
-  /* 锐利的非对称切角按钮 */
-  clip-path: polygon(0 0, 100% 0, 100% 70%, 92% 100%, 0 100%);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 18px;
+  padding: 4px 16px;
+  transition: border-color 0.33s, background-color 0.33s, color 0.33s, box-shadow 0.25s;
 }
 
-.submitBtn:hover {
-  background: #00d2ff;
-  transform: translateX(10px); /* 悬浮时横向位移，极具动感 */
-  box-shadow: -10px 10px 0px rgba(0, 210, 255, 0.1);
+.submitBtn:hover:not(:disabled) {
+  background: #3457B1;
+}
+
+.submitBtn:focus-visible {
+  box-shadow: #171A20 0 0 0 2px inset;
+}
+
+.submitBtn:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 24px 0;
+  color: #8E8E8E;
+  font-size: 13px;
+  font-style: normal;
+  line-height: 18px;
+}
+
+.divider span {
+  height: 1px;
+  flex: 1;
+  background: #EEEEEE;
+}
+
+.divider em {
+  font-style: normal;
+}
+
+.secondaryBtn {
+  display: flex;
+  width: 100%;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 1px solid #D0D1D2;
+  border-radius: 6px;
+  background: #FFFFFF;
+  color: #393C41;
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 18px;
+  transition: border-color 0.33s, color 0.33s, background-color 0.33s;
+}
+
+.secondaryBtn:hover {
+  border-color: #3E6AE1;
+  color: #171A20;
+}
+
+.secondaryIcon {
+  display: inline-flex;
+  width: 22px;
+  height: 22px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #171A20;
+  color: #FFFFFF;
+  font-size: 9px;
+  font-weight: 600;
 }
 
 .toggleText {
-  margin-top: 40px;
-  color: #2a2a35;
-  font-size: 0.75rem;
-  font-family: 'Courier New', monospace;
+  margin-top: 24px;
+  color: #5C5E62;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  text-align: center;
 }
 
 .toggleText span {
-  color: #4a4a5a;
+  margin-left: 8px;
+  color: #171A20;
   cursor: pointer;
-  margin-left: 12px;
-  transition: color 0.2s;
-  text-decoration: underline;
+  font-weight: 600;
+  transition: color 0.33s;
 }
 
 .toggleText span:hover {
-  color: #00d2ff;
+  color: #3E6AE1;
 }
 
-@media (max-width: 1280px) {
-  .hugeTitle { font-size: 8rem; }
-  .formPanel { padding-left: 60px; }
+@media (max-width: 1120px) {
+  .stage {
+    width: min(520px, calc(100vw - 64px));
+  }
+}
+
+@media (max-width: 860px) {
+  .container {
+    min-height: 100vh;
+    overflow-y: auto;
+    padding: 92px 24px 48px;
+  }
+
+  .pageHeader {
+    left: 24px;
+    right: 24px;
+  }
+
+  .headerMeta {
+    display: none;
+  }
+
+  .stage {
+    width: 100%;
+    min-height: auto;
+    padding: 0;
+  }
+
+  .card {
+    width: 100%;
+    max-width: 430px;
+    margin: 0 auto;
+    padding: 32px 24px;
+  }
+}
+
+@media (max-height: 760px) and (min-width: 861px) {
+  .stage {
+    padding: 72px 0 28px;
+  }
+
+  .card {
+    padding: 28px 32px;
+  }
+
+  .logoMark {
+    width: 44px;
+    height: 44px;
+    margin-bottom: 12px;
+  }
+
+  .header {
+    margin-bottom: 18px;
+  }
+
+  .form {
+    gap: 12px;
+  }
+
+  .input {
+    min-height: 42px;
+    padding: 10px 14px;
+  }
+
+  .divider {
+    margin: 16px 0;
+  }
+
+  .toggleText {
+    margin-top: 16px;
+  }
 }

@@ -14,12 +14,16 @@
 }
 
 .brand {
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  color: var(--dark);
+  display: inline-flex;
+  align-items: center;
   text-decoration: none;
   flex-shrink: 0;
+}
+
+.brandLockup {
+  width: 150px;
+  height: 41px;
+  display: block;
 }
 
 /* 右侧区域：links + user avatar 并排 */
@@ -66,14 +70,35 @@
 }
 .taskBtn:hover { color: var(--dark); background: var(--ash); }
 
-.themeBtn {
-  display: flex; align-items: center; justify-content: center;
-  background: none; border: none; cursor: pointer;
-  color: var(--muted); border-radius: 6px;
-  width: 32px; height: 32px;
+.themeSelectWrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 8px;
+  border-radius: 6px;
+  color: var(--muted);
   transition: color 0.15s, background 0.15s;
 }
-.themeBtn:hover { color: var(--dark); background: var(--ash); }
+.themeSelectWrap:hover {
+  color: var(--dark);
+  background: var(--ash);
+}
+.themeSelect {
+  max-width: 82px;
+  border: 0;
+  background: transparent;
+  color: currentColor;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  outline: none;
+}
+.themeSelect option {
+  color: #171A20;
+  background: #fff;
+}
 
 .badge {
   position: absolute; top: 2px; right: 2px;

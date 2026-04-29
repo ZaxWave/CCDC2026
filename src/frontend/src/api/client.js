@@ -30,12 +30,13 @@ async function request(path, body, method = 'POST') {
   return res.json();
 }
 
-export function detectImages(files, sourceType, gps) {
+export function detectImages(files, sourceType, gps, capturedAt) {
   const form = new FormData()
   files.forEach(f => form.append('files', f))
   if (sourceType) form.append('source_type', sourceType)
   if (gps?.lat != null) form.append('lat', gps.lat)
   if (gps?.lng != null) form.append('lng', gps.lng)
+  if (capturedAt) form.append('captured_at', capturedAt)
   return request('/api/v1/detect', form)
 }
 

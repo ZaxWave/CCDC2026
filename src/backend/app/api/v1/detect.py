@@ -31,6 +31,7 @@ async def detect(
     conf: float = Query(0.15, ge=0.0, le=1.0, description="置信度阈值"),
     lat: Optional[float] = Form(None, description="纬度（手动指定或浏览器定位，优先级最高）"),
     lng: Optional[float] = Form(None, description="经度（手动指定或浏览器定位，优先级最高）"),
+    captured_at: Optional[str] = Form(None, description="手动指定拍摄时间；仅在图片无 EXIF 拍摄时间时使用"),
     source_type: Optional[str] = Form(None, description="数据来源：dashcam/mobile/camera/drone"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -56,6 +57,15 @@ async def detect(
         user_lat, user_lng = wgs84_to_gcj02(lat, lng)
     else:
         user_lat, user_lng = None, None
+    manual_captured_at: Optional[datetime] = None
+    if captured_at:
+        raw_capture_time = captured_at.strip()
+        try:
+            manual_captured_at = datetime.fromisoformat(raw_capture_time.replace("Z", "+00:00"))
+            if manual_captured_at.tzinfo is not None:
+                manual_captured_at = manual_captured_at.astimezone(timezone.utc).replace(tzinfo=None)
+        except ValueError:
+            raise HTTPException(422, detail="captured_at 格式无效，请使用 YYYY-MM-DDTHH:mm 或 ISO 时间格式")
     batch_real_lat: Optional[float] = None   # 批次内首张带 EXIF 的坐标
     batch_real_lng: Optional[float] = None
     # 若整批都无真实 GPS：生成一个批次级随机坐标（同批图片落在同一位置）
@@ -76,7 +86,8 @@ async def detect(
 
         img_bytes = await upload.read()
         img_hash    = hashlib.sha256(img_bytes).hexdigest()
-        captured_at = extract_capture_time(img_bytes)  # EXIF 拍摄时间，无则 None
+        # EXIF 拍摄时间优先；图片无 EXIF 时才使用前端手动指定的批次拍摄时间。
+        image_captured_at = extract_capture_time(img_bytes) or manual_captured_at
 
         # ── GPS 解析 ────────────────────────────────────────────────────────
         if user_lat is not None and user_lng is not None:
@@ -177,7 +188,7 @@ async def detect(
                     creator_id=current_user.id,
                     thumbnail_b64=img_b64 or None,
                     content_hash=img_hash,
-                    captured_at=captured_at,
+                    captured_at=image_captured_at,
                 )
                 db.add(db_record)
                 db.flush()
@@ -218,7 +229,7 @@ async def detect(
                     creator_id=current_user.id,
                     thumbnail_b64=img_b64 or None,
                     content_hash=img_hash,
-                    captured_at=captured_at,
+                    captured_at=image_captured_at,
                 )
                 db.add(db_record)
                 cluster = db.query(DiseaseCluster).filter(

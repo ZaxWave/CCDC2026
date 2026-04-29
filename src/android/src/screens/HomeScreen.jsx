@@ -61,8 +61,8 @@ const s = StyleSheet.create({
   page: { flex: 1, backgroundColor: '#111111', justifyContent: 'center', paddingHorizontal: 32 },
   brand: { alignItems: 'center', marginBottom: 48 },
   wordmark: { flexDirection: 'row', alignItems: 'baseline' },
-  wordLight: { fontSize: 48, fontWeight: '300', color: '#ffffff', letterSpacing: 2 },
-  wordScan: { fontSize: 48, fontWeight: '800', color: '#3e6ae1', letterSpacing: 2 },
+  wordLight: { fontSize: 54, fontWeight: '650', fontStyle: 'italic', color: '#ffffff', letterSpacing: -2 },
+  wordScan: { fontSize: 54, fontWeight: '850', fontStyle: 'italic', color: '#3e6ae1', letterSpacing: -2 },
   tagline: { fontSize: 14, color: 'rgba(255,255,255,0.4)', marginTop: 8, letterSpacing: 4 },
   divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.08)', marginBottom: 48 },
   entries: {

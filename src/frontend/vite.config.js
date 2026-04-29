@@ -7,6 +7,17 @@ export default defineConfig({
   build: {
     outDir: 'public',
     emptyOutDir: true,
+    chunkSizeWarningLimit: 1200,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return undefined
+          if (/[\\/]node_modules[\\/](react|react-dom)[\\/]/.test(id)) return 'vendor-react'
+          if (id.includes('@amap') || id.includes('leaflet') || id.includes('react-leaflet')) return 'vendor-map'
+          return undefined
+        },
+      },
+    },
   },
   server: {
     proxy: {

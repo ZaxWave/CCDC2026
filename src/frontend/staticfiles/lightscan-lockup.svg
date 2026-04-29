@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 286 78" role="img" aria-labelledby="lockup-title lockup-desc">
+  <title id="lockup-title">LightScan logo</title>
+  <desc id="lockup-desc">An italic LightScan wordmark with a subtle forward motion feel.</desc>
+  <text x="8" y="55"
+        transform="skewX(-8)"
+        font-family="Inter, 'SF Pro Display', 'Segoe UI', Arial, sans-serif"
+        font-size="48"
+        letter-spacing="-0.7"
+        fill="#111827">
+    <tspan font-weight="650">Light</tspan><tspan font-weight="850" fill="#2563eb">Scan</tspan>
+  </text>
+</svg>
