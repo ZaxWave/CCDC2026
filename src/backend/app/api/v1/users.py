@@ -26,7 +26,7 @@ def get_my_profile(
         db.query(func.count(DiseaseRecord.id))
         .filter(
             DiseaseRecord.creator_id == current_user.id,
-            DiseaseRecord.deleted_at == None,
+            DiseaseRecord.deleted_at.is_(None),
         )
         .scalar()
         or 0
@@ -66,7 +66,7 @@ def update_my_profile(
         db.query(func.count(DiseaseRecord.id))
         .filter(
             DiseaseRecord.creator_id == current_user.id,
-            DiseaseRecord.deleted_at == None,
+            DiseaseRecord.deleted_at.is_(None),
         )
         .scalar()
         or 0

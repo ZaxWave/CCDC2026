@@ -1,8 +1,13 @@
 from sqlalchemy import Column, Integer, String, Float, DateTime, Boolean, ForeignKey, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 from .database import Base
+
+
+def utc_now() -> datetime:
+    """Return naive UTC for DateTime columns configured without timezone=True."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 class User(Base):
@@ -13,7 +18,7 @@ class User(Base):
     hashed_password = Column(String)
     role         = Column(String, default="worker")
     is_active    = Column(Boolean, default=True)
-    created_at   = Column(DateTime, default=datetime.utcnow, nullable=True)
+    created_at   = Column(DateTime, default=utc_now, nullable=True)
     nickname     = Column(String, nullable=True)
     unit         = Column(String, nullable=True)
     source_type  = Column(String, nullable=True, default="manual")
@@ -38,8 +43,8 @@ class DiseaseCluster(Base):
     # AI 自动初评字段
     severity          = Column(Integer, nullable=True)  # 1-5，由 ls-det 置信度+bbox 面积估算
     priority          = Column(Integer, nullable=True)  # 1-5，综合路段等级与 severity 生成
-    first_detected_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    last_detected_at  = Column(DateTime, nullable=False, default=datetime.utcnow)
+    first_detected_at = Column(DateTime, nullable=False, default=utc_now)
+    last_detected_at  = Column(DateTime, nullable=False, default=utc_now)
     repaired_at       = Column(DateTime, nullable=True)
     repaired_image_b64 = Column(Text, nullable=True)
     deleted_at        = Column(DateTime, nullable=True, default=None)  # 软删除时间戳
@@ -57,7 +62,7 @@ class DiseaseRecord(Base):
     cluster_id = Column(String, ForeignKey("disease_clusters.cluster_id"), nullable=True, index=True)
     creator_id = Column(Integer, ForeignKey("users.id"), index=True)
     filename   = Column(String, index=True)
-    timestamp  = Column(DateTime, default=datetime.utcnow, index=True)
+    timestamp  = Column(DateTime, default=utc_now, index=True)
     lat        = Column(Float, index=True)
     lng        = Column(Float, index=True)
     label      = Column(String, index=True)
@@ -95,7 +100,7 @@ class AuditLog(Base):
     from_status = Column(String, nullable=True)
     to_status   = Column(String, nullable=False)
     operator_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-    changed_at  = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    changed_at  = Column(DateTime, default=utc_now, nullable=False, index=True)
     note        = Column(String, nullable=True)
 
     operator = relationship("User", back_populates="audit_logs")
@@ -112,7 +117,7 @@ class DiseaseMedia(Base):
     media_type  = Column(String, nullable=False)   # "thumbnail" | "repaired"
     storage_url = Column(String, nullable=True)    # OSS/MinIO URL（优先使用）
     b64_data    = Column(Text, nullable=True)      # 兜底内嵌 Base64
-    created_at  = Column(DateTime, default=datetime.utcnow)
+    created_at  = Column(DateTime, default=utc_now)
 
     cluster = relationship("DiseaseCluster", back_populates="media")
     record  = relationship("DiseaseRecord",  back_populates="media")

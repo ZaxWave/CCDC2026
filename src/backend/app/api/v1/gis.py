@@ -15,6 +15,9 @@ from app.api.deps import get_current_user
 
 router = APIRouter(prefix="/api/v1/gis", tags=["gis"])
 
+def utc_now() -> datetime:
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
 class BatchDeleteBody(BaseModel):
     ids: List[int]
 
@@ -35,7 +38,7 @@ def get_records(
         .filter(
             DiseaseRecord.lat != 0.0,
             DiseaseRecord.lng != 0.0,
-            DiseaseRecord.deleted_at == None,
+            DiseaseRecord.deleted_at.is_(None),
         )
         .order_by(DiseaseRecord.timestamp.desc())
         .offset(offset)
@@ -61,7 +64,7 @@ async def update_record_status(
 
     record = db.query(DiseaseRecord).filter(
         DiseaseRecord.id == record_id,
-        DiseaseRecord.deleted_at == None,
+        DiseaseRecord.deleted_at.is_(None),
     ).first()
     if not record:
         raise HTTPException(status_code=404, detail="记录不存在")
@@ -75,7 +78,7 @@ async def update_record_status(
 
     repaired_b64 = None
     if status == "repaired":
-        record.repaired_at = datetime.utcnow()
+        record.repaired_at = utc_now()
         if repaired_image:
             img_bytes = await repaired_image.read()
             mime = repaired_image.content_type or "image/jpeg"
@@ -135,7 +138,7 @@ def get_my_records(
     """获取当前用户上传的病害记录 - 个人维护专属（不含已软删除）"""
     return db.query(DiseaseRecord).filter(
         DiseaseRecord.creator_id == current_user.id,
-        DiseaseRecord.deleted_at == None,
+        DiseaseRecord.deleted_at.is_(None),
     ).order_by(DiseaseRecord.timestamp.desc()).all()
 
 
@@ -148,7 +151,7 @@ def delete_record(
     """软删除病害记录 - 移入回收站，仅限本记录的创建者或管理员"""
     record = db.query(DiseaseRecord).filter(
         DiseaseRecord.id == record_id,
-        DiseaseRecord.deleted_at == None,
+        DiseaseRecord.deleted_at.is_(None),
     ).first()
     if not record:
         raise HTTPException(status_code=404, detail="记录不存在")
@@ -191,7 +194,7 @@ def batch_delete_records(
         .filter(
             DiseaseRecord.id.in_(body.ids),
             DiseaseRecord.creator_id == current_user.id,
-            DiseaseRecord.deleted_at == None,
+            DiseaseRecord.deleted_at.is_(None),
         )
         .all()
     )
@@ -212,7 +215,7 @@ def get_deleted_records(
         db.query(DiseaseRecord)
         .filter(
             DiseaseRecord.creator_id == current_user.id,
-            DiseaseRecord.deleted_at != None,
+            DiseaseRecord.deleted_at.isnot(None),
             DiseaseRecord.deleted_at >= cutoff,
         )
         .order_by(DiseaseRecord.deleted_at.desc())
@@ -230,7 +233,7 @@ def restore_record(
     record = db.query(DiseaseRecord).filter(
         DiseaseRecord.id == record_id,
         DiseaseRecord.creator_id == current_user.id,
-        DiseaseRecord.deleted_at != None,
+        DiseaseRecord.deleted_at.isnot(None),
     ).first()
     if not record:
         raise HTTPException(status_code=404, detail="记录不存在或已彻底删除")
@@ -249,7 +252,7 @@ def permanent_delete_record(
     record = db.query(DiseaseRecord).filter(
         DiseaseRecord.id == record_id,
         DiseaseRecord.creator_id == current_user.id,
-        DiseaseRecord.deleted_at != None,
+        DiseaseRecord.deleted_at.isnot(None),
     ).first()
     if not record:
         raise HTTPException(status_code=404, detail="记录不存在")
@@ -272,7 +275,7 @@ def batch_permanent_delete_records(
         .filter(
             DiseaseRecord.id.in_(body.ids),
             DiseaseRecord.creator_id == current_user.id,
-            DiseaseRecord.deleted_at != None,
+            DiseaseRecord.deleted_at.isnot(None),
         )
         .all()
     )
@@ -299,7 +302,7 @@ def get_my_stats(
         .filter(
             DiseaseRecord.creator_id == current_user.id,
             func.date(DiseaseRecord.timestamp) >= seven_days_ago,
-            DiseaseRecord.deleted_at == None,
+            DiseaseRecord.deleted_at.is_(None),
         )
         .group_by(func.date(DiseaseRecord.timestamp))
         .order_by(func.date(DiseaseRecord.timestamp))
@@ -317,7 +320,7 @@ def get_my_stats(
         db.query(func.count(DiseaseRecord.id))
         .filter(
             DiseaseRecord.creator_id == current_user.id,
-            DiseaseRecord.deleted_at == None,
+            DiseaseRecord.deleted_at.is_(None),
         )
         .scalar()
         or 0
@@ -337,14 +340,14 @@ def get_cluster_timeline(
     """
     ref = db.query(DiseaseRecord).filter(
         DiseaseRecord.id == record_id,
-        DiseaseRecord.deleted_at == None,
+        DiseaseRecord.deleted_at.is_(None),
     ).first()
     if not ref:
         raise HTTPException(status_code=404, detail="记录不存在")
     if not ref.lat or not ref.lng:
         raise HTTPException(status_code=422, detail="该记录缺少坐标信息")
 
-    three_months_ago = datetime.utcnow() - timedelta(days=90)
+    three_months_ago = utc_now() - timedelta(days=90)
 
     # 10 米对应的经纬度容差（赤道附近 1° ≈ 111111m）
     delta_lat = 10.0 / 111111.0
@@ -358,7 +361,7 @@ def get_cluster_timeline(
             .filter(
                 DiseaseRecord.cluster_id == ref.cluster_id,
                 DiseaseRecord.timestamp >= three_months_ago,
-                DiseaseRecord.deleted_at == None,
+                DiseaseRecord.deleted_at.is_(None),
             )
             .order_by(func.coalesce(DiseaseRecord.captured_at, DiseaseRecord.timestamp).asc())
             .all()
@@ -371,7 +374,7 @@ def get_cluster_timeline(
                 DiseaseRecord.lat.between(ref.lat - delta_lat, ref.lat + delta_lat),
                 DiseaseRecord.lng.between(ref.lng - delta_lng, ref.lng + delta_lng),
                 DiseaseRecord.timestamp >= three_months_ago,
-                DiseaseRecord.deleted_at == None,
+                DiseaseRecord.deleted_at.is_(None),
             )
             .order_by(func.coalesce(DiseaseRecord.captured_at, DiseaseRecord.timestamp).asc())
             .all()
@@ -432,7 +435,7 @@ def get_cluster_fusion(record_id: int, db: Session = Depends(get_db)):
     """
     ref = db.query(DiseaseRecord).filter(
         DiseaseRecord.id == record_id,
-        DiseaseRecord.deleted_at == None,
+        DiseaseRecord.deleted_at.is_(None),
     ).first()
     if not ref:
         raise HTTPException(status_code=404, detail="记录不存在")
@@ -442,7 +445,7 @@ def get_cluster_fusion(record_id: int, db: Session = Depends(get_db)):
             db.query(DiseaseRecord)
             .filter(
                 DiseaseRecord.cluster_id == ref.cluster_id,
-                DiseaseRecord.deleted_at == None,
+                DiseaseRecord.deleted_at.is_(None),
             )
             .order_by(DiseaseRecord.timestamp.asc())
             .all()
@@ -556,7 +559,7 @@ def get_source_stats(db: Session = Depends(get_db)):
     }
     rows = (
         db.query(DiseaseRecord.source_type, func.count(DiseaseRecord.id))
-        .filter(DiseaseRecord.deleted_at == None)
+        .filter(DiseaseRecord.deleted_at.is_(None))
         .group_by(DiseaseRecord.source_type)
         .all()
     )
@@ -580,7 +583,7 @@ def get_stats(db: Session = Depends(get_db)):
         )
         .filter(
             func.date(DiseaseRecord.timestamp) >= seven_days_ago,
-            DiseaseRecord.deleted_at == None,
+            DiseaseRecord.deleted_at.is_(None),
         )
         .group_by(func.date(DiseaseRecord.timestamp))
         .order_by(func.date(DiseaseRecord.timestamp))
@@ -595,6 +598,6 @@ def get_stats(db: Session = Depends(get_db)):
         day_str = str(day)
         daily.append(DailyCount(date=day_str, count=counts_by_date.get(day_str, 0)))
 
-    total = db.query(func.count(DiseaseRecord.id)).filter(DiseaseRecord.deleted_at == None).scalar() or 0
+    total = db.query(func.count(DiseaseRecord.id)).filter(DiseaseRecord.deleted_at.is_(None)).scalar() or 0
 
     return StatsOut(daily=daily, total=total)

@@ -16,6 +16,10 @@ from app.services.ai_report_service import generate_area_report, generate_cluste
 router = APIRouter(prefix="/api/v1/ai", tags=["ai-report"])
 
 
+def utc_now() -> datetime:
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
+
 class ReportOut(BaseModel):
     report: str
     generated_at: str
@@ -42,7 +46,7 @@ async def ai_area_report(
         db.query(DiseaseRecord)
         .filter(
             DiseaseRecord.timestamp >= since,
-            DiseaseRecord.deleted_at == None,
+            DiseaseRecord.deleted_at.is_(None),
         )
         .all()
     )
@@ -72,12 +76,12 @@ async def ai_cluster_advice(
     """针对指定病害点的时序数据，调用 DeepSeek 生成单点养护处置建议。"""
     ref = db.query(DiseaseRecord).filter(
         DiseaseRecord.id == record_id,
-        DiseaseRecord.deleted_at == None,
+        DiseaseRecord.deleted_at.is_(None),
     ).first()
     if not ref:
         raise HTTPException(status_code=404, detail="记录不存在")
 
-    three_months_ago = datetime.utcnow() - timedelta(days=90)
+    three_months_ago = utc_now() - timedelta(days=90)
 
     if ref.cluster_id:
         cluster_records = (
@@ -85,7 +89,7 @@ async def ai_cluster_advice(
             .filter(
                 DiseaseRecord.cluster_id == ref.cluster_id,
                 DiseaseRecord.timestamp >= three_months_ago,
-                DiseaseRecord.deleted_at == None,
+                DiseaseRecord.deleted_at.is_(None),
             )
             .order_by(DiseaseRecord.timestamp.asc())
             .all()
@@ -102,7 +106,7 @@ async def ai_cluster_advice(
                 DiseaseRecord.lat.between(ref.lat - delta_lat, ref.lat + delta_lat),
                 DiseaseRecord.lng.between(ref.lng - delta_lng, ref.lng + delta_lng),
                 DiseaseRecord.timestamp >= three_months_ago,
-                DiseaseRecord.deleted_at == None,
+                DiseaseRecord.deleted_at.is_(None),
             )
             .order_by(DiseaseRecord.timestamp.asc())
             .all()

@@ -76,7 +76,7 @@ def dispatch_order(
 
     record = db.query(DiseaseRecord).filter(
         DiseaseRecord.id == record_id,
-        DiseaseRecord.deleted_at == None,
+        DiseaseRecord.deleted_at.is_(None),
     ).first()
     if not record:
         raise HTTPException(status_code=404, detail="记录不存在")
@@ -175,8 +175,8 @@ def get_orders(
 ):
     """返回已派发工单（dispatch_info 不为空），不需要登录。"""
     q = db.query(DiseaseRecord).filter(
-        DiseaseRecord.dispatch_info != None,
-        DiseaseRecord.deleted_at == None,
+        DiseaseRecord.dispatch_info.isnot(None),
+        DiseaseRecord.deleted_at.is_(None),
     )
     if status:
         q = q.filter(DiseaseRecord.status == status)
@@ -221,7 +221,7 @@ def update_order_status(
 
     record = db.query(DiseaseRecord).filter(
         DiseaseRecord.id == record_id,
-        DiseaseRecord.deleted_at == None,
+        DiseaseRecord.deleted_at.is_(None),
     ).first()
     if not record:
         raise HTTPException(status_code=404, detail="工单不存在")

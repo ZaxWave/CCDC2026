@@ -12,7 +12,7 @@ import logging
 import traceback
 import uuid
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 _log = logging.getLogger("uvicorn.error")
@@ -42,6 +42,19 @@ _tasks: dict[str, dict] = {}
 
 # 限制并发视频任务数，防止同时多路推理耗尽显存
 _video_executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="video_worker")
+
+
+def _utc_now() -> datetime:
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
+
+def _parse_frame_time(raw_ts: Optional[str]) -> datetime:
+    if not raw_ts:
+        return _utc_now()
+    parsed = datetime.fromisoformat(raw_ts)
+    if parsed.tzinfo is not None:
+        return parsed.astimezone(timezone.utc).replace(tzinfo=None)
+    return parsed
 
 
 # ── 后台工作函数 ──────────────────────────────────────────────────────────
@@ -116,9 +129,9 @@ def _run_video_task(
                 lng = location.get("lng", 0.0)
                 raw_ts = frame.get("timestamp")
                 try:
-                    ts = datetime.fromisoformat(raw_ts) if raw_ts else datetime.utcnow()
+                    ts = _parse_frame_time(raw_ts)
                 except (ValueError, TypeError):
-                    ts = datetime.utcnow()
+                    ts = _utc_now()
 
                 for det in frame.get("detections", []):
                     feature = det.get("feature")
