@@ -528,20 +528,6 @@ export default function DashboardPanel({ onExit }) {
             {now.toLocaleString('zh-CN', { hour12: false })}
           </span>
           <button
-            onClick={toggleFullscreen}
-            style={{
-              height: 26, padding: '0 12px',
-              background: isFullscreen ? 'rgba(0,212,255,0.12)' : 'transparent',
-              border: `1px solid ${isFullscreen ? BLUE : 'rgba(255,255,255,0.15)'}`,
-              color: isFullscreen ? BLUE : 'rgba(255,255,255,0.4)',
-              fontSize: 11, fontWeight: 500,
-              cursor: 'pointer',
-              letterSpacing: '0.06em',
-            }}
-          >
-            {isFullscreen ? '退出全屏' : '全屏'}
-          </button>
-          <button
             onClick={onExit}
             style={{
               height: 26, padding: '0 14px',
@@ -566,6 +552,49 @@ export default function DashboardPanel({ onExit }) {
           </button>
         </div>
       </div>
+
+      <button
+        onClick={toggleFullscreen}
+        title={isFullscreen ? '退出全屏' : '进入全屏'}
+        style={{
+          position: 'fixed',
+          right: 24,
+          top: 68,
+          zIndex: 10020,
+          height: 34,
+          padding: '0 14px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          background: isFullscreen ? 'rgba(0,212,255,0.2)' : 'rgba(8,12,20,0.86)',
+          border: `1px solid ${isFullscreen ? BLUE : 'rgba(0,212,255,0.42)'}`,
+          color: BLUE,
+          boxShadow: `0 0 18px ${BLUE}33`,
+          fontSize: 12,
+          fontWeight: 700,
+          letterSpacing: '0.08em',
+          cursor: 'pointer',
+        }}
+      >
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          {isFullscreen ? (
+            <>
+              <path d="M8 3v5H3" />
+              <path d="M16 3v5h5" />
+              <path d="M8 21v-5H3" />
+              <path d="M16 21v-5h5" />
+            </>
+          ) : (
+            <>
+              <path d="M8 3H3v5" />
+              <path d="M16 3h5v5" />
+              <path d="M8 21H3v-5" />
+              <path d="M16 21h5v-5" />
+            </>
+          )}
+        </svg>
+        {isFullscreen ? '退出全屏' : '全屏'}
+      </button>
 
       {/* ────────── 主内容区 ────────── */}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0 }}>
