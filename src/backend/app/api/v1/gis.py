@@ -12,11 +12,9 @@ from app.db.database import get_db
 from app.db.models import DiseaseRecord, DiseaseCluster, User, AuditLog, DiseaseMedia
 from app.schemas.disease import DailyCount, DiseaseRecordOut, StatsOut
 from app.api.deps import get_current_user
+from app.core.time import utc_now
 
 router = APIRouter(prefix="/api/v1/gis", tags=["gis"])
-
-def utc_now() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 class BatchDeleteBody(BaseModel):
     ids: List[int]
@@ -159,7 +157,7 @@ def delete_record(
     if record.creator_id != current_user.id and current_user.role != "admin":
         raise HTTPException(status_code=403, detail="无权删除他人的记录")
 
-    record.deleted_at = datetime.now(tz=timezone.utc)
+    record.deleted_at = utc_now()
 
     # 若 cluster 下所有记录均已软删除，同步软删除 cluster，防止历史档案丢失
     if record.cluster_id:
@@ -188,7 +186,7 @@ def batch_delete_records(
     """批量软删除 - 仅操作属于当前用户的记录"""
     if not body.ids:
         raise HTTPException(status_code=400, detail="请提供要删除的记录 ID")
-    now = datetime.now(tz=timezone.utc)
+    now = utc_now()
     updated = (
         db.query(DiseaseRecord)
         .filter(
@@ -210,7 +208,7 @@ def get_deleted_records(
     current_user: User = Depends(get_current_user),
 ):
     """获取当前用户的回收站记录（软删除后 7 天内）"""
-    cutoff = datetime.now(tz=timezone.utc) - timedelta(days=7)
+    cutoff = utc_now() - timedelta(days=7)
     return (
         db.query(DiseaseRecord)
         .filter(
@@ -291,7 +289,7 @@ def get_my_stats(
     current_user: User = Depends(get_current_user),
 ):
     """返回当前用户近 7 天每日检出数量及个人总计"""
-    today = datetime.now(tz=timezone.utc).date()
+    today = utc_now().date()
     seven_days_ago = today - timedelta(days=6)
 
     rows = (
@@ -573,7 +571,7 @@ def get_source_stats(db: Session = Depends(get_db)):
 @router.get("/stats", response_model=StatsOut)
 def get_stats(db: Session = Depends(get_db)):
     """返回近 7 天每日检出数量及总计"""
-    today = datetime.now(tz=timezone.utc).date()
+    today = utc_now().date()
     seven_days_ago = today - timedelta(days=6)
 
     rows = (

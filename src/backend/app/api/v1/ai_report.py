@@ -12,12 +12,9 @@ from app.db.models import DiseaseRecord
 from app.api.deps import get_current_user
 from app.db.models import User
 from app.services.ai_report_service import generate_area_report, generate_cluster_advice
+from app.core.time import utc_now
 
 router = APIRouter(prefix="/api/v1/ai", tags=["ai-report"])
-
-
-def utc_now() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 class ReportOut(BaseModel):
@@ -41,7 +38,7 @@ async def ai_area_report(
     current_user: User = Depends(get_current_user),
 ):
     """调用 DeepSeek 生成辖区巡检周报与养护建议。"""
-    since = datetime.now(tz=timezone.utc) - timedelta(days=days)
+    since = utc_now() - timedelta(days=days)
     records = (
         db.query(DiseaseRecord)
         .filter(

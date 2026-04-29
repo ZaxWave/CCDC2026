@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.db.models import DiseaseRecord, DiseaseCluster, AuditLog
 from app.api.deps import get_current_user
+from app.core.time import utc_now
 
 router = APIRouter(prefix="/api/v1/disease", tags=["Disease Orders"])
 
@@ -230,7 +231,7 @@ def update_order_status(
     record.status = body.status
     record.worker_name = current_user.username
     if body.status == "repaired":
-        record.repaired_at = datetime.now(tz=timezone.utc)
+        record.repaired_at = utc_now()
 
     db.add(AuditLog(
         entity_type="record",

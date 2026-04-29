@@ -30,6 +30,7 @@ from app.services.video_service import (
     detect_video_timed,
     get_first_frame,
 )
+from app.core.time import utc_now
 
 router = APIRouter(prefix="/api/v1", tags=["detect-video"])
 
@@ -44,13 +45,9 @@ _tasks: dict[str, dict] = {}
 _video_executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="video_worker")
 
 
-def _utc_now() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
-
-
 def _parse_frame_time(raw_ts: Optional[str]) -> datetime:
     if not raw_ts:
-        return _utc_now()
+        return utc_now()
     parsed = datetime.fromisoformat(raw_ts)
     if parsed.tzinfo is not None:
         return parsed.astimezone(timezone.utc).replace(tzinfo=None)
@@ -131,11 +128,14 @@ def _run_video_task(
                 try:
                     ts = _parse_frame_time(raw_ts)
                 except (ValueError, TypeError):
-                    ts = _utc_now()
+                    ts = utc_now()
 
                 for det in frame.get("detections", []):
                     feature = det.get("feature")
-                    cluster_id = assign_cluster(lat, lng, det.get("label_cn"), feature, db)
+                    cluster_id = assign_cluster(
+                        lat, lng, det.get("label_cn"), feature, db,
+                        location_is_real=bool(lat and lng),
+                    )
                     db.add(DiseaseRecord(
                         filename=frame.get("filename"),
                         lat=lat,

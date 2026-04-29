@@ -1,13 +1,8 @@
 from sqlalchemy import Column, Integer, String, Float, DateTime, Boolean, ForeignKey, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
-from datetime import datetime, timezone
+from app.core.time import utc_now
 from .database import Base
-
-
-def utc_now() -> datetime:
-    """Return naive UTC for DateTime columns configured without timezone=True."""
-    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 class User(Base):

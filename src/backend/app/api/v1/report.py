@@ -15,15 +15,16 @@ from typing import Optional
 from app.db.database import get_db
 from app.db.models import DiseaseRecord
 from app.api.deps import get_current_user
+from app.core.time import utc_now
 
 router = APIRouter(prefix="/api/v1/report", tags=["Report"])
 
 # 病害严重程度权重（用于周报描述）
 SEVERITY = {
     "D40": ("坑槽",   "高"),
-    "D20": ("网状裂缝", "中"),
-    "D10": ("纵横裂缝", "中"),
-    "D00": ("横向裂缝", "低"),
+    "D20": ("龟裂", "中"),
+    "D10": ("横向裂缝", "中"),
+    "D00": ("纵向裂缝", "低"),
 }
 
 
@@ -47,7 +48,7 @@ def generate_weekly_report(
         raise HTTPException(status_code=500, detail="DEEPSEEK_API_KEY 未配置，请在 .env 中设置")
 
     # ── 1. 拉取本周数据 ─────────────────────────────────────────
-    now = datetime.now(tz=timezone.utc)
+    now = utc_now()
     # 本周一 00:00 UTC
     week_start = (now - timedelta(days=now.weekday())).replace(
         hour=0, minute=0, second=0, microsecond=0

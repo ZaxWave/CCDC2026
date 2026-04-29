@@ -13,6 +13,7 @@ from app.services.geo_service import extract_gps_strict, wgs84_to_gcj02, extract
 from app.db.database import get_db
 from app.db.models import DiseaseRecord, DiseaseCluster, User
 from app.api.deps import get_current_user
+from app.core.time import utc_now
 
 router = APIRouter(prefix="/api/v1", tags=["detect"])
 
@@ -229,7 +230,7 @@ async def detect(
                 ).first()
                 if cluster:
                     cluster.detection_count += 1
-                    cluster.last_detected_at = datetime.now(tz=timezone.utc)
+                    cluster.last_detected_at = utc_now()
                 db.flush()
 
         db.commit()
