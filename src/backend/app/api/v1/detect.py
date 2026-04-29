@@ -40,7 +40,7 @@ async def detect(
     接收 1–20 张图片，返回每张的检测结果与标注图。
 
     GPS 优先级：表单 lat/lng > 图片 EXIF > 批次内首张真实坐标 > 批次级随机演示坐标
-    同批次同类型病害强制归入同一 cluster；无检测的图片作补充视角证据入库。
+    同批次同类型病害也必须通过空间/视觉聚类判定；无检测的图片作补充视角证据入库。
     同一图片内同类型的多个检测框只保留置信度最高的一个（避免全景重复展示同图）。
     """
     if len(files) > MAX_FILES:
@@ -156,21 +156,13 @@ async def detect(
                         batch_clusters[label_cn] = existing.cluster_id
                     continue
 
-                if label_cn in batch_clusters:
-                    cluster_id = batch_clusters[label_cn]
-                    cluster = db.query(DiseaseCluster).filter(
-                        DiseaseCluster.cluster_id == cluster_id
-                    ).first()
-                    if cluster:
-                        cluster.detection_count += 1
-                        cluster.last_detected_at = datetime.now(tz=timezone.utc)
-                else:
-                    cluster_id = assign_cluster(
-                        rec_lat, rec_lng, label_cn, feature, db,
-                        confidence=det.get("conf"),
-                        bbox=det.get("bbox"),
-                    )
-                    batch_clusters[label_cn] = cluster_id
+                cluster_id = assign_cluster(
+                    rec_lat, rec_lng, label_cn, feature, db,
+                    confidence=det.get("conf"),
+                    bbox=det.get("bbox"),
+                    location_is_real=gps_real,
+                )
+                batch_clusters.setdefault(label_cn, cluster_id)
 
                 db_record = DiseaseRecord(
                     filename=upload.filename,

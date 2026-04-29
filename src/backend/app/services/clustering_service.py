@@ -28,7 +28,7 @@ clustering_service.py
 
 import math
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 import numpy as np
@@ -38,6 +38,7 @@ from sqlalchemy.orm import Session
 from app.db.models import DiseaseRecord, DiseaseCluster
 
 # ── 超参数 ────────────────────────────────────────────────────────────────────
+CANDIDATE_RADIUS_M   = 25.0  # 粗筛半径：覆盖 GPS 误差（手机城市峡谷 ≤15m）
 SPATIAL_THRESHOLD_M  = 5.0   # 空间合并阈值（米）
 SPATIAL_RELAXED_M    = 8.0   # 视觉强匹配时的宽松阈值
 VISUAL_STRONG        = 0.92  # 强视觉匹配阈值
@@ -45,6 +46,8 @@ VISUAL_WEAK          = 0.75  # 最低视觉可接受阈值
 MERGE_THRESHOLD      = 0.62  # 融合得分下限
 ALPHA                = 0.35  # 空间分数权重
 BETA                 = 0.65  # 视觉分数权重
+
+_SKIP_STATUSES = ("repaired", "closed")  # 已关闭簇不再接受合并
 
 # 模块级 PostGIS 可用性缓存，避免每次请求重复探测
 _postgis_available: Optional[bool] = None
@@ -65,6 +68,8 @@ def _haversine_m(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
 def _cosine_sim(v1: list, v2: list) -> float:
     """计算两个特征向量的余弦相似度，值域 [0, 1]。"""
     a, b = np.asarray(v1, dtype=np.float32), np.asarray(v2, dtype=np.float32)
+    if a.shape != b.shape:
+        return 0.0
     denom = np.linalg.norm(a) * np.linalg.norm(b)
     if denom < 1e-8:
         return 0.0
@@ -112,6 +117,7 @@ def assign_cluster(
     db: Session,
     confidence: Optional[float] = None,
     bbox: Optional[list] = None,
+    location_is_real: bool = True,
 ) -> str:
     """
     为新检测记录分配聚类 ID，同步维护 disease_clusters 主实体表。
@@ -119,37 +125,50 @@ def assign_cluster(
     Args:
         confidence: ls-det 检测置信度，用于自动初评 severity。
         bbox:       检测框 [x1, y1, x2, y2]，与 confidence 共同决定 severity。
+        location_is_real: 是否来自 EXIF / 手动选点 / 浏览器定位。演示假坐标只建簇，不参与旧簇合并。
 
     Returns: UUID 字符串（已有簇 ID 或新建簇 ID）。
     """
     severity = _compute_severity(confidence, bbox)
 
-    if not lat or not lng or (lat == 0.0 and lng == 0.0):
+    if not lat or not lng or (lat == 0.0 and lng == 0.0) or not location_is_real:
         cid = str(uuid.uuid4())
         _upsert_cluster(cid, label_cn, lat or 0.0, lng or 0.0, db,
-                        is_new=True, severity=severity)
+                        is_new=True, severity=severity, update_location=location_is_real)
         return cid
 
     # ── 候选查询：PostGIS ST_DWithin（精确）或经纬度包围盒（降级）────────────
+    # 粗筛以 CANDIDATE_RADIUS_M=25m 召回候选簇（每簇一行），
+    # 精排阶段再用 SPATIAL_THRESHOLD_M/SPATIAL_RELAXED_M 过滤。
     if _has_postgis(db):
         rows = db.execute(text("""
-            SELECT dr.cluster_id, dr.lat, dr.lng, dr.feature_vector
-            FROM disease_records dr
-            JOIN disease_clusters dc ON dr.cluster_id = dc.cluster_id
-            WHERE dr.label_cn       = :label_cn
-              AND dr.cluster_id     IS NOT NULL
-              AND dr.deleted_at     IS NULL
-              AND dc.location       IS NOT NULL
-              AND dc.deleted_at     IS NULL
+            SELECT
+                dc.cluster_id,
+                dc.canonical_lat  AS lat,
+                dc.canonical_lng  AS lng,
+                fv.feature_vector
+            FROM disease_clusters dc
+            LEFT JOIN LATERAL (
+                SELECT feature_vector
+                FROM disease_records
+                WHERE cluster_id  = dc.cluster_id
+                  AND deleted_at  IS NULL
+                  AND feature_vector IS NOT NULL
+                ORDER BY timestamp DESC
+                LIMIT 1
+            ) fv ON TRUE
+            WHERE dc.label_cn  = :label_cn
+              AND dc.deleted_at IS NULL
+              AND dc.status NOT IN ('repaired', 'closed')
+              AND dc.location   IS NOT NULL
               AND ST_DWithin(
                     dc.location::geography,
                     ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography,
                     :radius
                   )
-            ORDER BY dr.timestamp DESC
             LIMIT 30
         """), {"label_cn": label_cn, "lat": lat, "lng": lng,
-               "radius": SPATIAL_RELAXED_M}).fetchall()
+               "radius": CANDIDATE_RADIUS_M}).fetchall()
         candidates = [
             type("_C", (), {
                 "cluster_id":     r.cluster_id,
@@ -160,21 +179,38 @@ def assign_cluster(
             for r in rows
         ]
     else:
-        delta_lat = 10.0 / 111_111.0
-        delta_lng = 10.0 / (111_111.0 * math.cos(math.radians(lat)))
-        candidates = (
-            db.query(DiseaseRecord)
+        delta_lat = CANDIDATE_RADIUS_M / 111_111.0
+        delta_lng = CANDIDATE_RADIUS_M / (111_111.0 * math.cos(math.radians(lat)))
+        cluster_rows = (
+            db.query(DiseaseCluster)
             .filter(
-                DiseaseRecord.label_cn == label_cn,
-                DiseaseRecord.cluster_id.isnot(None),
-                DiseaseRecord.deleted_at.is_(None),
-                DiseaseRecord.lat.between(lat - delta_lat, lat + delta_lat),
-                DiseaseRecord.lng.between(lng - delta_lng, lng + delta_lng),
+                DiseaseCluster.label_cn == label_cn,
+                DiseaseCluster.deleted_at.is_(None),
+                DiseaseCluster.status.notin_(_SKIP_STATUSES),
+                DiseaseCluster.canonical_lat.between(lat - delta_lat, lat + delta_lat),
+                DiseaseCluster.canonical_lng.between(lng - delta_lng, lng + delta_lng),
             )
-            .order_by(DiseaseRecord.timestamp.desc())
             .limit(30)
             .all()
         )
+        candidates = []
+        for cl in cluster_rows:
+            latest = (
+                db.query(DiseaseRecord.feature_vector)
+                .filter(
+                    DiseaseRecord.cluster_id == cl.cluster_id,
+                    DiseaseRecord.deleted_at.is_(None),
+                    DiseaseRecord.feature_vector.isnot(None),
+                )
+                .order_by(DiseaseRecord.timestamp.desc())
+                .first()
+            )
+            candidates.append(type("_C", (), {
+                "cluster_id":     cl.cluster_id,
+                "lat":            cl.canonical_lat,
+                "lng":            cl.canonical_lng,
+                "feature_vector": latest[0] if latest else None,
+            })())
 
     best_score      = -1.0
     best_cluster_id = None
@@ -204,12 +240,12 @@ def assign_cluster(
 
     if best_cluster_id and best_score >= MERGE_THRESHOLD:
         _upsert_cluster(best_cluster_id, label_cn, lat, lng, db,
-                        is_new=False, severity=severity)
+                        is_new=False, severity=severity, update_location=location_is_real)
         return best_cluster_id
 
     new_cid = str(uuid.uuid4())
     _upsert_cluster(new_cid, label_cn, lat, lng, db,
-                    is_new=True, severity=severity)
+                    is_new=True, severity=severity, update_location=location_is_real)
     return new_cid
 
 
@@ -221,13 +257,14 @@ def _upsert_cluster(
     db: Session,
     is_new: bool,
     severity: Optional[int] = None,
+    update_location: bool = True,
 ) -> None:
     """创建或更新 disease_clusters 实体行。
 
     新建簇时写入 severity（AI 初评）和 priority（= severity，待路段等级加权后覆盖）。
     合并到已有簇时不覆盖已有的 severity/priority，保留人工审核结果。
     """
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     existing = db.query(DiseaseCluster).filter(
         DiseaseCluster.cluster_id == cluster_id
     ).first()
@@ -247,7 +284,7 @@ def _upsert_cluster(
         )
         db.add(cluster)
         # 若 PostGIS 可用，同步更新 location 几何列（触发 GIST 索引）
-        if _postgis_available and lat and lng:
+        if update_location and _postgis_available is True and lat and lng:
             db.flush()
             db.execute(text(
                 "UPDATE disease_clusters "
@@ -255,14 +292,15 @@ def _upsert_cluster(
                 "WHERE cluster_id = :cid"
             ), {"lng": lng, "lat": lat, "cid": cluster_id})
     else:
-        # 合并：更新质心坐标（滑动均值）和计数
+        # 合并：真实定位才更新质心，避免演示/兜底坐标污染病害点位置
         n = existing.detection_count
-        existing.canonical_lat   = (existing.canonical_lat * n + lat) / (n + 1)
-        existing.canonical_lng   = (existing.canonical_lng * n + lng) / (n + 1)
+        if update_location:
+            existing.canonical_lat = (existing.canonical_lat * n + lat) / (n + 1)
+            existing.canonical_lng = (existing.canonical_lng * n + lng) / (n + 1)
         existing.detection_count = n + 1
         existing.last_detected_at = now
         # 更新 PostGIS 质心
-        if _postgis_available:
+        if update_location and _postgis_available is True:
             db.execute(text(
                 "UPDATE disease_clusters "
                 "SET location = ST_SetSRID(ST_MakePoint(:lng, :lat), 4326) "
