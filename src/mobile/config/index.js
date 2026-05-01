@@ -11,7 +11,7 @@ const config = {
   outputRoot: 'dist', 
   plugins: [],
   defineConstants: {
-    TARO_APP_API_URL: JSON.stringify('http://192.168.1.103:8000'),
+    TARO_APP_API_URL: JSON.stringify('http://39.105.106.58'),
   },
   copy: {
     patterns: [],

@@ -1,7 +1,7 @@
 """
 /api/v1/disease — 智能养护工单派发
 
-  POST /dispatch/{record_id}     AI 生成维修方案并将记录置为 processing
+  POST /dispatch/{record_id}     AI 生成维修方案并创建待接单工单
   GET  /orders                   列出已派发工单（供移动端拉取）
   PATCH /orders/{record_id}/status  巡检员接单 / 标记完工
 """
@@ -70,7 +70,7 @@ def dispatch_order(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    """调用 DeepSeek 生成维修工单，写入 dispatch_info，状态置为 processing。"""
+    """调用 DeepSeek 生成维修工单，写入 dispatch_info，状态置为 pending。"""
     api_key = os.getenv("DEEPSEEK_API_KEY", "")
     if not api_key:
         raise HTTPException(status_code=500, detail="DEEPSEEK_API_KEY 未配置")
@@ -81,6 +81,8 @@ def dispatch_order(
     ).first()
     if not record:
         raise HTTPException(status_code=404, detail="记录不存在")
+    if record.status == "repaired":
+        raise HTTPException(status_code=409, detail="已完成记录不可重新派单")
 
     prompt = _DISPATCH_PROMPT.format(
         label_cn=record.label_cn or "未知",
@@ -122,15 +124,17 @@ def dispatch_order(
         "dispatched_by": current_user.username,
         "ai_generated": True,
     }
-    record.status = "processing"
-    record.worker_name = current_user.username
+    target_status = "processing" if prev_status == "processing" else "pending"
+    record.status = target_status
+    if target_status == "pending":
+        record.worker_name = None
 
     # 审计日志
     db.add(AuditLog(
         entity_type="record",
         entity_id=str(record.id),
         from_status=prev_status,
-        to_status="processing",
+        to_status=target_status,
         operator_id=current_user.id,
         note=f"AI 派单 by {current_user.username}",
     ))
@@ -139,17 +143,20 @@ def dispatch_order(
         cluster = db.query(DiseaseCluster).filter(
             DiseaseCluster.cluster_id == record.cluster_id
         ).first()
-        if cluster and cluster.status != "processing":
+        if cluster and cluster.status != target_status:
             db.add(AuditLog(
                 entity_type="cluster",
                 entity_id=cluster.cluster_id,
                 from_status=cluster.status,
-                to_status="processing",
+                to_status=target_status,
                 operator_id=current_user.id,
                 note=f"AI 派单触发 by {current_user.username}",
             ))
-            cluster.status = "processing"
-            cluster.worker_id = current_user.id
+            cluster.status = target_status
+            if target_status == "pending":
+                cluster.worker_id = None
+            else:
+                cluster.worker_id = current_user.id
 
     db.commit()
     db.refresh(record)
@@ -171,17 +178,28 @@ def dispatch_order(
 @router.get("/orders")
 def get_orders(
     status: Optional[str] = Query(None, description="pending|processing|repaired"),
+    only_dispatched: bool = Query(False, description="是否只返回 Web 端 AI 派发过的工单"),
     limit: int = Query(100, ge=1, le=500),
     db: Session = Depends(get_db),
 ):
-    """返回已派发工单（dispatch_info 不为空），不需要登录。"""
+    """返回移动端工单；默认把所有未删除病害作为待处理工单。"""
     q = db.query(DiseaseRecord).filter(
-        DiseaseRecord.dispatch_info.isnot(None),
         DiseaseRecord.deleted_at.is_(None),
     )
+    if only_dispatched:
+        q = q.filter(DiseaseRecord.dispatch_info.isnot(None))
     if status:
         q = q.filter(DiseaseRecord.status == status)
     records = q.order_by(DiseaseRecord.timestamp.desc()).limit(limit).all()
+
+    # 批量查询每个 cluster 的检测次数（时空聚类核心字段）
+    cluster_ids = [r.cluster_id for r in records if r.cluster_id]
+    cluster_count_map: dict = {}
+    if cluster_ids:
+        rows = db.query(DiseaseCluster.cluster_id, DiseaseCluster.detection_count).filter(
+            DiseaseCluster.cluster_id.in_(cluster_ids)
+        ).all()
+        cluster_count_map = {row.cluster_id: row.detection_count for row in rows}
 
     result = []
     for r in records:
@@ -198,12 +216,15 @@ def get_orders(
             "estimated_hours":  info.get("estimated_hours", 0),
             "safety_notes":     info.get("safety_notes", ""),
             "priority_reason":  info.get("priority_reason", ""),
+            "is_dispatched":    bool(r.dispatch_info),
             "worker_name":      r.worker_name,
             "lat":              r.lat,
             "lng":              r.lng,
             "dispatched_at":    info.get("dispatched_at"),
             "dispatched_by":    info.get("dispatched_by"),
             "timestamp":        r.timestamp.replace(tzinfo=timezone.utc).isoformat() if r.timestamp else None,
+            "cluster_id":       r.cluster_id,
+            "cluster_count":    cluster_count_map.get(r.cluster_id, 1) if r.cluster_id else 1,
         })
     return result
 

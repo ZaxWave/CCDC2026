@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { View, Text, Input } from '@tarojs/components'
 import Taro from '@tarojs/taro'
+import { login } from '../../api/auth'
 import styles from './index.module.scss'
 
 export default function Login() {
@@ -9,20 +10,25 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!account.trim() || !password.trim()) {
       setError('请填写账号和密码')
       return
     }
     setError('')
     setLoading(true)
-    setTimeout(() => {
-      Taro.setStorageSync('token', 'mock_token_123')
-      Taro.setStorageSync('user', { account, name: account })
+    try {
+      const data = await login(account.trim(), password)
+      Taro.setStorageSync('token', data.access_token)
+      Taro.setStorageSync('token_type', data.token_type || 'bearer')
+      Taro.setStorageSync('user', { account: account.trim(), name: account.trim() })
       setLoading(false)
       Taro.showToast({ title: '登录成功', icon: 'success', duration: 1000 })
       setTimeout(() => Taro.redirectTo({ url: '/pages/worker/list/index' }), 1000)
-    }, 1400)
+    } catch (e) {
+      setLoading(false)
+      setError(e.message || '登录失败')
+    }
   }
 
   return (
@@ -83,7 +89,7 @@ export default function Login() {
           <Text className={styles.submitText}>{loading ? '验证中...' : '登 录'}</Text>
         </View>
 
-        <Text className={styles.demoHint}>演示：任意工号 + 任意密码</Text>
+        <Text className={styles.demoHint}>使用服务器账号登录</Text>
       </View>
     </View>
   )

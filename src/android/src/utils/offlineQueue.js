@@ -2,7 +2,8 @@
  * offlineQueue.js — AsyncStorage-backed upload queue for offline-first巡检.
  *
  * Each queued item:
- *   { id, videoUri, gpsPoints, intervalMeters, savedAt, retries }
+ *   video: { id, videoUri, gpsPoints, intervalMeters, savedAt, retries }
+ *   photo sequence: { id, captureItems, intervalMeters, savedAt, retries }
  */
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
@@ -22,12 +23,14 @@ async function saveQueue(queue) {
   await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(queue))
 }
 
-export async function enqueue({ videoUri, gpsPoints, intervalMeters = 5 }) {
+export async function enqueue({ videoUri = '', gpsPoints = [], captureItems = [], intervalMeters = 5 }) {
   const queue = await getQueue()
   const item = {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    type: captureItems.length > 0 ? 'photo_sequence' : 'video',
     videoUri,
     gpsPoints,
+    captureItems,
     intervalMeters,
     savedAt: new Date().toISOString(),
     retries: 0,
@@ -44,6 +47,11 @@ export async function removeFromQueue(id) {
 export async function markRetry(id) {
   const queue = await getQueue()
   await saveQueue(queue.map(i => i.id === id ? { ...i, retries: i.retries + 1 } : i))
+}
+
+export async function markUploadedCount(id, uploadedCount) {
+  const queue = await getQueue()
+  await saveQueue(queue.map(i => i.id === id ? { ...i, uploadedCount } : i))
 }
 
 export async function clearExpired() {

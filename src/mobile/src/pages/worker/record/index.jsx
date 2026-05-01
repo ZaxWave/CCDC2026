@@ -146,7 +146,14 @@ export default function WorkerRecord() {
     setPhase('uploading')
     setUploadMsg('上传中...')
     try {
-      const result = await uploadVideo(videoPath, pts, INTERVAL_METERS)
+      const result = await uploadVideo(videoPath, pts, INTERVAL_METERS, status => {
+        if (status.status === 'queued') {
+          setUploadMsg('任务排队中...')
+        } else if (status.status === 'processing') {
+          const framesDone = status.frames_done ?? 0
+          setUploadMsg(`视频分析中：已处理 ${framesDone} 帧`)
+        }
+      })
       const frameCount  = result?.total_frames ?? 0
       const defectCount = (result?.results ?? []).reduce(
         (acc, r) => acc + (r.detections?.length ?? 0), 0

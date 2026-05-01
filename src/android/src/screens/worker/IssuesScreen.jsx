@@ -100,7 +100,7 @@ export default function IssuesScreen({ navigation }) {
   }
 
   const renderItem = ({ item: order }) => {
-    const st       = STATUS[uiStatus(order)]
+    const st       = STATUS[uiStatus(order)] || STATUS.pending
     const urgColor = URGENCY_COLOR[order.urgency] || '#9ca3af'
     const isActing = actioning[order.id]
     const locText  = order.lat && order.lng
@@ -126,16 +126,25 @@ export default function IssuesScreen({ navigation }) {
           </View>
         </View>
 
-        {/* AI 生成的维修方案 */}
+        {(order.cluster_count || 0) > 1 && (
+          <View style={s.clusterRow}>
+            <Text style={s.clusterText}>同点位检出 {order.cluster_count} 次</Text>
+          </View>
+        )}
+
         {!!order.repair_method && (
           <Text style={s.repairMethod} numberOfLines={2}>{order.repair_method}</Text>
         )}
 
+        {!!order.priority_reason && (
+          <Text style={s.priorityReason} numberOfLines={2}>{order.priority_reason}</Text>
+        )}
+
         {/* 位置 + 预计工时 */}
         <View style={s.taskMeta}>
-          <Text style={s.taskLocation} numberOfLines={1}>📍 {locText}</Text>
+          <Text style={s.taskLocation} numberOfLines={1}>{locText}</Text>
           {!!order.estimated_hours && (
-            <Text style={s.hoursText}>⏱ 约 {order.estimated_hours}h</Text>
+            <Text style={s.hoursText}>约 {order.estimated_hours}h</Text>
           )}
         </View>
 
@@ -224,9 +233,14 @@ export default function IssuesScreen({ navigation }) {
         refreshing={refreshing}
         onRefresh={() => load(true)}
         ListEmptyComponent={
-          <Text style={s.empty}>
-            {filter === 'all' ? '暂无派发工单' : `暂无「${FILTERS.find(f => f.key === filter)?.label}」工单`}
-          </Text>
+          <View style={s.emptyBox}>
+            <Text style={s.emptyTitle}>
+              {filter === 'all' ? '暂无工单' : `暂无${FILTERS.find(f => f.key === filter)?.label}工单`}
+            </Text>
+            {filter === 'all' && (
+              <Text style={s.emptyHint}>Web 端产生病害记录后会同步到这里。</Text>
+            )}
+          </View>
         }
       />
     </SafeAreaView>
@@ -246,7 +260,7 @@ const s = StyleSheet.create({
   topTitle: { fontSize: 18, fontWeight: '600', color: '#ffffff' },
   topCount: { fontSize: 13, color: '#f59e0b' },
   stats: {
-    flexDirection: 'row', paddingHorizontal: 24, paddingVertical: 16,
+    flexDirection: 'row', paddingHorizontal: 24, paddingVertical: 14,
     borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)',
   },
   statItem:  { flex: 1, alignItems: 'center' },
@@ -256,7 +270,7 @@ const s = StyleSheet.create({
     flexDirection: 'row', paddingHorizontal: 16, paddingVertical: 12,
     gap: 8, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)',
   },
-  filterTab:     { paddingHorizontal: 16, paddingVertical: 6, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
+  filterTab:     { paddingHorizontal: 16, paddingVertical: 7, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
   filterTabOn:   { backgroundColor: 'rgba(62,106,225,0.15)', borderColor: '#3e6ae1' },
   filterTabText:   { fontSize: 13, color: 'rgba(255,255,255,0.4)' },
   filterTabTextOn: { color: '#3e6ae1', fontWeight: '600' },
@@ -264,10 +278,10 @@ const s = StyleSheet.create({
   taskCard: {
     backgroundColor: 'rgba(255,255,255,0.04)',
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 12, padding: 16, gap: 8,
+    borderRadius: 10, padding: 16, gap: 9,
   },
   taskTop:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  taskId:   { fontSize: 12, color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace' },
+  taskId:   { fontSize: 12, color: 'rgba(255,255,255,0.32)', fontFamily: 'monospace' },
   statusBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     borderWidth: 1, borderRadius: 6, paddingHorizontal: 10, paddingVertical: 4,
@@ -276,8 +290,17 @@ const s = StyleSheet.create({
   statusText: { fontSize: 12, fontWeight: '600' },
   taskMain:   { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   taskType:   { fontSize: 17, fontWeight: '600', color: '#ffffff', flex: 1 },
-  urgencyBadge: { borderWidth: 1, borderRadius: 4, paddingHorizontal: 8, paddingVertical: 2 },
+  urgencyBadge: { borderWidth: 1, borderRadius: 4, paddingHorizontal: 8, paddingVertical: 3 },
   urgencyText:  { fontSize: 12, fontWeight: '700' },
+  clusterRow:  { flexDirection: 'row' },
+  clusterText: {
+    fontSize: 11, fontWeight: '600',
+    color: '#818cf8',
+    backgroundColor: 'rgba(99,102,241,0.12)',
+    borderWidth: 1, borderColor: 'rgba(99,102,241,0.3)',
+    borderRadius: 4, paddingHorizontal: 8, paddingVertical: 3,
+  },
+  priorityReason: { fontSize: 12, color: 'rgba(245,158,11,0.8)', lineHeight: 17 },
   repairMethod: { fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 18 },
   taskMeta:     { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   taskLocation: { fontSize: 13, color: 'rgba(255,255,255,0.4)', flex: 1 },
@@ -290,5 +313,13 @@ const s = StyleSheet.create({
   acceptBtnText: { fontSize: 13, fontWeight: '600', color: '#3e6ae1' },
   doneBtn:       { backgroundColor: 'rgba(26,128,69,0.12)', borderColor: 'rgba(26,128,69,0.4)' },
   doneBtnText:   { fontSize: 13, fontWeight: '600', color: '#1a8045' },
-  empty: { textAlign: 'center', color: 'rgba(255,255,255,0.3)', paddingTop: 60 },
+  emptyBox: { alignItems: 'center', paddingTop: 60, paddingHorizontal: 24 },
+  emptyTitle: { color: 'rgba(255,255,255,0.52)', fontSize: 15, fontWeight: '600' },
+  emptyHint: {
+    color: 'rgba(255,255,255,0.28)',
+    fontSize: 13,
+    lineHeight: 19,
+    marginTop: 8,
+    textAlign: 'center',
+  },
 })

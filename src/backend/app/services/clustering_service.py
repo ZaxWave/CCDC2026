@@ -32,7 +32,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 import numpy as np
-from sqlalchemy import text
+from sqlalchemy import or_, text
 from sqlalchemy.orm import Session
 
 from app.db.models import DiseaseRecord, DiseaseCluster
@@ -48,6 +48,21 @@ ALPHA                = 0.35  # 空间分数权重
 BETA                 = 0.65  # 视觉分数权重
 
 _SKIP_STATUSES = ("repaired", "closed")  # 已关闭簇不再接受合并
+
+# 病害类型差异化空间阈值 (strict_m, relaxed_m)
+# 纵向/横向裂缝是线型病害，物理延伸可达 10-20m，阈值放宽
+# 坑槽是点型病害，位置精确，阈值收紧
+_LABEL_THRESHOLDS: dict[str, tuple[float, float]] = {
+    "纵向裂缝": (8.0, 14.0),
+    "横向裂缝": (8.0, 14.0),
+    "龟裂":    (6.0, 10.0),
+    "坑槽":    (4.0,  7.0),
+}
+
+# 时间衰减：近期重复观测给合并得分加分，防止长期未修复的簇被错误隔离
+_TIME_FRESH_DAYS = 3.0    # 3 天内满额加分
+_TIME_DECAY_DAYS = 14.0   # 14 天后加分衰减至 0
+_TIME_BONUS_MAX  = 0.08   # 最大时间加分（叠加到 combined score）
 
 # 模块级 PostGIS 可用性缓存，避免每次请求重复探测
 _postgis_available: Optional[bool] = None
@@ -92,6 +107,40 @@ def _compute_severity(confidence: Optional[float], bbox: Optional[list]) -> int:
             pass
     raw = 0.6 * (confidence or 0.0) + 0.4 * area_score
     return max(1, min(5, round(raw * 5)))
+
+
+def _utc_now() -> datetime:
+    """Naive UTC for SQLAlchemy DateTime columns without timezone=True."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
+
+def _to_naive_utc(value: datetime) -> datetime:
+    """Normalize aware/naive datetimes before date arithmetic."""
+    if value.tzinfo is None:
+        return value
+    return value.astimezone(timezone.utc).replace(tzinfo=None)
+
+
+def _has_nonempty_vector(value: Optional[list]) -> bool:
+    """Truthiness-safe vector check; numpy arrays cannot be used in boolean context."""
+    try:
+        return value is not None and len(value) > 0
+    except TypeError:
+        return False
+
+
+def _time_bonus(last_detected_at: Optional[datetime]) -> float:
+    """近期重复观测加分：同一位置短时间内再次检出，说明是同一病害点。
+    3 天内满分，14 天后衰减至 0，线性插值。"""
+    if last_detected_at is None:
+        return 0.0
+    age_days = (_utc_now() - _to_naive_utc(last_detected_at)).total_seconds() / 86400.0
+    if age_days <= _TIME_FRESH_DAYS:
+        return _TIME_BONUS_MAX
+    if age_days >= _TIME_DECAY_DAYS:
+        return 0.0
+    slope = (_TIME_DECAY_DAYS - age_days) / (_TIME_DECAY_DAYS - _TIME_FRESH_DAYS)
+    return _TIME_BONUS_MAX * slope
 
 
 def _has_postgis(db: Session) -> bool:
@@ -144,8 +193,10 @@ def assign_cluster(
         rows = db.execute(text("""
             SELECT
                 dc.cluster_id,
-                dc.canonical_lat  AS lat,
-                dc.canonical_lng  AS lng,
+                dc.canonical_lat    AS lat,
+                dc.canonical_lng    AS lng,
+                dc.detection_count,
+                dc.last_detected_at,
                 fv.feature_vector
             FROM disease_clusters dc
             LEFT JOIN LATERAL (
@@ -159,7 +210,7 @@ def assign_cluster(
             ) fv ON TRUE
             WHERE dc.label_cn  = :label_cn
               AND dc.deleted_at IS NULL
-              AND dc.status NOT IN ('repaired', 'closed')
+              AND COALESCE(dc.status, 'pending') NOT IN ('repaired', 'closed')
               AND dc.location   IS NOT NULL
               AND ST_DWithin(
                     dc.location::geography,
@@ -171,22 +222,28 @@ def assign_cluster(
                "radius": CANDIDATE_RADIUS_M}).fetchall()
         candidates = [
             type("_C", (), {
-                "cluster_id":     r.cluster_id,
-                "lat":            r.lat,
-                "lng":            r.lng,
-                "feature_vector": r.feature_vector,
+                "cluster_id":      r.cluster_id,
+                "lat":             r.lat,
+                "lng":             r.lng,
+                "detection_count": r.detection_count,
+                "last_detected_at": r.last_detected_at,
+                "feature_vector":  r.feature_vector,
             })()
             for r in rows
         ]
     else:
         delta_lat = CANDIDATE_RADIUS_M / 111_111.0
-        delta_lng = CANDIDATE_RADIUS_M / (111_111.0 * math.cos(math.radians(lat)))
+        cos_lat = max(abs(math.cos(math.radians(lat))), 1e-6)
+        delta_lng = CANDIDATE_RADIUS_M / (111_111.0 * cos_lat)
         cluster_rows = (
             db.query(DiseaseCluster)
             .filter(
                 DiseaseCluster.label_cn == label_cn,
                 DiseaseCluster.deleted_at.is_(None),
-                DiseaseCluster.status.notin_(_SKIP_STATUSES),
+                or_(
+                    DiseaseCluster.status.is_(None),
+                    DiseaseCluster.status.notin_(_SKIP_STATUSES),
+                ),
                 DiseaseCluster.canonical_lat.between(lat - delta_lat, lat + delta_lat),
                 DiseaseCluster.canonical_lng.between(lng - delta_lng, lng + delta_lng),
             )
@@ -206,33 +263,42 @@ def assign_cluster(
                 .first()
             )
             candidates.append(type("_C", (), {
-                "cluster_id":     cl.cluster_id,
-                "lat":            cl.canonical_lat,
-                "lng":            cl.canonical_lng,
-                "feature_vector": latest[0] if latest else None,
+                "cluster_id":       cl.cluster_id,
+                "lat":              cl.canonical_lat,
+                "lng":              cl.canonical_lng,
+                "detection_count":  cl.detection_count,
+                "last_detected_at": cl.last_detected_at,
+                "feature_vector":   latest[0] if latest else None,
             })())
 
     best_score      = -1.0
     best_cluster_id = None
 
+    # 按病害类型取差异化空间阈值
+    strict_m, relaxed_m = _LABEL_THRESHOLDS.get(label_cn, (SPATIAL_THRESHOLD_M, SPATIAL_RELAXED_M))
+
     for cand in candidates:
+        if cand.lat is None or cand.lng is None:
+            continue
         dist_m = _haversine_m(lat, lng, cand.lat, cand.lng)
 
-        has_visual = (feature_vector and cand.feature_vector
-                      and len(feature_vector) > 0 and len(cand.feature_vector) > 0)
+        has_visual = _has_nonempty_vector(feature_vector) and _has_nonempty_vector(cand.feature_vector)
 
         if has_visual:
             visual_score  = _cosine_sim(feature_vector, cand.feature_vector)
-            spatial_limit = SPATIAL_RELAXED_M if visual_score >= VISUAL_STRONG else SPATIAL_THRESHOLD_M
+            spatial_limit = relaxed_m if visual_score >= VISUAL_STRONG else strict_m
             if dist_m > spatial_limit or visual_score < VISUAL_WEAK:
                 continue
             spatial_score = 1.0 - (dist_m / spatial_limit)
             combined      = ALPHA * spatial_score + BETA * visual_score
         else:
-            if dist_m > SPATIAL_THRESHOLD_M:
+            if dist_m > strict_m:
                 continue
-            spatial_score = 1.0 - (dist_m / SPATIAL_THRESHOLD_M)
+            spatial_score = 1.0 - (dist_m / strict_m)
             combined      = spatial_score * 0.9
+
+        # 近期重复观测加分（防止同一未修复病害被多次建簇）
+        combined = min(1.0, combined + _time_bonus(getattr(cand, "last_detected_at", None)))
 
         if combined > best_score:
             best_score      = combined
@@ -264,7 +330,7 @@ def _upsert_cluster(
     新建簇时写入 severity（AI 初评）和 priority（= severity，待路段等级加权后覆盖）。
     合并到已有簇时不覆盖已有的 severity/priority，保留人工审核结果。
     """
-    now = datetime.now(timezone.utc)
+    now = _utc_now()
     existing = db.query(DiseaseCluster).filter(
         DiseaseCluster.cluster_id == cluster_id
     ).first()

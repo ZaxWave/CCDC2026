@@ -277,12 +277,12 @@ app = FastAPI(title="LightScan API", version="0.1.0", lifespan=lifespan)
 # ── CORS ──────────────────────────────────────────────────────────────────────
 cors_origins_str = os.getenv(
     "CORS_ORIGINS",
-    '["http://localhost:3000","http://localhost:5173","http://localhost:8000"]',
+    '["http://localhost:3000","http://localhost:5173","http://localhost:5174","http://localhost:8000","http://127.0.0.1:5174"]',
 )
 try:
     cors_origins = json.loads(cors_origins_str)
 except json.JSONDecodeError:
-    cors_origins = ["http://localhost:3000", "http://localhost:5173", "http://localhost:8000"]
+    cors_origins = ["http://localhost:3000", "http://localhost:5173", "http://localhost:5174", "http://localhost:8000", "http://127.0.0.1:5174"]
     warnings.warn("⚠️ Invalid CORS_ORIGINS JSON. Using development defaults.", RuntimeWarning)
 
 environment = os.getenv("ENVIRONMENT", "development")

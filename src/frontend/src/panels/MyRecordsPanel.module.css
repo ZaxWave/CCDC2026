@@ -329,6 +329,61 @@
 .row:hover .delBtn { opacity: 1; }
 .delBtn:hover { background: rgba(217,48,37,0.06); border-color: #D93025; }
 
+/* ── 聚类 / 工单列 ───────────────────────────────────────── */
+.orderCell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 90px;
+}
+
+.clusterBadge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 2px;
+  background: rgba(99,102,241,0.08);
+  border: 1px solid rgba(99,102,241,0.3);
+  color: #818cf8;
+  white-space: nowrap;
+}
+
+.dispatchBtn {
+  height: 22px;
+  padding: 0 9px;
+  background: transparent;
+  border: 1px solid rgba(62,106,225,0.45);
+  border-radius: 2px;
+  color: #3E6AE1;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.12s;
+  white-space: nowrap;
+}
+.dispatchBtn:hover:not(:disabled) {
+  background: rgba(62,106,225,0.08);
+  border-color: #3E6AE1;
+}
+.dispatchBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dispatchedBadge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 2px;
+  background: rgba(34,197,94,0.08);
+  border: 1px solid rgba(34,197,94,0.35);
+  color: #22c55e;
+  white-space: nowrap;
+}
+
 /* ── 状态更新弹窗 ─────────────────────────────────────────── */
 .statusRadioGroup {
   display: flex;

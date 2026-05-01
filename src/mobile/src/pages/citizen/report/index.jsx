@@ -1,7 +1,7 @@
-import { View, Text, Image, ScrollView, Textarea } from '@tarojs/components'
+import { View, Text, Image, ScrollView, Textarea, Picker } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useState } from 'react'
-import { uploadImage } from '../../../api/detect'
+import { checkImageExif, uploadImage } from '../../../api/detect'
 import styles from './index.module.scss'
 
 const LABEL_CN_TO_TYPE = {
@@ -13,6 +13,12 @@ const LABEL_CN_TO_TYPE = {
 
 const MAX_DESC = 200
 
+function getLocalDateTime(date = new Date()) {
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+  const value = local.toISOString().slice(0, 16)
+  return { date: value.slice(0, 10), time: value.slice(11, 16), value }
+}
+
 export default function CitizenReport() {
   const [detectMode, setDetectMode] = useState('ai')
   const [selectedType, setSelectedType] = useState(null)
@@ -23,6 +29,11 @@ export default function CitizenReport() {
   const [aiDetected, setAiDetected] = useState(false)
   const [gpsStatus, setGpsStatus] = useState('idle')
   const [gpsCoords, setGpsCoords] = useState(null)
+  const initialCapture = getLocalDateTime()
+  const [captureDate, setCaptureDate] = useState(initialCapture.date)
+  const [captureTime, setCaptureTime] = useState(initialCapture.time)
+  const [captureRequired, setCaptureRequired] = useState(false)
+  const [captureHint, setCaptureHint] = useState('优先读取照片 EXIF 拍摄时间')
 
   const types = ['坑槽', '裂缝', '拥包', '沉陷', '车辙', '其他']
 
@@ -59,26 +70,7 @@ export default function CitizenReport() {
     }
     const newPaths = res.tempFiles.map(f => f.tempFilePath)
     setPhotos(prev => [...prev, ...newPaths])
-
-    if (detectMode === 'ai' && photos.length === 0 && newPaths.length > 0) {
-      setAutoDetecting(true)
-      setAiDetected(false)
-      try {
-        const compressed = await compressPath(newPaths[0])
-        const result = await uploadImage(compressed, null, null)
-        const dets = result?.detections ?? []
-        if (dets.length > 0) {
-          const top = dets.reduce((a, b) => (a.conf > b.conf ? a : b))
-          const mapped = LABEL_CN_TO_TYPE[top.label_cn] ?? '其他'
-          setSelectedType(mapped)
-          setAiDetected(true)
-        }
-      } catch {
-        // 识别失败静默处理，用户可手动选择
-      } finally {
-        setAutoDetecting(false)
-      }
-    }
+    setAiDetected(false)
   }
 
   const removePhoto = (index) => {
@@ -87,6 +79,33 @@ export default function CitizenReport() {
       next.splice(index, 1)
       return next
     })
+  }
+
+  const resolveCaptureTime = async () => {
+    if (captureRequired) {
+      return `${captureDate}T${captureTime}`
+    }
+
+    for (const filePath of photos.slice(0, 3)) {
+      try {
+        const exif = await checkImageExif(filePath)
+        if (exif?.capture_time) {
+          const value = exif.capture_time.slice(0, 16)
+          setCaptureRequired(false)
+          setCaptureHint(`已读取 EXIF：${value.replace('T', ' ')}`)
+          return value
+        }
+      } catch {}
+    }
+
+    setCaptureRequired(true)
+    setCaptureHint('未读取到 EXIF 拍摄时间，请选择本批照片拍摄时间')
+    await Taro.showModal({
+      title: '未读取到拍摄时间',
+      content: '照片可能经过微信、蓝牙或压缩传输导致 EXIF 丢失，请在页面中选择拍摄时间后再次提交。',
+      showCancel: false,
+    })
+    return ''
   }
 
   const handleSubmit = async () => {
@@ -104,6 +123,17 @@ export default function CitizenReport() {
     }
     if (loading) return
     setLoading(true)
+
+    let capturedAt = ''
+    try {
+      capturedAt = await resolveCaptureTime()
+      if (!capturedAt) {
+        setLoading(false)
+        return
+      }
+    } catch {
+      capturedAt = `${captureDate}T${captureTime}`
+    }
 
     // Step 1: GPS 定位 — 有独立 hideLoading 防止泄漏
     let lat = null
@@ -124,9 +154,19 @@ export default function CitizenReport() {
     // Step 2: 逐张上传
     try {
       Taro.showLoading({ title: '上报中（首次加载模型约需30秒）...' })
+      let detectedType = null
       for (const filePath of photos) {
         const compressed = await compressPath(filePath)
-        await uploadImage(compressed, lat, lng)
+        const result = await uploadImage(compressed, lat, lng, capturedAt)
+        const dets = result?.detections ?? []
+        if (!detectedType && dets.length > 0) {
+          const top = dets.reduce((a, b) => (a.conf > b.conf ? a : b))
+          detectedType = LABEL_CN_TO_TYPE[top.label_cn] ?? '其他'
+        }
+      }
+      if (detectedType) {
+        setSelectedType(detectedType)
+        setAiDetected(true)
       }
       Taro.hideLoading()
       setLoading(false)
@@ -181,7 +221,7 @@ export default function CitizenReport() {
                     ? '识别中...'
                     : aiDetected
                     ? `已识别：${selectedType}`
-                    : '添加照片后自动识别类型'}
+                    : '提交后自动识别类型'}
                 </Text>
               </View>
             ) : (
@@ -221,6 +261,26 @@ export default function CitizenReport() {
                 </View>
               )}
             </View>
+          </View>
+
+          <View className={`${styles.section} ${captureRequired ? styles.sectionWarn : ''}`}>
+            <View className={styles.secHeader}>
+              <Text className={styles.secLabel}>拍摄时间</Text>
+              <Text className={styles.secNote}>{captureRequired ? '必填' : '自动'}</Text>
+            </View>
+            <View className={styles.timeRow}>
+              <Picker mode='date' value={captureDate} onChange={e => setCaptureDate(e.detail.value)}>
+                <View className={styles.timePicker}>
+                  <Text className={styles.timePickerText}>{captureDate}</Text>
+                </View>
+              </Picker>
+              <Picker mode='time' value={captureTime} onChange={e => setCaptureTime(e.detail.value)}>
+                <View className={styles.timePicker}>
+                  <Text className={styles.timePickerText}>{captureTime}</Text>
+                </View>
+              </Picker>
+            </View>
+            <Text className={styles.timeHint}>{captureHint}</Text>
           </View>
 
           {/* 描述路面情况 */}

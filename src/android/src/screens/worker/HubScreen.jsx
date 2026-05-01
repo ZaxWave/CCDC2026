@@ -1,16 +1,11 @@
-import { useState, useEffect } from 'react'
-import { View, Text, TouchableOpacity, Alert, StyleSheet } from 'react-native'
+import { View, Text, TouchableOpacity, Alert, StyleSheet, ScrollView } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import BrandWordmark from '../../components/BrandWordmark'
+import { useNetwork } from '../../context/NetworkContext'
 
 export default function HubScreen({ navigation }) {
-  const [user, setUser] = useState({})
-
-  useEffect(() => {
-    AsyncStorage.getItem('user').then(raw => {
-      if (raw) setUser(JSON.parse(raw))
-    })
-  }, [])
+  const { isOnline, queueCount } = useNetwork()
 
   const logout = () => {
     Alert.alert('退出登录', '确认退出专业版？', [
@@ -18,7 +13,7 @@ export default function HubScreen({ navigation }) {
       {
         text: '退出',
         onPress: async () => {
-          await AsyncStorage.multiRemove(['token', 'user'])
+          await AsyncStorage.multiRemove(['token', 'token_type', 'user'])
           navigation.replace('Home')
         },
       },
@@ -27,80 +22,136 @@ export default function HubScreen({ navigation }) {
 
   return (
     <SafeAreaView style={s.page}>
-      <View style={s.header}>
-        <View>
-          <Text style={s.greeting}>{user.name || '巡检员'}</Text>
-          <Text style={s.greetingSub}>今日工作台</Text>
+      <ScrollView contentContainerStyle={s.body} showsVerticalScrollIndicator={false}>
+        <View style={s.header}>
+          <BrandWordmark size={28} muted />
+          <TouchableOpacity style={s.logoutBtn} onPress={logout} activeOpacity={0.7}>
+            <Text style={s.logoutText}>退出</Text>
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity style={s.logoutBtn} onPress={logout} activeOpacity={0.7}>
-          <Text style={s.logoutText}>退出</Text>
-        </TouchableOpacity>
-      </View>
 
-      <View style={s.tiles}>
-        <TouchableOpacity style={s.tile} onPress={() => navigation.navigate('Issues')} activeOpacity={0.7}>
-          <View style={s.tileBody}>
-            <Text style={s.tileTitle}>已有问题</Text>
-            <Text style={s.tileDesc}>查看工单 · 处理记录</Text>
+        <View style={s.hero}>
+          <View style={s.heroTop}>
+            <Text style={s.heroTitle}>巡检工作台</Text>
+            <View style={[s.netBadge, isOnline ? s.netOn : s.netOff]}>
+              <View style={[s.netDot, isOnline ? s.netDotOn : s.netDotOff]} />
+              <Text style={s.netText}>{isOnline ? '在线' : '离线'}</Text>
+            </View>
           </View>
-          <Text style={s.tileArrow}>›</Text>
-        </TouchableOpacity>
+          <Text style={s.heroText}>采集、同步和处置现场任务。连续路段使用距离采样，避免上传大体积视频。</Text>
+          {queueCount > 0 && (
+            <Text style={s.queueText}>有 {queueCount} 个离线任务等待同步</Text>
+          )}
+        </View>
 
-        <TouchableOpacity
-          style={[s.tile, s.tileDark]}
-          onPress={() => navigation.navigate('Record')}
-          activeOpacity={0.7}
-        >
-          <View style={s.recDot} />
-          <View style={s.tileBody}>
-            <Text style={[s.tileTitle, s.tileTitleLight]}>开始巡检</Text>
-            <Text style={[s.tileDesc, s.tileDescLight]}>GPS 轨迹 · 5m 间隔抽帧</Text>
-          </View>
-          <Text style={[s.tileArrow, s.tileArrowLight]}>›</Text>
-        </TouchableOpacity>
-      </View>
+        <View style={s.section}>
+          <Text style={s.sectionTitle}>采集</Text>
+          <TouchableOpacity
+            style={[s.actionCard, s.primaryCard]}
+            onPress={() => navigation.navigate('Report', { source: 'worker' })}
+            activeOpacity={0.75}
+          >
+            <View style={[s.iconBox, s.iconBlue]}>
+              <Text style={s.iconText}>01</Text>
+            </View>
+            <View style={s.cardBody}>
+              <Text style={s.cardTitle}>拍照巡检</Text>
+              <Text style={s.cardDesc}>适合同一病害多角度取证，自动写入时间和位置。</Text>
+            </View>
+            <Text style={s.cardArrow}>›</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={s.actionCard}
+            onPress={() => navigation.navigate('Record')}
+            activeOpacity={0.75}
+          >
+            <View style={[s.iconBox, s.iconRed]}>
+              <Text style={s.iconText}>02</Text>
+            </View>
+            <View style={s.cardBody}>
+              <Text style={s.cardTitle}>距离采样</Text>
+              <Text style={s.cardDesc}>横屏采样，可自定义距离间隔并自动抓拍。</Text>
+            </View>
+            <Text style={s.cardArrow}>›</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={s.section}>
+          <Text style={s.sectionTitle}>处置</Text>
+          <TouchableOpacity style={s.actionCard} onPress={() => navigation.navigate('Issues')} activeOpacity={0.75}>
+            <View style={[s.iconBox, s.iconGray]}>
+              <Text style={s.iconText}>03</Text>
+            </View>
+            <View style={s.cardBody}>
+              <Text style={s.cardTitle}>养护工单</Text>
+              <Text style={s.cardDesc}>查看已派发问题，接单、处理并完成闭环。</Text>
+            </View>
+            <Text style={s.cardArrow}>›</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   )
 }
 
 const s = StyleSheet.create({
   page: { flex: 1, backgroundColor: '#111111' },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 32,
-    paddingTop: 24,
-    paddingBottom: 40,
-  },
-  greeting: { fontSize: 28, fontWeight: '700', color: '#ffffff' },
-  greetingSub: { fontSize: 14, color: 'rgba(255,255,255,0.4)', marginTop: 4 },
+  body: { padding: 22, paddingBottom: 44, gap: 22 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   logoutBtn: {
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.15)',
     borderRadius: 8,
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     paddingVertical: 8,
   },
-  logoutText: { color: 'rgba(255,255,255,0.5)', fontSize: 14 },
-  tiles: { paddingHorizontal: 24, gap: 16 },
-  tile: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.05)',
+  logoutText: { color: 'rgba(255,255,255,0.56)', fontSize: 13, fontWeight: '500' },
+  hero: {
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.045)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 16,
-    padding: 28,
-    gap: 16,
+    padding: 18,
+    gap: 10,
   },
-  tileDark: { backgroundColor: '#0d1b3e', borderColor: '#3e6ae1' },
-  tileBody: { flex: 1 },
-  tileTitle: { fontSize: 20, fontWeight: '600', color: '#ffffff', marginBottom: 6 },
-  tileTitleLight: { color: '#ffffff' },
-  tileDesc: { fontSize: 13, color: 'rgba(255,255,255,0.4)' },
-  tileDescLight: { color: 'rgba(255,255,255,0.4)' },
-  tileArrow: { fontSize: 28, color: 'rgba(255,255,255,0.3)' },
-  tileArrowLight: { color: 'rgba(255,255,255,0.3)' },
-  recDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#ef4444' },
+  heroTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
+  heroTitle: { color: '#ffffff', fontSize: 22, fontWeight: '600' },
+  heroText: { color: 'rgba(255,255,255,0.56)', fontSize: 13, lineHeight: 20 },
+  queueText: { color: '#8fb0ff', fontSize: 12, lineHeight: 18 },
+  netBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 6, paddingHorizontal: 9, paddingVertical: 5, borderWidth: 1 },
+  netOn: { backgroundColor: 'rgba(34,197,94,0.08)', borderColor: 'rgba(34,197,94,0.24)' },
+  netOff: { backgroundColor: 'rgba(239,68,68,0.08)', borderColor: 'rgba(239,68,68,0.24)' },
+  netDot: { width: 6, height: 6, borderRadius: 3 },
+  netDotOn: { backgroundColor: '#22c55e' },
+  netDotOff: { backgroundColor: '#ef4444' },
+  netText: { color: 'rgba(255,255,255,0.66)', fontSize: 12, fontWeight: '500' },
+  section: { gap: 12 },
+  sectionTitle: { color: 'rgba(255,255,255,0.48)', fontSize: 13, fontWeight: '500', letterSpacing: 0 },
+  actionCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 14,
+    padding: 16,
+    gap: 14,
+    backgroundColor: 'rgba(255,255,255,0.045)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  primaryCard: { backgroundColor: 'rgba(255,255,255,0.06)', borderColor: 'rgba(62,106,225,0.42)' },
+  iconBox: {
+    width: 42,
+    height: 42,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconBlue: { backgroundColor: '#3e6ae1' },
+  iconRed: { backgroundColor: '#b91c1c' },
+  iconGray: { backgroundColor: 'rgba(255,255,255,0.12)' },
+  iconText: { color: '#ffffff', fontSize: 13, fontWeight: '600' },
+  cardBody: { flex: 1, gap: 5 },
+  cardTitle: { color: '#ffffff', fontSize: 18, fontWeight: '600' },
+  cardDesc: { color: 'rgba(255,255,255,0.42)', fontSize: 12, lineHeight: 18 },
+  cardArrow: { color: 'rgba(255,255,255,0.28)', fontSize: 30, lineHeight: 32 },
 })

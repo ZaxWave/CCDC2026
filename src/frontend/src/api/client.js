@@ -136,3 +136,12 @@ export function getClusterFusion(recordId) {
 export function dispatchOrder(recordId) {
   return request(`/api/v1/disease/dispatch/${recordId}`, {}, 'POST');
 }
+
+export function getOrders(status) {
+  const qs = status ? `?status=${status}` : '';
+  return request(`/api/v1/disease/orders${qs}`, null, 'GET');
+}
+
+export function updateOrderStatus(recordId, status) {
+  return request(`/api/v1/disease/orders/${recordId}/status`, { status }, 'PATCH');
+}

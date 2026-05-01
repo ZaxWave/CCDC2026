@@ -6,105 +6,224 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context'
 import * as ImagePicker from 'expo-image-picker'
 import * as Location from 'expo-location'
-import { uploadImage } from '../../api/detect'
+import { checkImageExif, uploadImages } from '../../api/detect'
 
 const LABEL_CN_TO_TYPE = { '纵向裂缝': '裂缝', '横向裂缝': '裂缝', '龟裂': '裂缝', '坑槽': '坑槽' }
-const MAX_DESC = 200
-const TYPES = ['坑槽', '裂缝', '拥包', '沉陷', '车辙', '其他']
+const MAX_PHOTOS = 9
 
-export default function ReportScreen({ navigation }) {
-  const [detectMode, setDetectMode] = useState('ai')
-  const [selectedType, setSelectedType] = useState(null)
+function getLocalDateTimeValue(date = new Date()) {
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
+}
+
+function normalizeExifTime(value) {
+  if (!value) return ''
+  if (typeof value === 'number') return getLocalDateTimeValue(new Date(value * 1000))
+  const text = String(value).trim()
+  const match = text.match(/^(\d{4}):(\d{2}):(\d{2})\s+(\d{2}):(\d{2})/)
+  if (match) return `${match[1]}-${match[2]}-${match[3]}T${match[4]}:${match[5]}`
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(text)) return text.slice(0, 16)
+  return ''
+}
+
+function getAssetCaptureTime(asset) {
+  const exif = asset?.exif || {}
+  return normalizeExifTime(
+    exif.DateTimeOriginal ||
+    exif.DateTimeDigitized ||
+    exif.DateTime ||
+    exif['{Exif}']?.DateTimeOriginal ||
+    exif['{TIFF}']?.DateTime
+  )
+}
+
+function isValidCaptureTime(value) {
+  return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value || '')
+}
+
+function summarizeResults(results) {
+  const list = Array.isArray(results) ? results : [results]
+  const detections = list.flatMap(item => item?.detections ?? [])
+  const top = detections.reduce((best, item) => {
+    if (!best) return item
+    return (item.conf || 0) > (best.conf || 0) ? item : best
+  }, null)
+
+  return {
+    images: list.length,
+    detections: detections.length,
+    topLabel: top?.label_cn ? (LABEL_CN_TO_TYPE[top.label_cn] || top.label_cn) : '未发现明显病害',
+    topConfidence: top?.conf,
+  }
+}
+
+export default function ReportScreen({ navigation, route }) {
+  const isWorkerUpload = route?.params?.source === 'worker'
   const [photos, setPhotos] = useState([])
-  const [desc, setDesc] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [autoDetecting, setAutoDetecting] = useState(false)
-  const [aiDetected, setAiDetected] = useState(false)
+  const [phase, setPhase] = useState('idle')
+  const [captureAt, setCaptureAt] = useState(getLocalDateTimeValue())
+  const [captureRequired, setCaptureRequired] = useState(false)
+  const [captureSource, setCaptureSource] = useState('待检查')
   const [gpsStatus, setGpsStatus] = useState('idle')
   const [gpsCoords, setGpsCoords] = useState(null)
+  const [summary, setSummary] = useState(null)
+  const [errorMsg, setErrorMsg] = useState('')
 
-  const switchMode = (mode) => { setDetectMode(mode); setSelectedType(null); setAiDetected(false) }
+  const busy = phase === 'checking' || phase === 'locating' || phase === 'uploading'
+  const remaining = MAX_PHOTOS - photos.length
 
-  const addPhotos = async (newPaths, currentCount) => {
-    setPhotos(prev => [...prev, ...newPaths])
-    if (detectMode === 'ai' && currentCount === 0 && newPaths.length > 0) {
-      setAutoDetecting(true)
-      try {
-        const result = await uploadImage(newPaths[0], null, null)
-        const dets = result?.detections ?? []
-        if (dets.length > 0) {
-          const top = dets.reduce((a, b) => (a.conf > b.conf ? a : b))
-          setSelectedType(LABEL_CN_TO_TYPE[top.label_cn] ?? '其他')
-          setAiDetected(true)
-        }
-      } catch { /* silent */ } finally {
-        setAutoDetecting(false)
-      }
+  const resetResultState = () => {
+    setSummary(null)
+    setErrorMsg('')
+    if (phase === 'done') setPhase('idle')
+  }
+
+  const addPhotos = (assets) => {
+    const nextAssets = assets.slice(0, remaining).map(asset => ({ uri: asset.uri, exif: asset.exif || {} }))
+    if (!nextAssets.length) return
+
+    setPhotos(prev => [...prev, ...nextAssets])
+    resetResultState()
+
+    const exifTime = nextAssets.map(getAssetCaptureTime).find(Boolean)
+    if (exifTime) {
+      setCaptureAt(exifTime)
+      setCaptureRequired(false)
+      setCaptureSource('EXIF')
+    } else if (captureSource === '待检查') {
+      setCaptureSource('待检查')
     }
   }
 
-  const handleAddPhoto = () => {
-    const remaining = 9 - photos.length
-    const count = photos.length
-    Alert.alert('添加照片', '选择来源', [
-      {
-        text: '拍照',
-        onPress: async () => {
-          const { status } = await ImagePicker.requestCameraPermissionsAsync()
-          if (status !== 'granted') { Alert.alert('需要摄像头权限'); return }
-          const result = await ImagePicker.launchCameraAsync({ quality: 0.8 })
-          if (!result.canceled) addPhotos(result.assets.map(a => a.uri), count)
-        },
-      },
-      {
-        text: '从相册选取',
-        onPress: async () => {
-          const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
-          if (status !== 'granted') { Alert.alert('需要相册权限'); return }
-          const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsMultipleSelection: true,
-            quality: 0.8,
-            selectionLimit: remaining,
-          })
-          if (!result.canceled) addPhotos(result.assets.map(a => a.uri), count)
-        },
-      },
-      { text: '取消', style: 'cancel' },
-    ])
+  const takePhoto = async () => {
+    if (remaining <= 0 || busy) return
+    const { status } = await ImagePicker.requestCameraPermissionsAsync()
+    if (status !== 'granted') {
+      Alert.alert('需要摄像头权限', '请允许 LightScan 使用摄像头拍摄巡检照片。')
+      return
+    }
+    const result = await ImagePicker.launchCameraAsync({ quality: 0.86, exif: true })
+    if (!result.canceled) addPhotos(result.assets)
   }
 
-  const removePhoto = (index) => setPhotos(prev => prev.filter((_, i) => i !== index))
+  const pickPhotos = async () => {
+    if (remaining <= 0 || busy) return
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
+    if (status !== 'granted') {
+      Alert.alert('需要相册权限', '请允许 LightScan 读取相册以选择巡检照片。')
+      return
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsMultipleSelection: true,
+      quality: 0.86,
+      exif: true,
+      selectionLimit: remaining,
+    })
+    if (!result.canceled) addPhotos(result.assets)
+  }
 
-  const handleSubmit = async () => {
-    if (photos.length === 0) { Alert.alert('请至少添加一张照片'); return }
-    if (detectMode === 'manual' && !selectedType) { Alert.alert('请选择病害类型'); return }
-    if (loading) return
-    setLoading(true)
+  const removePhoto = (index) => {
+    setPhotos(prev => prev.filter((_, i) => i !== index))
+    resetResultState()
+  }
 
-    let lat = null, lng = null
+  const resolveCaptureTime = async () => {
+    if (captureRequired) {
+      if (!isValidCaptureTime(captureAt)) {
+        Alert.alert('时间格式不正确', '请按 YYYY-MM-DDTHH:mm 格式填写，例如 2026-04-30T14:30。')
+        return ''
+      }
+      setCaptureSource('手动')
+      return captureAt
+    }
+
+    const fromAssets = photos.map(getAssetCaptureTime).find(Boolean)
+    if (fromAssets) {
+      setCaptureAt(fromAssets)
+      setCaptureSource('EXIF')
+      return fromAssets
+    }
+
+    setPhase('checking')
+    const checks = await Promise.allSettled(photos.slice(0, 3).map(photo => checkImageExif(photo.uri)))
+    const found = checks.find(r => r.status === 'fulfilled' && r.value?.has_capture_time)
+    if (found) {
+      const backendTime = String(found.value.capture_time).slice(0, 16)
+      setCaptureAt(backendTime)
+      setCaptureSource('EXIF')
+      return backendTime
+    }
+
+    setCaptureRequired(true)
+    setCaptureSource('手动')
+    if (!captureAt) setCaptureAt(getLocalDateTimeValue())
+    Alert.alert('需要确认拍摄时间', '这些图片没有可读取的 EXIF 拍摄时间，请确认下方时间后再次提交。')
+    return ''
+  }
+
+  const resolveLocation = async () => {
+    setPhase('locating')
     try {
       const { status } = await Location.requestForegroundPermissionsAsync()
-      if (status === 'granted') {
-        const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High })
-        lat = loc.coords.latitude
-        lng = loc.coords.longitude
-        setGpsCoords({ lat, lng })
-        setGpsStatus('ok')
-      } else {
+      if (status !== 'granted') {
         setGpsStatus('failed')
+        return { lat: null, lng: null }
       }
-    } catch { setGpsStatus('failed') }
-
-    try {
-      for (const filePath of photos) await uploadImage(filePath, lat, lng)
-      setLoading(false)
-      Alert.alert('提交成功', '感谢您的上报！', [{ text: '确定', onPress: () => navigation.goBack() }])
-    } catch (e) {
-      setLoading(false)
-      Alert.alert('上报失败', e.message)
+      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High })
+      const coords = { lat: loc.coords.latitude, lng: loc.coords.longitude }
+      setGpsCoords(coords)
+      setGpsStatus('ok')
+      return coords
+    } catch {
+      setGpsStatus('failed')
+      return { lat: null, lng: null }
     }
   }
+
+  const handleSubmit = async () => {
+    if (busy) return
+    if (photos.length === 0) {
+      Alert.alert('请先添加照片', isWorkerUpload ? '拍摄或选择巡检照片后再提交检测。' : '请至少添加一张现场照片。')
+      return
+    }
+
+    setSummary(null)
+    setErrorMsg('')
+
+    try {
+      const capturedAt = await resolveCaptureTime()
+      if (!capturedAt) {
+        setPhase('idle')
+        return
+      }
+
+      const { lat, lng } = await resolveLocation()
+      setPhase('uploading')
+      const results = await uploadImages(photos.map(photo => photo.uri), lat, lng, capturedAt)
+      setSummary(summarizeResults(results))
+      setPhase('done')
+    } catch (e) {
+      setErrorMsg(e.message || '上传失败，请稍后重试')
+      setPhase('idle')
+    }
+  }
+
+  const title = isWorkerUpload ? '拍照巡检' : '问题上报'
+  const subtitle = isWorkerUpload ? '专业版' : '随手拍'
+  const stepPhotoDone = photos.length > 0
+  const stepInfoDone = captureSource === 'EXIF' || captureSource === '手动'
+  const stepUploadDone = phase === 'done'
+  const submitText = phase === 'checking'
+    ? '检查照片信息'
+    : phase === 'locating'
+    ? '获取定位'
+    : phase === 'uploading'
+    ? '上传检测中'
+    : phase === 'done'
+    ? '重新提交检测'
+    : isWorkerUpload
+    ? '提交检测'
+    : '提交上报'
 
   return (
     <SafeAreaView style={s.page}>
@@ -113,102 +232,151 @@ export default function ReportScreen({ navigation }) {
           <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
             <Text style={s.backIcon}>‹</Text>
           </TouchableOpacity>
-          <Text style={s.headerTitle}>问题上报</Text>
+          <View>
+            <Text style={s.headerTitle}>{title}</Text>
+            <Text style={s.headerHint}>{isWorkerUpload ? '上传后写入病害记录' : '识别并生成平台记录'}</Text>
+          </View>
         </View>
-        <Text style={s.headerSub}>随手拍</Text>
+        <Text style={s.headerSub}>{subtitle}</Text>
+      </View>
+
+      <View style={s.progressBar}>
+        {[
+          { key: 'photo', label: '取证', done: stepPhotoDone, active: !stepPhotoDone },
+          { key: 'info', label: '信息', done: stepInfoDone, active: stepPhotoDone && !stepInfoDone },
+          { key: 'upload', label: '检测', done: stepUploadDone, active: busy || (stepInfoDone && !stepUploadDone) },
+        ].map((step, index) => (
+          <View key={step.key} style={s.stepWrap}>
+            <View style={[s.stepDot, step.done && s.stepDotDone, step.active && s.stepDotActive]}>
+              <Text style={[s.stepNum, (step.done || step.active) && s.stepNumOn]}>{index + 1}</Text>
+            </View>
+            <Text style={[s.stepText, (step.done || step.active) && s.stepTextOn]}>{step.label}</Text>
+            {index < 2 && <View style={[s.stepLine, step.done && s.stepLineDone]} />}
+          </View>
+        ))}
       </View>
 
       <ScrollView style={s.scroll} contentContainerStyle={s.body} showsVerticalScrollIndicator={false}>
-
-        {/* 病害类型 */}
-        <Text style={s.secLabel}>病害类型</Text>
-        <View style={s.modeSwitch}>
-          {['ai', 'manual'].map(m => (
+        <View style={s.panel}>
+          <View style={s.panelTop}>
+            <Text style={s.panelTitle}>{isWorkerUpload ? '现场取证' : '道路问题取证'}</Text>
+            <Text style={s.panelCount}>{photos.length}/{MAX_PHOTOS}</Text>
+          </View>
+          <Text style={s.panelText}>
+            {isWorkerUpload
+              ? '建议同一病害拍 2-4 张不同角度照片。位置和拍摄时间会随记录一并保存。'
+              : '拍摄清晰的路面照片，系统会识别病害类型并记录位置。'}
+          </Text>
+          <View style={s.actionRow}>
             <TouchableOpacity
-              key={m}
-              style={[s.modeBtn, detectMode === m && s.modeBtnOn]}
-              onPress={() => switchMode(m)}
-              activeOpacity={0.7}
+              style={[s.primaryAction, (busy || remaining <= 0) && s.actionDisabled]}
+              onPress={takePhoto}
+              activeOpacity={0.75}
+              disabled={busy || remaining <= 0}
             >
-              <Text style={[s.modeBtnText, detectMode === m && s.modeBtnTextOn]}>
-                {m === 'ai' ? 'AI 识别' : '手动选择'}
-              </Text>
+              <Text style={s.primaryActionText}>拍照</Text>
             </TouchableOpacity>
-          ))}
+            <TouchableOpacity
+              style={[s.secondaryAction, (busy || remaining <= 0) && s.actionDisabled]}
+              onPress={pickPhotos}
+              activeOpacity={0.75}
+              disabled={busy || remaining <= 0}
+            >
+              <Text style={s.secondaryActionText}>从相册选择</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
-        {detectMode === 'ai' ? (
-          <View style={s.aiStatus}>
-            <Text style={s.aiStatusText}>
-              {autoDetecting ? '识别中...' : aiDetected ? `已识别：${selectedType}` : '添加照片后自动识别类型'}
-            </Text>
-          </View>
-        ) : (
-          <View style={s.typeGrid}>
-            {TYPES.map(t => (
-              <TouchableOpacity
-                key={t}
-                style={[s.typeItem, selectedType === t && s.typeItemActive]}
-                onPress={() => setSelectedType(t)}
-                activeOpacity={0.7}
-              >
-                <Text style={[s.typeItemLabel, selectedType === t && s.typeItemLabelActive]}>{t}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-
-        {/* 现场照片 */}
-        <View style={s.secHeader}>
-          <Text style={s.secLabel}>现场照片</Text>
-          <Text style={s.secNote}>{photos.length}/9</Text>
-        </View>
         <View style={s.photoGrid}>
           {photos.map((p, i) => (
-            <View key={`photo-${i}`} style={s.photoCell}>
-              <Image source={{ uri: p }} style={s.photoImg} resizeMode="cover" />
-              <TouchableOpacity style={s.photoRemove} onPress={() => removePhoto(i)}>
+            <View key={`${p.uri}-${i}`} style={s.photoCell}>
+              <Image source={{ uri: p.uri }} style={s.photoImg} resizeMode="cover" />
+              <Text style={s.photoIndex}>{String(i + 1).padStart(2, '0')}</Text>
+              <TouchableOpacity style={s.photoRemove} onPress={() => removePhoto(i)} disabled={busy}>
                 <Text style={s.removeX}>×</Text>
               </TouchableOpacity>
             </View>
           ))}
-          {photos.length < 9 && (
-            <TouchableOpacity style={s.photoAdd} onPress={handleAddPhoto} activeOpacity={0.7}>
-              <Text style={s.addPlus}>+</Text>
-              <Text style={s.addLabel}>添加照片</Text>
-            </TouchableOpacity>
+          {photos.length === 0 && (
+            <View style={s.emptyPhotos}>
+              <Text style={s.emptyTitle}>还没有照片</Text>
+              <Text style={s.emptyText}>先拍摄或选择现场图片</Text>
+            </View>
           )}
         </View>
 
-        {/* 描述路面情况 */}
-        <Text style={s.secLabel}>描述路面情况</Text>
-        <TextInput
-          style={s.textarea}
-          placeholder="请简要描述路面情况..."
-          placeholderTextColor="rgba(255,255,255,0.25)"
-          multiline
-          numberOfLines={4}
-          value={desc}
-          onChangeText={t => setDesc(t.slice(0, MAX_DESC))}
-          textAlignVertical="top"
-        />
-        <Text style={s.charCount}>{desc.length}/{MAX_DESC}</Text>
+        <View style={s.infoPanel}>
+          <Text style={s.secLabel}>提交信息</Text>
+          <View style={s.infoRow}>
+            <Text style={s.infoName}>拍摄时间</Text>
+            <Text style={[s.infoValue, captureSource === '手动' && s.warnText]}>{captureSource}</Text>
+          </View>
+          {captureRequired && (
+            <>
+              <TextInput
+                style={s.timeInput}
+                placeholder="YYYY-MM-DDTHH:mm"
+                placeholderTextColor="rgba(255,255,255,0.25)"
+                value={captureAt}
+                onChangeText={setCaptureAt}
+                autoCapitalize="none"
+              />
+              <Text style={s.timeHint}>图片缺少 EXIF 时间时，将使用这里的时间写入巡检记录。</Text>
+            </>
+          )}
+          <View style={s.infoRow}>
+            <Text style={s.infoName}>定位</Text>
+            <Text style={[s.infoValue, gpsStatus === 'failed' && s.warnText]}>
+              {gpsStatus === 'ok' && gpsCoords
+                ? `${gpsCoords.lat.toFixed(5)}, ${gpsCoords.lng.toFixed(5)}`
+                : gpsStatus === 'failed'
+                ? '未获取，将使用后端兜底'
+                : '提交时获取'}
+            </Text>
+          </View>
+        </View>
+
+        {summary && (
+          <View style={s.resultPanel}>
+            <Text style={s.resultTitle}>检测完成</Text>
+            <View style={s.resultGrid}>
+              <View style={s.resultCell}>
+                <Text style={s.resultValue}>{summary.images}</Text>
+                <Text style={s.resultLabel}>图片</Text>
+              </View>
+              <View style={s.resultCell}>
+                <Text style={s.resultValue}>{summary.detections}</Text>
+                <Text style={s.resultLabel}>病害</Text>
+              </View>
+            </View>
+            <Text style={s.resultText}>
+              {summary.detections > 0
+                ? `主要识别：${summary.topLabel}${summary.topConfidence ? ` · ${(summary.topConfidence * 100).toFixed(0)}%` : ''}`
+                : '未发现明显病害，照片仍可作为巡检证据补充。'}
+            </Text>
+          </View>
+        )}
+
+        {!!errorMsg && (
+          <View style={s.errorBox}>
+            <Text style={s.errorText}>{errorMsg}</Text>
+          </View>
+        )}
 
         <TouchableOpacity
-          style={[s.submitBtn, loading && s.submitBtnLoading]}
+          style={[s.submitBtn, (busy || photos.length === 0) && s.submitBtnDisabled]}
           onPress={handleSubmit}
           activeOpacity={0.75}
+          disabled={busy || photos.length === 0}
         >
-          {loading ? <ActivityIndicator color="#fff" /> : <Text style={s.submitText}>提交</Text>}
+          {busy ? <ActivityIndicator color="#fff" /> : <Text style={s.submitText}>{submitText}</Text>}
         </TouchableOpacity>
 
-        <Text style={s.privacy}>
-          {gpsStatus === 'ok' && gpsCoords
-            ? `已定位：${gpsCoords.lat.toFixed(5)}, ${gpsCoords.lng.toFixed(5)}`
-            : gpsStatus === 'failed'
-            ? '定位失败，将以无坐标上报'
-            : '提交时将自动获取您的地理位置'}
-        </Text>
+        {phase === 'done' && (
+          <TouchableOpacity style={s.closeBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
+            <Text style={s.closeBtnText}>{isWorkerUpload ? '返回工作台' : '返回首页'}</Text>
+          </TouchableOpacity>
+        )}
       </ScrollView>
     </SafeAreaView>
   )
@@ -218,64 +386,132 @@ const s = StyleSheet.create({
   page: { flex: 1, backgroundColor: '#111111' },
   header: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingHorizontal: 20, paddingVertical: 16,
-    borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)',
+    paddingHorizontal: 20, paddingVertical: 14,
+    borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.07)',
   },
-  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  backIcon: { fontSize: 28, color: 'rgba(255,255,255,0.7)', lineHeight: 32 },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
+  backIcon: { fontSize: 30, color: 'rgba(255,255,255,0.7)', lineHeight: 34 },
   headerTitle: { fontSize: 18, fontWeight: '600', color: '#ffffff' },
-  headerSub: { fontSize: 13, color: 'rgba(255,255,255,0.4)' },
+  headerHint: { fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 3 },
+  headerSub: { fontSize: 12, color: '#3e6ae1', fontWeight: '500' },
+  progressBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.06)',
+  },
+  stepWrap: { flexDirection: 'row', alignItems: 'center', flex: 1 },
+  stepDot: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepDotActive: { borderColor: '#3e6ae1', backgroundColor: 'rgba(62,106,225,0.15)' },
+  stepDotDone: { borderColor: '#3e6ae1', backgroundColor: '#3e6ae1' },
+  stepNum: { color: 'rgba(255,255,255,0.35)', fontSize: 11, fontWeight: '600' },
+  stepNumOn: { color: '#ffffff' },
+  stepText: { color: 'rgba(255,255,255,0.3)', fontSize: 12, fontWeight: '500', marginLeft: 7 },
+  stepTextOn: { color: 'rgba(255,255,255,0.74)' },
+  stepLine: { height: 1, backgroundColor: 'rgba(255,255,255,0.09)', flex: 1, marginHorizontal: 10 },
+  stepLineDone: { backgroundColor: 'rgba(62,106,225,0.7)' },
   scroll: { flex: 1 },
-  body: { padding: 20, gap: 12, paddingBottom: 48 },
-  secHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  secLabel: { fontSize: 14, fontWeight: '600', color: 'rgba(255,255,255,0.7)', letterSpacing: 1 },
-  secNote: { fontSize: 13, color: 'rgba(255,255,255,0.35)' },
-  modeSwitch: { flexDirection: 'row', gap: 8 },
-  modeBtn: {
-    flex: 1, paddingVertical: 10, borderRadius: 8,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)', alignItems: 'center',
+  body: { padding: 18, gap: 14, paddingBottom: 48 },
+  panel: {
+    backgroundColor: 'rgba(255,255,255,0.045)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.09)',
+    borderRadius: 14,
+    padding: 16,
+    gap: 14,
   },
-  modeBtnOn: { backgroundColor: 'rgba(62,106,225,0.15)', borderColor: '#3e6ae1' },
-  modeBtnText: { fontSize: 14, color: 'rgba(255,255,255,0.4)', fontWeight: '500' },
-  modeBtnTextOn: { color: '#3e6ae1', fontWeight: '700' },
-  aiStatus: { backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: 14 },
-  aiStatusText: { fontSize: 14, color: 'rgba(255,255,255,0.5)', textAlign: 'center' },
-  typeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  typeItem: {
-    paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
-    backgroundColor: 'rgba(255,255,255,0.04)',
+  panelTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  panelTitle: { fontSize: 18, color: '#ffffff', fontWeight: '600' },
+  panelCount: { fontSize: 13, color: 'rgba(255,255,255,0.45)' },
+  panelText: { color: 'rgba(255,255,255,0.48)', fontSize: 13, lineHeight: 20 },
+  actionRow: { flexDirection: 'row', gap: 10 },
+  primaryAction: {
+    flex: 1, height: 46, borderRadius: 8, backgroundColor: '#3e6ae1',
+    alignItems: 'center', justifyContent: 'center',
   },
-  typeItemActive: { backgroundColor: 'rgba(62,106,225,0.15)', borderColor: '#3e6ae1' },
-  typeItemLabel: { fontSize: 14, color: 'rgba(255,255,255,0.5)' },
-  typeItemLabelActive: { color: '#3e6ae1', fontWeight: '700' },
+  primaryActionText: { color: '#ffffff', fontWeight: '600', fontSize: 15 },
+  secondaryAction: {
+    flex: 1, height: 46, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.16)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  secondaryActionText: { color: 'rgba(255,255,255,0.72)', fontWeight: '500', fontSize: 15 },
+  actionDisabled: { opacity: 0.45 },
   photoGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  photoCell: { width: 100, height: 100, borderRadius: 8, overflow: 'hidden' },
+  photoCell: {
+    width: '31.8%', aspectRatio: 1, borderRadius: 10, overflow: 'hidden',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+  },
   photoImg: { width: '100%', height: '100%' },
+  photoIndex: {
+    position: 'absolute', left: 6, bottom: 5, color: '#ffffff',
+    fontSize: 11, fontWeight: '600', backgroundColor: 'rgba(0,0,0,0.45)',
+    paddingHorizontal: 5, paddingVertical: 2, borderRadius: 4,
+  },
   photoRemove: {
-    position: 'absolute', top: 4, right: 4,
-    width: 22, height: 22, borderRadius: 11,
-    backgroundColor: 'rgba(0,0,0,0.6)', alignItems: 'center', justifyContent: 'center',
+    position: 'absolute', top: 5, right: 5,
+    width: 23, height: 23, borderRadius: 12,
+    backgroundColor: 'rgba(0,0,0,0.62)', alignItems: 'center', justifyContent: 'center',
   },
-  removeX: { color: '#ffffff', fontSize: 16, lineHeight: 20 },
-  photoAdd: {
-    width: 100, height: 100, borderRadius: 8,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)',
-    alignItems: 'center', justifyContent: 'center', gap: 4,
+  removeX: { color: '#ffffff', fontSize: 16, lineHeight: 19 },
+  emptyPhotos: {
+    flex: 1, minHeight: 118, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
+    borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center', gap: 5,
   },
-  addPlus: { fontSize: 28, color: 'rgba(255,255,255,0.3)' },
-  addLabel: { fontSize: 12, color: 'rgba(255,255,255,0.3)' },
-  textarea: {
+  emptyTitle: { color: 'rgba(255,255,255,0.55)', fontSize: 15, fontWeight: '500' },
+  emptyText: { color: 'rgba(255,255,255,0.28)', fontSize: 12 },
+  infoPanel: {
+    backgroundColor: 'rgba(255,255,255,0.035)',
+    borderRadius: 12, padding: 14, gap: 12,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)',
+  },
+  secLabel: { fontSize: 13, fontWeight: '500', color: 'rgba(255,255,255,0.72)', letterSpacing: 0 },
+  infoRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 16, alignItems: 'center' },
+  infoName: { color: 'rgba(255,255,255,0.42)', fontSize: 13 },
+  infoValue: { color: 'rgba(255,255,255,0.68)', fontSize: 13, flexShrink: 1, textAlign: 'right' },
+  warnText: { color: '#f59e0b' },
+  timeInput: {
     backgroundColor: 'rgba(255,255,255,0.04)',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 10, padding: 14, fontSize: 15, color: '#ffffff', minHeight: 100,
+    borderWidth: 1, borderColor: 'rgba(245,158,11,0.45)',
+    borderRadius: 9, paddingHorizontal: 12, height: 44, fontSize: 14, color: '#ffffff',
   },
-  charCount: { textAlign: 'right', fontSize: 12, color: 'rgba(255,255,255,0.3)' },
+  timeHint: { fontSize: 12, color: 'rgba(255,255,255,0.35)', lineHeight: 18 },
+  resultPanel: {
+    borderRadius: 12, padding: 16, gap: 12,
+    backgroundColor: 'rgba(34,197,94,0.08)',
+    borderWidth: 1, borderColor: 'rgba(34,197,94,0.28)',
+  },
+  resultTitle: { color: '#22c55e', fontSize: 16, fontWeight: '600' },
+  resultGrid: { flexDirection: 'row', gap: 10 },
+  resultCell: {
+    flex: 1, borderRadius: 10, backgroundColor: 'rgba(0,0,0,0.2)',
+    alignItems: 'center', paddingVertical: 14,
+  },
+  resultValue: { color: '#ffffff', fontSize: 25, fontWeight: '600' },
+  resultLabel: { color: 'rgba(255,255,255,0.42)', fontSize: 12, marginTop: 2 },
+  resultText: { color: 'rgba(255,255,255,0.7)', fontSize: 13, lineHeight: 20 },
+  errorBox: {
+    backgroundColor: 'rgba(239,68,68,0.1)',
+    borderWidth: 1, borderColor: 'rgba(239,68,68,0.32)',
+    borderRadius: 10, padding: 12,
+  },
+  errorText: { color: '#ef4444', fontSize: 13, lineHeight: 19 },
   submitBtn: {
     backgroundColor: '#3e6ae1', borderRadius: 10,
-    height: 52, alignItems: 'center', justifyContent: 'center', marginTop: 8,
+    height: 54, alignItems: 'center', justifyContent: 'center', marginTop: 4,
   },
-  submitBtnLoading: { opacity: 0.7 },
-  submitText: { fontSize: 17, fontWeight: '700', color: '#ffffff', letterSpacing: 2 },
-  privacy: { textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.25)' },
+  submitBtnDisabled: { backgroundColor: 'rgba(62,106,225,0.38)' },
+  submitText: { fontSize: 17, fontWeight: '600', color: '#ffffff', letterSpacing: 0 },
+  closeBtn: { height: 46, alignItems: 'center', justifyContent: 'center' },
+  closeBtnText: { color: 'rgba(255,255,255,0.55)', fontSize: 14, fontWeight: '500' },
 })

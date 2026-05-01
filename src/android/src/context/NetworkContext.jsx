@@ -7,8 +7,8 @@
 import { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react'
 import { AppState } from 'react-native'
 import { BASE_URL } from '../api/request'
-import { getQueue, removeFromQueue, markRetry, clearExpired, MAX_RETRIES } from '../utils/offlineQueue'
-import { submitVideo } from '../api/detect'
+import { getQueue, removeFromQueue, markRetry, markUploadedCount, clearExpired, MAX_RETRIES } from '../utils/offlineQueue'
+import { submitVideo, uploadImage } from '../api/detect'
 
 const NetworkCtx = createContext({
   isOnline: true,
@@ -48,12 +48,26 @@ export function NetworkProvider({ children }) {
     if (processing.current) return
     processing.current = true
     try {
+      const online = await pingServer()
+      setIsOnline(online)
+      if (!online) return
+
       await clearExpired()
       const queue = await getQueue()
       for (const item of queue) {
         try {
-          // 只提交任务即可，后端异步推理并写入数据库
-          await submitVideo(item.videoUri, item.gpsPoints, item.intervalMeters)
+          if (item.type === 'photo_sequence') {
+            const captures = item.captureItems || []
+            const startIndex = item.uploadedCount || 0
+            for (let i = startIndex; i < captures.length; i++) {
+              const capture = captures[i]
+              await uploadImage(capture.uri, capture.lat, capture.lng, capture.capturedAt)
+              await markUploadedCount(item.id, i + 1)
+            }
+          } else {
+            // 兼容旧队列：只提交任务即可，后端异步推理并写入数据库
+            await submitVideo(item.videoUri, item.gpsPoints, item.intervalMeters)
+          }
           await removeFromQueue(item.id)
         } catch {
           if (item.retries + 1 >= MAX_RETRIES) {

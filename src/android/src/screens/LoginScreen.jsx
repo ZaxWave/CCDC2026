@@ -2,8 +2,10 @@ import { useState } from 'react'
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { login } from '../api/auth'
+import BrandWordmark from '../components/BrandWordmark'
 
-export default function LoginScreen({ navigation }) {
+export default function LoginScreen({ navigation, route }) {
   const [account, setAccount] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -16,11 +18,17 @@ export default function LoginScreen({ navigation }) {
     }
     setError('')
     setLoading(true)
-    await new Promise(r => setTimeout(r, 1400))
-    await AsyncStorage.setItem('token', 'mock_token_123')
-    await AsyncStorage.setItem('user', JSON.stringify({ account, name: account }))
-    setLoading(false)
-    navigation.replace('WorkerHub')
+    try {
+      const data = await login(account.trim(), password)
+      await AsyncStorage.setItem('token', data.access_token)
+      await AsyncStorage.setItem('token_type', data.token_type || 'bearer')
+      await AsyncStorage.setItem('user', JSON.stringify({ account: account.trim(), name: account.trim() }))
+      navigation.replace(route?.params?.redirect || 'WorkerHub', route?.params?.redirectParams)
+    } catch (e) {
+      setError(e.message || '登录失败，请检查账号和密码')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -32,18 +40,20 @@ export default function LoginScreen({ navigation }) {
         </TouchableOpacity>
       </View>
 
-      <View style={s.header}>
-        <Text style={s.roleLabel}>INSPECTOR · 巡检员</Text>
-        <Text style={s.title}>登录</Text>
-        <Text style={s.subtitle}>使用工号和系统密码登录专业版</Text>
-      </View>
+      <View style={s.formWrap}>
+        <BrandWordmark size={34} centered />
+        <View style={s.header}>
+          <Text style={s.roleLabel}>{route?.params?.redirect === 'Report' ? '上报前登录' : '专业版'}</Text>
+          <Text style={s.title}>账号登录</Text>
+          <Text style={s.subtitle}>连接 LightScan 服务器后继续使用现场端</Text>
+        </View>
 
       <View style={s.form}>
         <View style={s.field}>
-          <Text style={s.fieldLabel}>工号 / 账号</Text>
+          <Text style={s.fieldLabel}>账号</Text>
           <TextInput
             style={s.input}
-            placeholder="请输入工号"
+            placeholder="输入管理员或巡检员账号"
             placeholderTextColor="rgba(255,255,255,0.25)"
             value={account}
             onChangeText={setAccount}
@@ -78,11 +88,12 @@ export default function LoginScreen({ navigation }) {
         >
           {loading
             ? <ActivityIndicator color="#fff" />
-            : <Text style={s.submitText}>登 录</Text>
+            : <Text style={s.submitText}>登录</Text>
           }
         </TouchableOpacity>
 
-        <Text style={s.demoHint}>演示：任意工号 + 任意密码</Text>
+        <Text style={s.demoHint}>使用服务器账号登录，登录状态会保存在本机。</Text>
+      </View>
       </View>
     </SafeAreaView>
   )
@@ -94,15 +105,32 @@ const s = StyleSheet.create({
   backBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   backIcon: { fontSize: 28, color: 'rgba(255,255,255,0.6)', lineHeight: 32 },
   backText: { fontSize: 16, color: 'rgba(255,255,255,0.6)' },
-  header: { paddingHorizontal: 32, paddingTop: 48, paddingBottom: 40 },
-  roleLabel: { fontSize: 12, color: 'rgba(255,255,255,0.3)', letterSpacing: 3, marginBottom: 12 },
-  title: { fontSize: 36, fontWeight: '700', color: '#ffffff', marginBottom: 8 },
-  subtitle: { fontSize: 14, color: 'rgba(255,255,255,0.4)' },
-  form: { paddingHorizontal: 32, gap: 20 },
+  formWrap: { flex: 1, justifyContent: 'center', paddingHorizontal: 28, paddingBottom: 56, gap: 28 },
+  header: { alignItems: 'center', gap: 8 },
+  roleLabel: { fontSize: 12, color: 'rgba(255,255,255,0.36)', letterSpacing: 0 },
+  title: { fontSize: 30, fontWeight: '600', color: '#ffffff' },
+  subtitle: { fontSize: 13, color: 'rgba(255,255,255,0.4)', textAlign: 'center', lineHeight: 19 },
+  form: {
+    gap: 18,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 14,
+    padding: 18,
+  },
   field: { gap: 8 },
-  fieldLabel: { fontSize: 13, color: 'rgba(255,255,255,0.5)', letterSpacing: 1 },
-  input: { fontSize: 16, color: '#ffffff', paddingVertical: 8 },
-  inputUnderline: { height: 1, backgroundColor: 'rgba(255,255,255,0.15)' },
+  fieldLabel: { fontSize: 13, color: 'rgba(255,255,255,0.5)', letterSpacing: 0 },
+  input: {
+    fontSize: 16,
+    color: '#ffffff',
+    paddingHorizontal: 12,
+    height: 48,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255,255,255,0.045)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  inputUnderline: { display: 'none' },
   errorBox: {
     backgroundColor: 'rgba(220,38,38,0.1)',
     borderRadius: 8,
@@ -117,9 +145,9 @@ const s = StyleSheet.create({
     height: 52,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 8,
+    marginTop: 4,
   },
   submitLoading: { opacity: 0.7 },
-  submitText: { fontSize: 16, fontWeight: '700', color: '#ffffff', letterSpacing: 4 },
-  demoHint: { textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.25)', marginTop: 4 },
+  submitText: { fontSize: 16, fontWeight: '600', color: '#ffffff', letterSpacing: 0 },
+  demoHint: { textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.28)', marginTop: 2, lineHeight: 18 },
 })

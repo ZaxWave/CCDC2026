@@ -65,6 +65,11 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
+.sectionWarn {
+  background: rgba(245, 158, 11, 0.08);
+  border-bottom-color: rgba(245, 158, 11, 0.22);
+}
+
 .secHeader {
   display: flex;
   align-items: center;
@@ -231,6 +236,38 @@
   text-align: right;
   margin-top: 12px;
   display: block;
+}
+
+// ── 拍摄时间 ────────────────────────────────────────────────
+.timeRow {
+  display: flex;
+  gap: 16px;
+}
+
+.timePicker {
+  min-width: 210px;
+  height: 76px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 24px;
+}
+
+.timePickerText {
+  font-size: 26px;
+  color: rgba(255, 255, 255, 0.78);
+  font-weight: 600;
+}
+
+.timeHint {
+  display: block;
+  margin-top: 18px;
+  font-size: 22px;
+  color: rgba(255, 255, 255, 0.34);
+  line-height: 1.5;
 }
 
 // ── 提交 ────────────────────────────────────────────────────

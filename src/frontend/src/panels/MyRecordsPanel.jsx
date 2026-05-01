@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { getMyGisRecords, deleteRecord, getMyStats, getDeletedRecords, restoreRecord, batchDeleteRecords, updateRecordStatus, permanentDeleteRecord, batchPermanentDeleteRecords } from '../api/client';
+import { getMyGisRecords, deleteRecord, getMyStats, getDeletedRecords, restoreRecord, batchDeleteRecords, updateRecordStatus, permanentDeleteRecord, batchPermanentDeleteRecords, dispatchOrder } from '../api/client';
 import WeeklyReportModal from '../components/WeeklyReportModal';
 import RepairCompareModal from '../components/RepairCompareModal';
 import s from './MyRecordsPanel.module.css';
@@ -176,6 +176,10 @@ export default function MyRecordsPanel() {
   const [showBatchPermanentConfirm, setShowBatchPermanentConfirm] = useState(false);
   const [batchPermanentDeleting, setBatchPermanentDeleting] = useState(false);
 
+  // 工单派发
+  const [dispatchingId, setDispatchingId] = useState(null);
+  const [dispatchedIds, setDispatchedIds] = useState(new Set());
+
   // 修复照片预览 URL 管理
   useEffect(() => {
     if (!repairFile) { setRepairPreview(null); return; }
@@ -193,6 +197,21 @@ export default function MyRecordsPanel() {
     ]).finally(() => setLoading(false));
 
   useEffect(() => { loadActive(); }, []);
+
+  const handleDispatch = async (record) => {
+    setDispatchingId(record.id);
+    try {
+      await dispatchOrder(record.id);
+      setDispatchedIds(prev => new Set([...prev, record.id]));
+      // 刷新列表以获取最新 dispatch_info
+      const fresh = await getMyGisRecords().catch(() => null);
+      if (fresh) setRecords(fresh);
+    } catch (e) {
+      alert(e.message?.includes('401') ? '请先登录后再派发工单' : `派发失败：${e.message}`);
+    } finally {
+      setDispatchingId(null);
+    }
+  };
 
   const openStatusModal = (record) => {
     setStatusModal(record);
@@ -263,6 +282,15 @@ export default function MyRecordsPanel() {
     } catch (e) { alert(e.message); }
     finally { setBatchPermanentDeleting(false); setShowBatchPermanentConfirm(false); }
   };
+
+  // 统计每个 cluster_id 的检测次数（用于显示聚类重复数）
+  const clusterCounts = useMemo(() => {
+    const m = {};
+    for (const r of records) {
+      if (r.cluster_id) m[r.cluster_id] = (m[r.cluster_id] || 0) + 1;
+    }
+    return m;
+  }, [records]);
 
   const filtered = useMemo(() => {
     return records.filter(r => {
@@ -477,7 +505,7 @@ export default function MyRecordsPanel() {
                 </th>
                 <th>ID</th><th>病害类型</th><th>置信度</th>
                 <th>经纬度</th><th>来源文件</th><th>检测时间</th>
-                <th>处理状态</th><th></th>
+                <th>处理状态</th><th>聚类/工单</th><th></th>
               </tr>
             </thead>
             <tbody>
@@ -509,6 +537,26 @@ export default function MyRecordsPanel() {
                     ) : null}
                   </td>
                   <td><StatusBadge status={r.status || 'pending'} /></td>
+                  <td className={s.orderCell}>
+                    {r.cluster_id && (clusterCounts[r.cluster_id] || 0) > 1 && (
+                      <span className={s.clusterBadge} title={`聚类 ${r.cluster_id.slice(0, 8)}…`}>
+                        {clusterCounts[r.cluster_id]} 次
+                      </span>
+                    )}
+                    {r.dispatch_info || dispatchedIds.has(r.id) ? (
+                      <span className={s.dispatchedBadge}>
+                        ✓ {r.dispatch_info?.urgency || '已派'}
+                      </span>
+                    ) : (
+                      <button
+                        className={s.dispatchBtn}
+                        disabled={dispatchingId === r.id}
+                        onClick={() => handleDispatch(r)}
+                      >
+                        {dispatchingId === r.id ? '派发中…' : 'AI 派单'}
+                      </button>
+                    )}
+                  </td>
                   <td className={s.actionCell}>
                     {r.status === 'repaired' && r.repaired_image_b64 && (
                       <button className={s.compareBtn} onClick={() => setCompareRecord(r)}>对比</button>

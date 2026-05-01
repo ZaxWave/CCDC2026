@@ -1,9 +1,29 @@
 import { uploadFile, request } from './request'
 
-export async function uploadImage(filePath, lat = null, lng = null) {
+function buildImageFormData(lat, lng, capturedAt) {
   const formData = {}
   if (lat != null) formData.lat = String(lat)
   if (lng != null) formData.lng = String(lng)
+  if (capturedAt) formData.captured_at = capturedAt
+  formData.source_type = 'mobile'
+  return formData
+}
+
+export async function checkImageExif(filePath) {
+  return uploadFile({ url: '/api/v1/check-exif', filePath, name: 'file' })
+}
+
+export async function uploadImages(filePaths, lat = null, lng = null, capturedAt = '') {
+  return uploadFile({
+    url: '/api/v1/detect',
+    filePath: filePaths,
+    name: 'files',
+    formData: buildImageFormData(lat, lng, capturedAt),
+  })
+}
+
+export async function uploadImage(filePath, lat = null, lng = null, capturedAt = '') {
+  const formData = buildImageFormData(lat, lng, capturedAt)
   const results = await uploadFile({ url: '/api/v1/detect', filePath, name: 'files', formData })
   return Array.isArray(results) ? results[0] : results
 }

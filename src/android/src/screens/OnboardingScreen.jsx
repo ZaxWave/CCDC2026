@@ -4,29 +4,30 @@ import {
   StyleSheet, Dimensions, StatusBar
 } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import BrandWordmark from '../components/BrandWordmark'
 
-const { width, height } = Dimensions.get('window')
+const { width } = Dimensions.get('window')
 
 const SLIDES = [
   {
     id: '1',
-    icon: '⚡',
-    title: '轻量化\n实时检测',
-    desc: '搭载自研 ls-det 轻量模型，单帧推理仅需 18ms。无论行车记录仪、路侧摄像头还是手机拍摄，随时随地精准识别 8 类路面病害。',
+    index: '01',
+    title: '现场采集',
+    desc: '拍照和录像都可以直接写入平台记录，保留位置、时间和识别结果。',
     accent: '#3E6AE1',
   },
   {
     id: '2',
-    icon: '📈',
-    title: 'AI 趋势\n演化预测',
-    desc: '时间轴引擎持续追踪同一病害的置信度变化，自动生成"稳定 / 恶化 / 好转"趋势判断，提前预警高风险路段，让维护更主动。',
+    index: '02',
+    title: '多角度聚合',
+    desc: '同一病害的多次拍摄会被聚合为一个病害点，便于后续查看和处置。',
     accent: '#0ea770',
   },
   {
     id: '3',
-    icon: '🔁',
-    title: '一键派单\n闭环处理',
-    desc: 'DeepSeek 大模型自动生成工料估算与维修方案，一键推送至巡检员任务列表，实现"发现病害 → 生成报告 → 派发工单 → 闭环修复"全生命周期管理。',
+    index: '03',
+    title: '闭环处理',
+    desc: '巡检员可以接收工单、更新状态，并把处理结果回传到平台。',
     accent: '#f59e0b',
   },
 ]
@@ -64,11 +65,9 @@ export default function OnboardingScreen({ navigation }) {
         }}
         renderItem={({ item }) => (
           <View style={styles.slide}>
-            {/* background glow */}
-            <View style={[styles.glow, { backgroundColor: item.accent + '22' }]} />
-
-            <Text style={styles.icon}>{item.icon}</Text>
-            <Text style={[styles.title, { color: item.accent }]}>{item.title}</Text>
+            <BrandWordmark size={34} centered />
+            <Text style={[styles.index, { color: item.accent }]}>{item.index}</Text>
+            <Text style={styles.title}>{item.title}</Text>
             <Text style={styles.desc}>{item.desc}</Text>
           </View>
         )}
@@ -120,30 +119,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
     paddingTop: 60,
   },
-  glow: {
-    position: 'absolute',
-    width: width * 0.8,
-    height: width * 0.8,
-    borderRadius: width * 0.4,
-    top: '10%',
-    alignSelf: 'center',
-  },
-  icon: {
-    fontSize: 72,
-    marginBottom: 32,
-  },
+  index: { fontSize: 13, fontWeight: '600', marginTop: 58, marginBottom: 12 },
   title: {
-    fontSize: 32,
-    fontWeight: '800',
+    fontSize: 34,
+    fontWeight: '600',
     textAlign: 'center',
     lineHeight: 42,
-    marginBottom: 24,
+    marginBottom: 18,
+    color: '#ffffff',
   },
   desc: {
-    fontSize: 16,
-    color: '#8892a4',
+    fontSize: 15,
+    color: 'rgba(255,255,255,0.48)',
     textAlign: 'center',
-    lineHeight: 26,
+    lineHeight: 24,
+    maxWidth: 310,
   },
   dots: {
     flexDirection: 'row',
@@ -157,7 +147,6 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
     backgroundColor: '#2c3347',
-    transition: 'all 0.3s',
   },
   footer: {
     flexDirection: 'row',
@@ -176,7 +165,7 @@ const styles = StyleSheet.create({
   nextBtn: {
     paddingHorizontal: 32,
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: 8,
   },
   nextText: {
     color: '#fff',

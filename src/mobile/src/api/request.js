@@ -1,8 +1,6 @@
 import Taro from '@tarojs/taro'
 
-// 真机测试时改为电脑的局域网 IP，例如 http://192.168.1.100:8000
-// 可通过 src/mobile/.env 文件中 TARO_APP_API_URL=http://192.168.x.x:8000 配置
-export const BASE_URL = process.env.TARO_APP_API_URL || 'http://localhost:8000'
+export const BASE_URL = process.env.TARO_APP_API_URL || 'http://39.105.106.58'
 
 function getToken() {
   return Taro.getStorageSync('token') || ''
@@ -29,7 +27,11 @@ export function uploadFile({ url, filePath, name = 'file', formData = {} }) {
             resolve(res.data)
           }
         } else {
-          reject(new Error(`HTTP ${res.statusCode}`))
+          let detail = ''
+          try {
+            detail = JSON.parse(res.data)?.detail || ''
+          } catch {}
+          reject(new Error(detail || `HTTP ${res.statusCode}`))
         }
       },
       fail(err) {
@@ -56,5 +58,5 @@ export async function request({ method = 'GET', url, data } = {}) {
   if (res.statusCode >= 200 && res.statusCode < 300) {
     return res.data
   }
-  throw new Error(`HTTP ${res.statusCode}`)
+  throw new Error(res.data?.detail || `HTTP ${res.statusCode}`)
 }
