@@ -4,21 +4,27 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import BrandWordmark from '../components/BrandWordmark'
 import { useThemedStyles } from '../theme'
 
+async function getValidToken() {
+  const token = await AsyncStorage.getItem('token')
+  if (!token) return ''
+  const isJwtLike = token.split('.').length === 3
+  if (!isJwtLike) {
+    await AsyncStorage.multiRemove(['token', 'token_type', 'user'])
+    return ''
+  }
+  return token
+}
+
 export default function HomeScreen({ navigation }) {
   const s = useThemedStyles(createStyles)
 
   const goToCitizen = async () => {
-    const token = await AsyncStorage.getItem('token')
+    const token = await getValidToken()
     navigation.navigate(token ? 'Report' : 'Login', token ? undefined : { redirect: 'Report' })
   }
 
   const goToWorker = async () => {
-    const token = await AsyncStorage.getItem('token')
-    if (token === 'mock_token_123') {
-      await AsyncStorage.multiRemove(['token', 'token_type', 'user'])
-      navigation.navigate('Login')
-      return
-    }
+    const token = await getValidToken()
     navigation.navigate(token ? 'WorkerHub' : 'Login', token ? undefined : { redirect: 'WorkerHub' })
   }
 
