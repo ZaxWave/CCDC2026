@@ -2,8 +2,11 @@ import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import BrandWordmark from '../components/BrandWordmark'
+import { useThemedStyles } from '../theme'
 
 export default function HomeScreen({ navigation }) {
+  const s = useThemedStyles(createStyles)
+
   const goToCitizen = async () => {
     const token = await AsyncStorage.getItem('token')
     navigation.navigate(token ? 'Report' : 'Login', token ? undefined : { redirect: 'Report' })
@@ -79,52 +82,52 @@ export default function HomeScreen({ navigation }) {
   )
 }
 
-const s = StyleSheet.create({
-  page: { flex: 1, backgroundColor: '#111111' },
+const createStyles = (t) => StyleSheet.create({
+  page: { flex: 1, backgroundColor: t.bg },
   body: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 18, paddingBottom: 34, justifyContent: 'center' },
   topBar: { position: 'absolute', top: 18, left: 24, right: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  version: { color: 'rgba(255,255,255,0.34)', fontSize: 12, fontWeight: '500' },
+  version: { color: t.textFaint, fontSize: 12, fontWeight: '500' },
   hero: { marginTop: 58, marginBottom: 34, gap: 9 },
-  heroKicker: { color: '#3e6ae1', fontSize: 13, fontWeight: '500', letterSpacing: 0 },
-  heroTitle: { color: '#ffffff', fontSize: 34, fontWeight: '600', letterSpacing: 0, lineHeight: 42 },
-  heroText: { color: 'rgba(255,255,255,0.5)', fontSize: 14, lineHeight: 22, maxWidth: 310 },
+  heroKicker: { color: t.blue, fontSize: 13, fontWeight: '500', letterSpacing: 0 },
+  heroTitle: { color: t.text, fontSize: 34, fontWeight: '500', letterSpacing: 0, lineHeight: 42 },
+  heroText: { color: t.textMuted, fontSize: 14, lineHeight: 22, maxWidth: 310 },
   modePanel: {
-    borderRadius: 14,
-    backgroundColor: 'rgba(255,255,255,0.045)',
+    borderRadius: 12,
+    backgroundColor: t.panel,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.09)',
+    borderColor: t.border,
     overflow: 'hidden',
   },
-  panelTitle: { color: 'rgba(255,255,255,0.48)', fontSize: 12, fontWeight: '500', letterSpacing: 0, paddingHorizontal: 18, paddingTop: 18, paddingBottom: 4 },
+  panelTitle: { color: t.textMuted, fontSize: 12, fontWeight: '500', letterSpacing: 0, paddingHorizontal: 18, paddingTop: 18, paddingBottom: 4 },
   modeCard: { flexDirection: 'row', alignItems: 'center', padding: 18, gap: 13, minHeight: 94 },
-  modeCardPrimary: { backgroundColor: 'rgba(62,106,225,0.08)' },
+  modeCardPrimary: { backgroundColor: t.blueSoft },
   modeNum: {
     width: 42,
     height: 42,
-    borderRadius: 10,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 4,
+    backgroundColor: t.surfaceStrong,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  modeNumPrimary: { backgroundColor: '#3e6ae1' },
-  modeNumText: { color: '#ffffff', fontSize: 13, fontWeight: '600' },
+  modeNumPrimary: { backgroundColor: t.blue },
+  modeNumText: { color: '#ffffff', fontSize: 13, fontWeight: '500' },
   modeBody: { flex: 1, gap: 5 },
   modeTop: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
-  modeTitle: { color: '#ffffff', fontSize: 18, fontWeight: '600' },
+  modeTitle: { color: t.text, fontSize: 18, fontWeight: '500' },
   modeTag: {
-    color: 'rgba(255,255,255,0.6)',
+    color: t.textMuted,
     fontSize: 11,
     fontWeight: '500',
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 5,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 4,
+    backgroundColor: t.surfaceStrong,
   },
-  modeTagPrimary: { color: '#8fb0ff', backgroundColor: 'rgba(62,106,225,0.16)' },
-  modeDesc: { color: 'rgba(255,255,255,0.42)', fontSize: 13, lineHeight: 19 },
-  arrow: { color: 'rgba(255,255,255,0.28)', fontSize: 30, lineHeight: 32 },
-  divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.07)', marginHorizontal: 18 },
+  modeTagPrimary: { color: t.blueText, backgroundColor: t.blueSoft },
+  modeDesc: { color: t.textFaint, fontSize: 13, lineHeight: 19 },
+  arrow: { color: t.textFaint, fontSize: 30, lineHeight: 32 },
+  divider: { height: 1, backgroundColor: t.border, marginHorizontal: 18 },
   statusRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 9, marginTop: 26 },
-  statusText: { color: 'rgba(255,255,255,0.32)', fontSize: 12, fontWeight: '500' },
-  statusDot: { width: 3, height: 3, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.24)' },
+  statusText: { color: t.textFaint, fontSize: 12, fontWeight: '500' },
+  statusDot: { width: 3, height: 3, borderRadius: 2, backgroundColor: t.borderStrong },
 })

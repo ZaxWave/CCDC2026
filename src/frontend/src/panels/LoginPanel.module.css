@@ -1,86 +1,130 @@
+/* ─── Tesla-Inspired Split Layout ──────────────────────────────────────────
+   Left  : Carbon Dark brand panel — full-height, product statement
+   Right : Pure White form panel — gallery silence, no chrome
+   Rules : no shadows · no gradients · 4px interactive radii · 12px cards
+           weight 400/500 only · 0.33s transitions everywhere
+────────────────────────────────────────────────────────────────────────── */
+
 .container {
   position: fixed;
   inset: 0;
   z-index: 9999;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr;
   min-height: 100vh;
   width: 100vw;
   overflow: hidden;
-  background:
-    radial-gradient(circle at 50% 28%, rgba(62, 106, 225, 0.10), transparent 34%),
-    linear-gradient(180deg, #F7F9FF 0%, #FFFFFF 100%);
-  color: #171A20;
   font-family: -apple-system, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+  color: #171A20;
 }
 
+.container,
+.container * {
+  box-sizing: border-box;
+}
+
+/* ── Left panel — Carbon Dark brand statement ───────────────────────────── */
 .pageHeader {
-  position: absolute;
-  z-index: 2;
-  top: 28px;
-  left: 48px;
-  right: 48px;
+  position: relative;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: space-between;
-  color: #171A20;
+  padding: 52px 56px;
+  background: #171A20;
+  color: #FFFFFF;
+  overflow: hidden;
+}
+
+/* subtle ambient grid — no images, pure CSS depth */
+.pageHeader::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+}
+
+/* Electric Blue hairline at the seam */
+.pageHeader::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 1px;
+  height: 100%;
+  background: rgba(62, 106, 225, 0.3);
 }
 
 .brandLockup {
-  display: inline-flex;
-  align-items: center;
+  display: block;
+  width: 158px;
+  height: auto;
+  filter: brightness(0) invert(1);
+  position: relative;
+  z-index: 1;
 }
 
 .brandLogo {
   display: block;
-  width: 166px;
-  height: 46px;
+  width: 100%;
+  height: auto;
 }
 
 .headerMeta {
-  color: #5C5E62;
+  position: relative;
+  z-index: 1;
+  color: rgba(255, 255, 255, 0.3);
   font-size: 13px;
+  font-weight: 400;
   line-height: 20px;
+  letter-spacing: 0;
 }
 
+/* ── Right panel — Pure White form stage ─────────────────────────────────── */
 .stage {
   position: relative;
-  z-index: 2;
   display: flex;
-  width: min(520px, calc(100vw - 48px));
-  min-height: 100vh;
-  margin: 0 auto;
   align-items: center;
   justify-content: center;
-  padding: 40px 0;
+  padding: 40px 56px;
+  background: #FFFFFF;
+  overflow-y: auto;
+  min-height: 100vh;
 }
 
+/* ── Card — no border, no shadow, form sits directly on white ────────────── */
 .card {
-  width: 430px;
-  max-width: 100%;
-  border: 1px solid rgba(208, 209, 210, 0.72);
-  border-radius: 28px;
-  background: rgba(255, 255, 255, 0.94);
-  padding: 40px;
-  box-shadow: 0 20px 70px rgba(23, 26, 32, 0.10);
+  width: 100%;
+  max-width: 360px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
 .logoMark {
   display: block;
-  width: 54px;
-  height: 54px;
-  margin: 0 auto 18px;
+  width: 44px;
+  height: 44px;
+  margin: 0 0 28px;
 }
 
+/* ── Header ──────────────────────────────────────────────────────────────── */
 .header {
-  margin-bottom: 28px;
-  text-align: center;
+  margin-bottom: 32px;
+  text-align: left;
 }
 
 .title {
   margin: 0;
   color: #171A20;
-  font-size: 22px;
-  font-weight: 600;
-  line-height: 1.25;
+  font-size: 28px;
+  font-weight: 500;
+  line-height: 1.2;
   letter-spacing: 0;
 }
 
@@ -92,10 +136,11 @@
   line-height: 20px;
 }
 
+/* ── Form ────────────────────────────────────────────────────────────────── */
 .form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
 }
 
 .inputGroup {
@@ -127,39 +172,36 @@
   font-size: 13px;
   line-height: 18px;
   padding: 0;
-  text-decoration: underline;
-  text-underline-offset: 3px;
   transition: color 0.33s;
 }
 
-.textButton:hover {
-  color: #3E6AE1;
-}
+.textButton:hover { color: #3E6AE1; }
 
+/* ── Inputs — 4px radius, no excess rounding ─────────────────────────────── */
 .input {
   width: 100%;
   min-height: 46px;
   border: 1px solid #D0D1D2;
-  border-radius: 6px;
+  border-radius: 4px;
   background: #FFFFFF;
   color: #171A20;
   font: inherit;
   font-size: 14px;
+  font-weight: 400;
   line-height: 20px;
   outline: none;
   padding: 12px 14px;
-  transition: border-color 0.33s, background-color 0.33s, box-shadow 0.25s;
+  transition: border-color 0.33s, box-shadow 0.33s;
 }
 
-.input::placeholder {
-  color: #8E8E8E;
-}
+.input::placeholder { color: #8E8E8E; }
 
 .input:focus {
   border-color: #3E6AE1;
   box-shadow: #3E6AE1 0 0 0 1px inset;
 }
 
+/* ── Remember me ─────────────────────────────────────────────────────────── */
 .rememberRow {
   display: inline-flex;
   align-items: center;
@@ -167,22 +209,26 @@
   color: #393C41;
   cursor: pointer;
   font-size: 13px;
+  font-weight: 400;
   line-height: 18px;
   width: fit-content;
 }
 
 .rememberRow input {
-  width: 17px;
-  height: 17px;
+  width: 16px;
+  height: 16px;
   accent-color: #3E6AE1;
 }
 
+/* ── Error ───────────────────────────────────────────────────────────────── */
 .error {
   color: #D93025;
   font-size: 13px;
+  font-weight: 400;
   line-height: 18px;
 }
 
+/* ── Primary CTA — Electric Blue, 4px radius, no shadow ─────────────────── */
 .submitBtn {
   display: flex;
   width: 100%;
@@ -190,31 +236,28 @@
   align-items: center;
   justify-content: center;
   border: 3px solid transparent;
-  border-radius: 6px;
+  border-radius: 4px;
   background: #3E6AE1;
   color: #FFFFFF;
   cursor: pointer;
   font: inherit;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   line-height: 18px;
   padding: 4px 16px;
-  transition: border-color 0.33s, background-color 0.33s, color 0.33s, box-shadow 0.25s;
+  transition: background-color 0.33s, border-color 0.33s, color 0.33s, box-shadow 0.33s;
 }
 
-.submitBtn:hover:not(:disabled) {
-  background: #3457B1;
-}
+.submitBtn:hover:not(:disabled) { background: #3457B1; }
 
-.submitBtn:focus-visible {
-  box-shadow: #171A20 0 0 0 2px inset;
-}
+.submitBtn:focus-visible { box-shadow: #171A20 0 0 0 2px inset; }
 
 .submitBtn:disabled {
   cursor: default;
-  opacity: 0.55;
+  opacity: 0.5;
 }
 
+/* ── Divider ─────────────────────────────────────────────────────────────── */
 .divider {
   display: flex;
   align-items: center;
@@ -222,7 +265,7 @@
   margin: 24px 0;
   color: #8E8E8E;
   font-size: 13px;
-  font-style: normal;
+  font-weight: 400;
   line-height: 18px;
 }
 
@@ -232,10 +275,9 @@
   background: #EEEEEE;
 }
 
-.divider em {
-  font-style: normal;
-}
+.divider em { font-style: normal; }
 
+/* ── Secondary CTA — white fill, 4px radius ──────────────────────────────── */
 .secondaryBtn {
   display: flex;
   width: 100%;
@@ -244,7 +286,7 @@
   justify-content: center;
   gap: 10px;
   border: 1px solid #D0D1D2;
-  border-radius: 6px;
+  border-radius: 4px;
   background: #FFFFFF;
   color: #393C41;
   cursor: pointer;
@@ -252,7 +294,7 @@
   font-size: 14px;
   font-weight: 500;
   line-height: 18px;
-  transition: border-color 0.33s, color 0.33s, background-color 0.33s;
+  transition: border-color 0.33s, color 0.33s;
 }
 
 .secondaryBtn:hover {
@@ -270,99 +312,89 @@
   background: #171A20;
   color: #FFFFFF;
   font-size: 9px;
-  font-weight: 600;
+  font-weight: 500;
 }
 
+/* ── Toggle text ─────────────────────────────────────────────────────────── */
 .toggleText {
   margin-top: 24px;
   color: #5C5E62;
   font-size: 14px;
   font-weight: 400;
   line-height: 20px;
-  text-align: center;
+  text-align: left;
 }
 
 .toggleText span {
-  margin-left: 8px;
+  margin-left: 6px;
   color: #171A20;
   cursor: pointer;
-  font-weight: 600;
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 3px;
   transition: color 0.33s;
 }
 
-.toggleText span:hover {
-  color: #3E6AE1;
+.toggleText span:hover { color: #3E6AE1; }
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+
+@media (max-width: 1100px) {
+  .pageHeader { padding: 48px 40px; }
+  .stage { padding: 40px 40px; }
 }
 
-@media (max-width: 1120px) {
-  .stage {
-    width: min(520px, calc(100vw - 64px));
-  }
-}
-
-@media (max-width: 860px) {
+/* Tablet / Mobile: stack — compact header bar on top, full form below */
+@media (max-width: 768px) {
   .container {
-    min-height: 100vh;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
     overflow-y: auto;
-    padding: 92px 24px 48px;
   }
 
   .pageHeader {
-    left: 24px;
-    right: 24px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 24px;
+    min-height: auto;
   }
 
-  .headerMeta {
-    display: none;
+  .pageHeader::before,
+  .pageHeader::after { display: none; }
+
+  .headerMeta { font-size: 12px; }
+
+  .brandLockup {
+    width: 120px;
+    flex-shrink: 0;
   }
+
+  .headerMeta { display: none; }
 
   .stage {
-    width: 100%;
     min-height: auto;
-    padding: 0;
+    padding: 40px 24px 60px;
+    align-items: flex-start;
   }
 
   .card {
     width: 100%;
-    max-width: 430px;
-    margin: 0 auto;
-    padding: 32px 24px;
+    max-width: 100%;
   }
+
+  .title { font-size: 24px; }
+
+  .header { margin-bottom: 24px; }
 }
 
-@media (max-height: 760px) and (min-width: 861px) {
-  .stage {
-    padding: 72px 0 28px;
-  }
-
-  .card {
-    padding: 28px 32px;
-  }
-
-  .logoMark {
-    width: 44px;
-    height: 44px;
-    margin-bottom: 12px;
-  }
-
-  .header {
-    margin-bottom: 18px;
-  }
-
-  .form {
-    gap: 12px;
-  }
-
-  .input {
-    min-height: 42px;
-    padding: 10px 14px;
-  }
-
-  .divider {
-    margin: 16px 0;
-  }
-
-  .toggleText {
-    margin-top: 16px;
-  }
+/* Short viewports on desktop */
+@media (max-height: 700px) and (min-width: 769px) {
+  .pageHeader { padding: 40px 48px; }
+  .stage { padding: 24px 40px; }
+  .logoMark { width: 36px; height: 36px; margin-bottom: 18px; }
+  .header { margin-bottom: 20px; }
+  .form { gap: 14px; }
+  .divider { margin: 16px 0; }
+  .toggleText { margin-top: 16px; }
 }

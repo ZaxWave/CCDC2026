@@ -104,21 +104,6 @@ export default function LoginPanel({ onLoginSuccess }) {
             </button>
           </form>
 
-          <div className={styles.divider}>
-            <span></span>
-            <em>或</em>
-            <span></span>
-          </div>
-
-          <button
-            type="button"
-            className={styles.secondaryBtn}
-            onClick={() => setError('演示入口暂未开放，请使用账号密码登录')}
-          >
-            <span className={styles.secondaryIcon}>LS</span>
-            使用演示身份进入
-          </button>
-
           <div className={styles.toggleText}>
             {isLoginMode ? '还没有账号？' : '已有账号？'}
             <span onClick={() => setIsLoginMode(!isLoginMode)}>

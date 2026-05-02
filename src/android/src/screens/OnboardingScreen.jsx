@@ -5,6 +5,7 @@ import {
 } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import BrandWordmark from '../components/BrandWordmark'
+import { useThemedStyles, useTheme } from '../theme'
 
 const { width } = Dimensions.get('window')
 
@@ -33,6 +34,8 @@ const SLIDES = [
 ]
 
 export default function OnboardingScreen({ navigation }) {
+  const styles = useThemedStyles(createStyles)
+  const theme = useTheme()
   const [activeIndex, setActiveIndex] = useState(0)
   const flatRef = useRef(null)
 
@@ -51,7 +54,7 @@ export default function OnboardingScreen({ navigation }) {
 
   return (
     <View style={styles.root}>
-      <StatusBar barStyle="light-content" backgroundColor="#0d1018" />
+      <StatusBar barStyle={theme.isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.bg} />
 
       <FlatList
         ref={flatRef}
@@ -105,10 +108,10 @@ export default function OnboardingScreen({ navigation }) {
   )
 }
 
-const styles = StyleSheet.create({
+const createStyles = (t) => StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#0d1018',
+    backgroundColor: t.bg,
     justifyContent: 'center',
   },
   slide: {
@@ -126,11 +129,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 42,
     marginBottom: 18,
-    color: '#ffffff',
+    color: t.text,
   },
   desc: {
     fontSize: 15,
-    color: 'rgba(255,255,255,0.48)',
+    color: t.textMuted,
     textAlign: 'center',
     lineHeight: 24,
     maxWidth: 310,
@@ -146,7 +149,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#2c3347',
+    backgroundColor: t.surfaceStrong,
   },
   footer: {
     flexDirection: 'row',
@@ -159,7 +162,7 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   skipText: {
-    color: '#8892a4',
+    color: t.textMuted,
     fontSize: 15,
   },
   nextBtn: {

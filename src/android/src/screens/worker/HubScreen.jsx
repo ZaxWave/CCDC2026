@@ -3,8 +3,10 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import BrandWordmark from '../../components/BrandWordmark'
 import { useNetwork } from '../../context/NetworkContext'
+import { useThemedStyles } from '../../theme'
 
 export default function HubScreen({ navigation }) {
+  const s = useThemedStyles(createStyles)
   const { isOnline, queueCount } = useNetwork()
 
   const logout = () => {
@@ -95,63 +97,63 @@ export default function HubScreen({ navigation }) {
   )
 }
 
-const s = StyleSheet.create({
-  page: { flex: 1, backgroundColor: '#111111' },
+const createStyles = (t) => StyleSheet.create({
+  page: { flex: 1, backgroundColor: t.bg },
   body: { padding: 22, paddingBottom: 44, gap: 22 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   logoutBtn: {
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
-    borderRadius: 8,
+    borderColor: t.borderStrong,
+    borderRadius: 4,
     paddingHorizontal: 14,
     paddingVertical: 8,
   },
-  logoutText: { color: 'rgba(255,255,255,0.56)', fontSize: 13, fontWeight: '500' },
+  logoutText: { color: t.textMuted, fontSize: 13, fontWeight: '500' },
   hero: {
-    borderRadius: 14,
-    backgroundColor: 'rgba(255,255,255,0.045)',
+    borderRadius: 12,
+    backgroundColor: t.panel,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: t.border,
     padding: 18,
     gap: 10,
   },
   heroTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
-  heroTitle: { color: '#ffffff', fontSize: 22, fontWeight: '600' },
-  heroText: { color: 'rgba(255,255,255,0.56)', fontSize: 13, lineHeight: 20 },
-  queueText: { color: '#8fb0ff', fontSize: 12, lineHeight: 18 },
-  netBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 6, paddingHorizontal: 9, paddingVertical: 5, borderWidth: 1 },
+  heroTitle: { color: t.text, fontSize: 22, fontWeight: '500' },
+  heroText: { color: t.textMuted, fontSize: 13, lineHeight: 20 },
+  queueText: { color: t.blueText, fontSize: 12, lineHeight: 18 },
+  netBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 4, paddingHorizontal: 9, paddingVertical: 5, borderWidth: 1 },
   netOn: { backgroundColor: 'rgba(34,197,94,0.08)', borderColor: 'rgba(34,197,94,0.24)' },
   netOff: { backgroundColor: 'rgba(239,68,68,0.08)', borderColor: 'rgba(239,68,68,0.24)' },
   netDot: { width: 6, height: 6, borderRadius: 3 },
   netDotOn: { backgroundColor: '#22c55e' },
   netDotOff: { backgroundColor: '#ef4444' },
-  netText: { color: 'rgba(255,255,255,0.66)', fontSize: 12, fontWeight: '500' },
+  netText: { color: t.textSoft, fontSize: 12, fontWeight: '500' },
   section: { gap: 12 },
-  sectionTitle: { color: 'rgba(255,255,255,0.48)', fontSize: 13, fontWeight: '500', letterSpacing: 0 },
+  sectionTitle: { color: t.textMuted, fontSize: 13, fontWeight: '500', letterSpacing: 0 },
   actionCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 14,
+    borderRadius: 12,
     padding: 16,
     gap: 14,
-    backgroundColor: 'rgba(255,255,255,0.045)',
+    backgroundColor: t.panel,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: t.border,
   },
-  primaryCard: { backgroundColor: 'rgba(255,255,255,0.06)', borderColor: 'rgba(62,106,225,0.42)' },
+  primaryCard: { backgroundColor: t.panelStrong, borderColor: 'rgba(62,106,225,0.42)' },
   iconBox: {
     width: 42,
     height: 42,
-    borderRadius: 9,
+    borderRadius: 4,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  iconBlue: { backgroundColor: '#3e6ae1' },
+  iconBlue: { backgroundColor: t.blue },
   iconRed: { backgroundColor: '#b91c1c' },
-  iconGray: { backgroundColor: 'rgba(255,255,255,0.12)' },
-  iconText: { color: '#ffffff', fontSize: 13, fontWeight: '600' },
+  iconGray: { backgroundColor: t.surfaceStrong },
+  iconText: { color: '#ffffff', fontSize: 13, fontWeight: '500' },
   cardBody: { flex: 1, gap: 5 },
-  cardTitle: { color: '#ffffff', fontSize: 18, fontWeight: '600' },
-  cardDesc: { color: 'rgba(255,255,255,0.42)', fontSize: 12, lineHeight: 18 },
-  cardArrow: { color: 'rgba(255,255,255,0.28)', fontSize: 30, lineHeight: 32 },
+  cardTitle: { color: t.text, fontSize: 18, fontWeight: '500' },
+  cardDesc: { color: t.textFaint, fontSize: 12, lineHeight: 18 },
+  cardArrow: { color: t.textFaint, fontSize: 30, lineHeight: 32 },
 })

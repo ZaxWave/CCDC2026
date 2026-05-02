@@ -11,6 +11,7 @@ import IssuesScreen from './src/screens/worker/IssuesScreen'
 import RecordScreen from './src/screens/worker/RecordScreen'
 import OnboardingScreen from './src/screens/OnboardingScreen'
 import { NetworkProvider } from './src/context/NetworkContext'
+import { ThemeProvider, useTheme } from './src/theme'
 
 const Stack = createNativeStackNavigator()
 
@@ -26,9 +27,19 @@ export default function App() {
   if (!initialRoute) return null
 
   return (
+    <ThemeProvider>
+      <AppShell initialRoute={initialRoute} />
+    </ThemeProvider>
+  )
+}
+
+function AppShell({ initialRoute }) {
+  const theme = useTheme()
+
+  return (
     <NetworkProvider>
       <NavigationContainer>
-        <StatusBar style="light" />
+        <StatusBar style={theme.isDark ? 'light' : 'dark'} backgroundColor={theme.bg} />
         <Stack.Navigator
           initialRouteName={initialRoute}
           screenOptions={{ headerShown: false, animation: 'slide_from_right' }}

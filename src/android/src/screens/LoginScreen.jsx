@@ -4,8 +4,10 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { login } from '../api/auth'
 import BrandWordmark from '../components/BrandWordmark'
+import { useThemedStyles } from '../theme'
 
 export default function LoginScreen({ navigation, route }) {
+  const s = useThemedStyles(createStyles)
   const [account, setAccount] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -54,7 +56,7 @@ export default function LoginScreen({ navigation, route }) {
           <TextInput
             style={s.input}
             placeholder="输入管理员或巡检员账号"
-            placeholderTextColor="rgba(255,255,255,0.25)"
+            placeholderTextColor={s.placeholder.color}
             value={account}
             onChangeText={setAccount}
             autoCapitalize="none"
@@ -67,7 +69,7 @@ export default function LoginScreen({ navigation, route }) {
           <TextInput
             style={s.input}
             placeholder="请输入密码"
-            placeholderTextColor="rgba(255,255,255,0.25)"
+            placeholderTextColor={s.placeholder.color}
             secureTextEntry
             value={password}
             onChangeText={setPassword}
@@ -99,55 +101,56 @@ export default function LoginScreen({ navigation, route }) {
   )
 }
 
-const s = StyleSheet.create({
-  page: { flex: 1, backgroundColor: '#111111' },
+const createStyles = (t) => StyleSheet.create({
+  page: { flex: 1, backgroundColor: t.bg },
   topBar: { paddingHorizontal: 24, paddingTop: 8 },
   backBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  backIcon: { fontSize: 28, color: 'rgba(255,255,255,0.6)', lineHeight: 32 },
-  backText: { fontSize: 16, color: 'rgba(255,255,255,0.6)' },
+  backIcon: { fontSize: 28, color: t.textMuted, lineHeight: 32 },
+  backText: { fontSize: 16, color: t.textMuted },
   formWrap: { flex: 1, justifyContent: 'center', paddingHorizontal: 28, paddingBottom: 56, gap: 28 },
   header: { alignItems: 'center', gap: 8 },
-  roleLabel: { fontSize: 12, color: 'rgba(255,255,255,0.36)', letterSpacing: 0 },
-  title: { fontSize: 30, fontWeight: '600', color: '#ffffff' },
-  subtitle: { fontSize: 13, color: 'rgba(255,255,255,0.4)', textAlign: 'center', lineHeight: 19 },
+  roleLabel: { fontSize: 12, color: t.textFaint, letterSpacing: 0 },
+  title: { fontSize: 30, fontWeight: '500', color: t.text },
+  subtitle: { fontSize: 13, color: t.textMuted, textAlign: 'center', lineHeight: 19 },
   form: {
     gap: 18,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: t.panel,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 14,
+    borderColor: t.border,
+    borderRadius: 12,
     padding: 18,
   },
   field: { gap: 8 },
-  fieldLabel: { fontSize: 13, color: 'rgba(255,255,255,0.5)', letterSpacing: 0 },
+  fieldLabel: { fontSize: 13, color: t.textMuted, letterSpacing: 0 },
   input: {
     fontSize: 16,
-    color: '#ffffff',
+    color: t.text,
     paddingHorizontal: 12,
     height: 48,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255,255,255,0.045)',
+    borderRadius: 4,
+    backgroundColor: t.input,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: t.borderStrong,
   },
+  placeholder: { color: t.textFaint },
   inputUnderline: { display: 'none' },
   errorBox: {
     backgroundColor: 'rgba(220,38,38,0.1)',
-    borderRadius: 8,
+    borderRadius: 4,
     padding: 12,
     borderWidth: 1,
     borderColor: 'rgba(220,38,38,0.3)',
   },
   errorText: { color: '#ef4444', fontSize: 14 },
   submitBtn: {
-    backgroundColor: '#3e6ae1',
-    borderRadius: 8,
+    backgroundColor: t.blue,
+    borderRadius: 4,
     height: 52,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 4,
   },
   submitLoading: { opacity: 0.7 },
-  submitText: { fontSize: 16, fontWeight: '600', color: '#ffffff', letterSpacing: 0 },
-  demoHint: { textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.28)', marginTop: 2, lineHeight: 18 },
+  submitText: { fontSize: 16, fontWeight: '500', color: '#ffffff', letterSpacing: 0 },
+  demoHint: { textAlign: 'center', fontSize: 12, color: t.textFaint, marginTop: 2, lineHeight: 18 },
 })

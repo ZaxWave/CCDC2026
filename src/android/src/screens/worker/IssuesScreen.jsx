@@ -5,6 +5,7 @@ import {
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { getOrders, acceptOrder, completeOrder } from '../../api/orders'
+import { useThemedStyles, useTheme } from '../../theme'
 
 const STATUS = {
   pending:    { label: '待处理', dot: '#f59e0b', bg: 'rgba(245,158,11,0.08)',  border: 'rgba(245,158,11,0.22)' },
@@ -33,6 +34,8 @@ function timeAgo(isoStr) {
 }
 
 export default function IssuesScreen({ navigation }) {
+  const s = useThemedStyles(createStyles)
+  const theme = useTheme()
   const [filter,     setFilter]     = useState('all')
   const [orders,     setOrders]     = useState([])
   const [loading,    setLoading]    = useState(true)
@@ -186,7 +189,7 @@ export default function IssuesScreen({ navigation }) {
           </TouchableOpacity>
         </View>
         <View style={s.loadingBox}>
-          <ActivityIndicator color="#3e6ae1" size="large" />
+          <ActivityIndicator color={theme.blue} size="large" />
           <Text style={s.loadingText}>加载工单…</Text>
         </View>
       </SafeAreaView>
@@ -247,76 +250,76 @@ export default function IssuesScreen({ navigation }) {
   )
 }
 
-const s = StyleSheet.create({
-  page:       { flex: 1, backgroundColor: '#111111' },
+const createStyles = (t) => StyleSheet.create({
+  page:       { flex: 1, backgroundColor: t.bg },
   loadingBox: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  loadingText:{ color: 'rgba(255,255,255,0.3)', marginTop: 12, fontSize: 13 },
+  loadingText:{ color: t.textFaint, marginTop: 12, fontSize: 13 },
   topBar: {
     flexDirection: 'row', justifyContent: 'space-between',
     alignItems: 'center', paddingHorizontal: 24, paddingVertical: 16,
   },
   backBtn:  { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  backIcon: { fontSize: 28, color: 'rgba(255,255,255,0.7)', lineHeight: 32 },
-  topTitle: { fontSize: 18, fontWeight: '600', color: '#ffffff' },
+  backIcon: { fontSize: 28, color: t.textSoft, lineHeight: 32 },
+  topTitle: { fontSize: 18, fontWeight: '500', color: t.text },
   topCount: { fontSize: 13, color: '#f59e0b' },
   stats: {
     flexDirection: 'row', paddingHorizontal: 24, paddingVertical: 14,
-    borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)',
+    borderBottomWidth: 1, borderBottomColor: t.border,
   },
   statItem:  { flex: 1, alignItems: 'center' },
-  statNum:   { fontSize: 28, fontWeight: '700' },
-  statLabel: { fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 4 },
+  statNum:   { fontSize: 28, fontWeight: '500' },
+  statLabel: { fontSize: 12, color: t.textMuted, marginTop: 4 },
   filterBar: {
     flexDirection: 'row', paddingHorizontal: 16, paddingVertical: 12,
-    gap: 8, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)',
+    gap: 8, borderBottomWidth: 1, borderBottomColor: t.border,
   },
-  filterTab:     { paddingHorizontal: 16, paddingVertical: 7, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
-  filterTabOn:   { backgroundColor: 'rgba(62,106,225,0.15)', borderColor: '#3e6ae1' },
-  filterTabText:   { fontSize: 13, color: 'rgba(255,255,255,0.4)' },
-  filterTabTextOn: { color: '#3e6ae1', fontWeight: '600' },
+  filterTab:     { paddingHorizontal: 16, paddingVertical: 7, borderRadius: 4, borderWidth: 1, borderColor: t.borderStrong },
+  filterTabOn:   { backgroundColor: t.blueSoft, borderColor: t.blue },
+  filterTabText:   { fontSize: 13, color: t.textMuted },
+  filterTabTextOn: { color: t.blue, fontWeight: '500' },
   listContent: { padding: 16, gap: 12 },
   taskCard: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 10, padding: 16, gap: 9,
+    backgroundColor: t.panel,
+    borderWidth: 1, borderColor: t.border,
+    borderRadius: 12, padding: 16, gap: 9,
   },
   taskTop:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  taskId:   { fontSize: 12, color: 'rgba(255,255,255,0.32)', fontFamily: 'monospace' },
+  taskId:   { fontSize: 12, color: t.textFaint, fontFamily: 'monospace' },
   statusBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
-    borderWidth: 1, borderRadius: 6, paddingHorizontal: 10, paddingVertical: 4,
+    borderWidth: 1, borderRadius: 4, paddingHorizontal: 10, paddingVertical: 4,
   },
   statusDot:  { width: 6, height: 6, borderRadius: 3 },
-  statusText: { fontSize: 12, fontWeight: '600' },
+  statusText: { fontSize: 12, fontWeight: '500' },
   taskMain:   { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  taskType:   { fontSize: 17, fontWeight: '600', color: '#ffffff', flex: 1 },
+  taskType:   { fontSize: 17, fontWeight: '500', color: t.text, flex: 1 },
   urgencyBadge: { borderWidth: 1, borderRadius: 4, paddingHorizontal: 8, paddingVertical: 3 },
-  urgencyText:  { fontSize: 12, fontWeight: '700' },
+  urgencyText:  { fontSize: 12, fontWeight: '500' },
   clusterRow:  { flexDirection: 'row' },
   clusterText: {
-    fontSize: 11, fontWeight: '600',
+    fontSize: 11, fontWeight: '500',
     color: '#818cf8',
     backgroundColor: 'rgba(99,102,241,0.12)',
     borderWidth: 1, borderColor: 'rgba(99,102,241,0.3)',
     borderRadius: 4, paddingHorizontal: 8, paddingVertical: 3,
   },
   priorityReason: { fontSize: 12, color: 'rgba(245,158,11,0.8)', lineHeight: 17 },
-  repairMethod: { fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 18 },
+  repairMethod: { fontSize: 13, color: t.textMuted, lineHeight: 18 },
   taskMeta:     { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  taskLocation: { fontSize: 13, color: 'rgba(255,255,255,0.4)', flex: 1 },
-  hoursText:    { fontSize: 12, color: 'rgba(255,255,255,0.3)', marginLeft: 8 },
+  taskLocation: { fontSize: 13, color: t.textMuted, flex: 1 },
+  hoursText:    { fontSize: 12, color: t.textFaint, marginLeft: 8 },
   taskBottom:   { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 2 },
-  taskTime:     { fontSize: 12, color: 'rgba(255,255,255,0.3)' },
-  actionBtn:    { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 6, borderWidth: 1 },
+  taskTime:     { fontSize: 12, color: t.textFaint },
+  actionBtn:    { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 4, borderWidth: 1 },
   btnDisabled:  { opacity: 0.5 },
   acceptBtn:     { backgroundColor: 'rgba(62,106,225,0.12)', borderColor: 'rgba(62,106,225,0.4)' },
-  acceptBtnText: { fontSize: 13, fontWeight: '600', color: '#3e6ae1' },
+  acceptBtnText: { fontSize: 13, fontWeight: '500', color: t.blue },
   doneBtn:       { backgroundColor: 'rgba(26,128,69,0.12)', borderColor: 'rgba(26,128,69,0.4)' },
-  doneBtnText:   { fontSize: 13, fontWeight: '600', color: '#1a8045' },
+  doneBtnText:   { fontSize: 13, fontWeight: '500', color: '#1a8045' },
   emptyBox: { alignItems: 'center', paddingTop: 60, paddingHorizontal: 24 },
-  emptyTitle: { color: 'rgba(255,255,255,0.52)', fontSize: 15, fontWeight: '600' },
+  emptyTitle: { color: t.textMuted, fontSize: 15, fontWeight: '500' },
   emptyHint: {
-    color: 'rgba(255,255,255,0.28)',
+    color: t.textFaint,
     fontSize: 13,
     lineHeight: 19,
     marginTop: 8,

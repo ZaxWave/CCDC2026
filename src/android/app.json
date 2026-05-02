@@ -4,10 +4,11 @@
     "slug": "lightscan",
     "version": "1.0.0",
     "orientation": "default",
-    "userInterfaceStyle": "dark",
-    "backgroundColor": "#111111",
+    "userInterfaceStyle": "automatic",
+    "backgroundColor": "#171A20",
     "android": {
       "package": "com.lightscan.app",
+      "usesCleartextTraffic": true,
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",

@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import * as ImagePicker from 'expo-image-picker'
 import * as Location from 'expo-location'
 import { checkImageExif, uploadImages } from '../../api/detect'
+import { useThemedStyles } from '../../theme'
 
 const LABEL_CN_TO_TYPE = { '纵向裂缝': '裂缝', '横向裂缝': '裂缝', '龟裂': '裂缝', '坑槽': '坑槽' }
 const MAX_PHOTOS = 9
@@ -57,6 +58,7 @@ function summarizeResults(results) {
 }
 
 export default function ReportScreen({ navigation, route }) {
+  const s = useThemedStyles(createStyles)
   const isWorkerUpload = route?.params?.source === 'worker'
   const [photos, setPhotos] = useState([])
   const [phase, setPhase] = useState('idle')
@@ -316,7 +318,7 @@ export default function ReportScreen({ navigation, route }) {
               <TextInput
                 style={s.timeInput}
                 placeholder="YYYY-MM-DDTHH:mm"
-                placeholderTextColor="rgba(255,255,255,0.25)"
+                placeholderTextColor={s.placeholder.color}
                 value={captureAt}
                 onChangeText={setCaptureAt}
                 autoCapitalize="none"
@@ -382,80 +384,80 @@ export default function ReportScreen({ navigation, route }) {
   )
 }
 
-const s = StyleSheet.create({
-  page: { flex: 1, backgroundColor: '#111111' },
+const createStyles = (t) => StyleSheet.create({
+  page: { flex: 1, backgroundColor: t.bg },
   header: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: 20, paddingVertical: 14,
-    borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.07)',
+    borderBottomWidth: 1, borderBottomColor: t.border,
   },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
-  backIcon: { fontSize: 30, color: 'rgba(255,255,255,0.7)', lineHeight: 34 },
-  headerTitle: { fontSize: 18, fontWeight: '600', color: '#ffffff' },
-  headerHint: { fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 3 },
-  headerSub: { fontSize: 12, color: '#3e6ae1', fontWeight: '500' },
+  backIcon: { fontSize: 30, color: t.textSoft, lineHeight: 34 },
+  headerTitle: { fontSize: 18, fontWeight: '500', color: t.text },
+  headerHint: { fontSize: 11, color: t.textFaint, marginTop: 3 },
+  headerSub: { fontSize: 12, color: t.blue, fontWeight: '500' },
   progressBar: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.06)',
+    borderBottomColor: t.border,
   },
   stepWrap: { flexDirection: 'row', alignItems: 'center', flex: 1 },
   stepDot: {
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: t.surface,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: t.borderStrong,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  stepDotActive: { borderColor: '#3e6ae1', backgroundColor: 'rgba(62,106,225,0.15)' },
-  stepDotDone: { borderColor: '#3e6ae1', backgroundColor: '#3e6ae1' },
-  stepNum: { color: 'rgba(255,255,255,0.35)', fontSize: 11, fontWeight: '600' },
+  stepDotActive: { borderColor: t.blue, backgroundColor: t.blueSoft },
+  stepDotDone: { borderColor: t.blue, backgroundColor: t.blue },
+  stepNum: { color: t.textFaint, fontSize: 11, fontWeight: '500' },
   stepNumOn: { color: '#ffffff' },
-  stepText: { color: 'rgba(255,255,255,0.3)', fontSize: 12, fontWeight: '500', marginLeft: 7 },
-  stepTextOn: { color: 'rgba(255,255,255,0.74)' },
-  stepLine: { height: 1, backgroundColor: 'rgba(255,255,255,0.09)', flex: 1, marginHorizontal: 10 },
+  stepText: { color: t.textFaint, fontSize: 12, fontWeight: '500', marginLeft: 7 },
+  stepTextOn: { color: t.textSoft },
+  stepLine: { height: 1, backgroundColor: t.border, flex: 1, marginHorizontal: 10 },
   stepLineDone: { backgroundColor: 'rgba(62,106,225,0.7)' },
   scroll: { flex: 1 },
   body: { padding: 18, gap: 14, paddingBottom: 48 },
   panel: {
-    backgroundColor: 'rgba(255,255,255,0.045)',
+    backgroundColor: t.panel,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.09)',
-    borderRadius: 14,
+    borderColor: t.border,
+    borderRadius: 12,
     padding: 16,
     gap: 14,
   },
   panelTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  panelTitle: { fontSize: 18, color: '#ffffff', fontWeight: '600' },
-  panelCount: { fontSize: 13, color: 'rgba(255,255,255,0.45)' },
-  panelText: { color: 'rgba(255,255,255,0.48)', fontSize: 13, lineHeight: 20 },
+  panelTitle: { fontSize: 18, color: t.text, fontWeight: '500' },
+  panelCount: { fontSize: 13, color: t.textMuted },
+  panelText: { color: t.textMuted, fontSize: 13, lineHeight: 20 },
   actionRow: { flexDirection: 'row', gap: 10 },
   primaryAction: {
-    flex: 1, height: 46, borderRadius: 8, backgroundColor: '#3e6ae1',
+    flex: 1, height: 46, borderRadius: 4, backgroundColor: t.blue,
     alignItems: 'center', justifyContent: 'center',
   },
-  primaryActionText: { color: '#ffffff', fontWeight: '600', fontSize: 15 },
+  primaryActionText: { color: '#ffffff', fontWeight: '500', fontSize: 15 },
   secondaryAction: {
-    flex: 1, height: 46, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.16)',
+    flex: 1, height: 46, borderRadius: 4, borderWidth: 1, borderColor: t.borderStrong,
     alignItems: 'center', justifyContent: 'center',
   },
-  secondaryActionText: { color: 'rgba(255,255,255,0.72)', fontWeight: '500', fontSize: 15 },
+  secondaryActionText: { color: t.textSoft, fontWeight: '500', fontSize: 15 },
   actionDisabled: { opacity: 0.45 },
   photoGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   photoCell: {
-    width: '31.8%', aspectRatio: 1, borderRadius: 10, overflow: 'hidden',
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    width: '31.8%', aspectRatio: 1, borderRadius: 4, overflow: 'hidden',
+    backgroundColor: t.surface,
   },
   photoImg: { width: '100%', height: '100%' },
   photoIndex: {
     position: 'absolute', left: 6, bottom: 5, color: '#ffffff',
-    fontSize: 11, fontWeight: '600', backgroundColor: 'rgba(0,0,0,0.45)',
+    fontSize: 11, fontWeight: '500', backgroundColor: 'rgba(0,0,0,0.45)',
     paddingHorizontal: 5, paddingVertical: 2, borderRadius: 4,
   },
   photoRemove: {
@@ -465,53 +467,54 @@ const s = StyleSheet.create({
   },
   removeX: { color: '#ffffff', fontSize: 16, lineHeight: 19 },
   emptyPhotos: {
-    flex: 1, minHeight: 118, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
+    flex: 1, minHeight: 118, borderRadius: 12, borderWidth: 1, borderColor: t.borderStrong,
     borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center', gap: 5,
   },
-  emptyTitle: { color: 'rgba(255,255,255,0.55)', fontSize: 15, fontWeight: '500' },
-  emptyText: { color: 'rgba(255,255,255,0.28)', fontSize: 12 },
+  emptyTitle: { color: t.textMuted, fontSize: 15, fontWeight: '500' },
+  emptyText: { color: t.textFaint, fontSize: 12 },
   infoPanel: {
-    backgroundColor: 'rgba(255,255,255,0.035)',
+    backgroundColor: t.panel,
     borderRadius: 12, padding: 14, gap: 12,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)',
+    borderWidth: 1, borderColor: t.border,
   },
-  secLabel: { fontSize: 13, fontWeight: '500', color: 'rgba(255,255,255,0.72)', letterSpacing: 0 },
+  secLabel: { fontSize: 13, fontWeight: '500', color: t.textSoft, letterSpacing: 0 },
   infoRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 16, alignItems: 'center' },
-  infoName: { color: 'rgba(255,255,255,0.42)', fontSize: 13 },
-  infoValue: { color: 'rgba(255,255,255,0.68)', fontSize: 13, flexShrink: 1, textAlign: 'right' },
+  infoName: { color: t.textMuted, fontSize: 13 },
+  infoValue: { color: t.textSoft, fontSize: 13, flexShrink: 1, textAlign: 'right' },
   warnText: { color: '#f59e0b' },
   timeInput: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: t.input,
     borderWidth: 1, borderColor: 'rgba(245,158,11,0.45)',
-    borderRadius: 9, paddingHorizontal: 12, height: 44, fontSize: 14, color: '#ffffff',
+    borderRadius: 4, paddingHorizontal: 12, height: 44, fontSize: 14, color: t.text,
   },
-  timeHint: { fontSize: 12, color: 'rgba(255,255,255,0.35)', lineHeight: 18 },
+  placeholder: { color: t.textFaint },
+  timeHint: { fontSize: 12, color: t.textFaint, lineHeight: 18 },
   resultPanel: {
     borderRadius: 12, padding: 16, gap: 12,
     backgroundColor: 'rgba(34,197,94,0.08)',
     borderWidth: 1, borderColor: 'rgba(34,197,94,0.28)',
   },
-  resultTitle: { color: '#22c55e', fontSize: 16, fontWeight: '600' },
+  resultTitle: { color: '#22c55e', fontSize: 16, fontWeight: '500' },
   resultGrid: { flexDirection: 'row', gap: 10 },
   resultCell: {
-    flex: 1, borderRadius: 10, backgroundColor: 'rgba(0,0,0,0.2)',
+    flex: 1, borderRadius: 4, backgroundColor: t.isDark ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.68)',
     alignItems: 'center', paddingVertical: 14,
   },
-  resultValue: { color: '#ffffff', fontSize: 25, fontWeight: '600' },
-  resultLabel: { color: 'rgba(255,255,255,0.42)', fontSize: 12, marginTop: 2 },
-  resultText: { color: 'rgba(255,255,255,0.7)', fontSize: 13, lineHeight: 20 },
+  resultValue: { color: t.text, fontSize: 25, fontWeight: '500' },
+  resultLabel: { color: t.textMuted, fontSize: 12, marginTop: 2 },
+  resultText: { color: t.textSoft, fontSize: 13, lineHeight: 20 },
   errorBox: {
     backgroundColor: 'rgba(239,68,68,0.1)',
     borderWidth: 1, borderColor: 'rgba(239,68,68,0.32)',
-    borderRadius: 10, padding: 12,
+    borderRadius: 4, padding: 12,
   },
   errorText: { color: '#ef4444', fontSize: 13, lineHeight: 19 },
   submitBtn: {
-    backgroundColor: '#3e6ae1', borderRadius: 10,
+    backgroundColor: t.blue, borderRadius: 4,
     height: 54, alignItems: 'center', justifyContent: 'center', marginTop: 4,
   },
   submitBtnDisabled: { backgroundColor: 'rgba(62,106,225,0.38)' },
-  submitText: { fontSize: 17, fontWeight: '600', color: '#ffffff', letterSpacing: 0 },
+  submitText: { fontSize: 17, fontWeight: '500', color: '#ffffff', letterSpacing: 0 },
   closeBtn: { height: 46, alignItems: 'center', justifyContent: 'center' },
-  closeBtnText: { color: 'rgba(255,255,255,0.55)', fontSize: 14, fontWeight: '500' },
+  closeBtnText: { color: t.textMuted, fontSize: 14, fontWeight: '500' },
 })

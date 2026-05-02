@@ -44,8 +44,8 @@
   font-size: 14px;
   font-weight: 500;
   padding: 6px 14px;
-  border-radius: 6px;
-  transition: color 0.15s, background 0.15s;
+  border-radius: 4px;
+  transition: color 0.33s, background-color 0.33s;
 }
 
 .links a:hover {
@@ -64,9 +64,9 @@
   position: relative;
   display: flex; align-items: center; justify-content: center;
   background: none; border: none; cursor: pointer;
-  color: var(--muted); border-radius: 6px;
+  color: var(--muted); border-radius: 4px;
   width: 32px; height: 32px;
-  transition: color 0.15s, background 0.15s;
+  transition: color 0.33s, background-color 0.33s;
 }
 .taskBtn:hover { color: var(--dark); background: var(--ash); }
 
@@ -76,9 +76,9 @@
   gap: 6px;
   height: 32px;
   padding: 0 8px;
-  border-radius: 6px;
+  border-radius: 4px;
   color: var(--muted);
-  transition: color 0.15s, background 0.15s;
+  transition: color 0.33s, background-color 0.33s;
 }
 .themeSelectWrap:hover {
   color: var(--dark);
