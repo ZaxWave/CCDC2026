@@ -39,6 +39,13 @@ data/processed/
 src/frontend/node_modules/
 src/mobile/node_modules/
 src/android/node_modules/
+
+# ============================================
+# Mobile / React Native Build Cache
+# ============================================
+src/mobile/.swc/
+src/android/.swc/
+src/android/.expo/devices*.json
 src/frontend/.vite/
 src/frontend/dist/
 src/frontend/build/
