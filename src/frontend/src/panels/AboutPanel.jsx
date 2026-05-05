@@ -80,11 +80,11 @@ const INNOVATIONS = [
   { tag: 'INV-06', title: 'ReID 病害追踪',    desc: '基于特征向量相似度对同一物理病害的多次观测进行聚类，自动构建演化时间轴，支持趋势判断（恶化/稳定/好转）。' },
 ];
 
-const TEAM = [
-  { role: 'Project Lead / Full-Stack',  name: 'ZaxWave',    note: 'Architecture · Backend · Frontend', color: '#3E6AE1' },
-  { role: 'AI Model Engineering',       name: 'Team AI',     note: 'LS-Det Training · Dataset Annotation', color: '#7c3aed' },
-  { role: 'GIS & Visualization',        name: 'Team GIS',    note: 'AMap Integration · ECharts Dashboard', color: '#0891b2' },
-  { role: 'UI / UX Design',             name: 'Team Design', note: 'Industrial Minimal Design System', color: '#1a8045' },
+const DATASETS = [
+  { tag: 'RDD2022-JP',  name: '日本道路病害数据集',   count: '~10,500 张', note: 'VOC XML 格式，摩托车视角采集', color: '#3E6AE1' },
+  { tag: 'RDD2022-CN',  name: '中国摩托车视角数据集', count: '~1,977 张',  note: 'RDD2022 中国子集，国内路面场景', color: '#7c3aed' },
+  { tag: 'SVRDD-v1',    name: '城市道路病害数据集',   count: '~8,000 张',  note: 'YOLO 格式，7类标注，国内来源', color: '#0891b2' },
+  { tag: 'Merged',      name: '合并训练集',           count: '~20,500 张', note: '8:2 train/val split，统一映射至4类', color: '#1a8045' },
 ];
 
 // ── 子组件 ───────────────────────────────────────────────────
@@ -260,19 +260,19 @@ export default function AboutPanel() {
         </div>
       </section>
 
-      {/* ══ SECTION 05: TEAM ═════════════════════════════════ */}
+      {/* ══ SECTION 05: DATASETS ════════════════════════════ */}
       <section className={s.section}>
-        <SectionHeader label="SECTION 05" title="开发团队  Development Team" />
+        <SectionHeader label="SECTION 05" title="训练数据集  Training Datasets" />
         <div className={s.teamGrid}>
-          {TEAM.map((m, i) => (
-            <div key={i} className={s.teamCard} style={{ '--team-accent': m.color }}>
-              <div className={s.teamAvatar} style={{ background: `linear-gradient(135deg, ${m.color}, ${m.color}99)` }}>
-                {m.name.charAt(0).toUpperCase()}
+          {DATASETS.map((d) => (
+            <div key={d.tag} className={s.teamCard} style={{ '--team-accent': d.color }}>
+              <div className={s.teamAvatar} style={{ background: `linear-gradient(135deg, ${d.color}, ${d.color}99)` }}>
+                {d.tag.slice(0, 2)}
               </div>
               <div className={s.teamInfo}>
-                <div className={s.teamName}>{m.name}</div>
-                <div className={s.teamRole} style={{ color: m.color }}>{m.role}</div>
-                <div className={s.teamNote}>{m.note}</div>
+                <div className={s.teamName}>{d.name}</div>
+                <div className={s.teamRole} style={{ color: d.color }}>{d.count}</div>
+                <div className={s.teamNote}>{d.note}</div>
               </div>
             </div>
           ))}
