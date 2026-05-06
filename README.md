@@ -292,7 +292,7 @@ npm install
 
 # 开发模式（需要 Android Studio + JDK 17+）
 npm start
-# 按 `a` 键在 Android 设备上运行
+# 按 `a` 键在 Android 设备上运行            
 
 # 生产构建（APK）
 eas build --platform android --profile preview
