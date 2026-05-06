@@ -1,5 +1,6 @@
 import os
 import warnings
+from typing import Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
@@ -10,6 +11,7 @@ from app.schemas.user import TokenData
 
 # 告诉 FastAPI 登录接口在哪里（用于自动生成 Swagger 文档）
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
+oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
 
 # Load from environment variables with development fallbacks
 SECRET_KEY = os.getenv("SECRET_KEY")
@@ -43,6 +45,23 @@ def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_
     if user is None:
         raise credentials_exception
     return user
+
+def get_optional_user(
+    db: Session = Depends(get_db),
+    token: Optional[str] = Depends(oauth2_scheme_optional),
+) -> Optional[User]:
+    """无 token 时返回 None，有 token 时走正常验证逻辑（供公开接口使用）。"""
+    if not token:
+        return None
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if not username:
+            return None
+        return db.query(User).filter(User.username == username).first()
+    except JWTError:
+        return None
+
 
 def get_current_admin_user(current_user: User = Depends(get_current_user)):
     """仅管理员可用的路由守卫"""

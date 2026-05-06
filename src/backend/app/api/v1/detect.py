@@ -12,14 +12,14 @@ from app.services.clustering_service import assign_cluster
 from app.services.geo_service import extract_gps_strict, wgs84_to_gcj02, extract_capture_time
 from app.db.database import get_db
 from app.db.models import DiseaseRecord, DiseaseCluster, User
-from app.api.deps import get_current_user
+from app.api.deps import get_optional_user
 from app.core.time import utc_now
 
 router = APIRouter(prefix="/api/v1", tags=["detect"])
 
 ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp", "image/bmp"}
 MAX_FILES = 20
-VALID_SOURCE_TYPES = {"dashcam", "mobile", "camera", "drone", "manual", "bus_dashcam", "street_camera"}
+VALID_SOURCE_TYPES = {"dashcam", "mobile", "camera", "drone", "manual", "bus_dashcam", "street_camera", "citizen"}
 
 _FALLBACK_LAT = 30.474
 _FALLBACK_LNG = 114.414
@@ -35,7 +35,7 @@ async def detect(
     captured_at: Optional[str] = Form(None, description="手动指定拍摄时间；仅在图片无 EXIF 拍摄时间时使用"),
     source_type: Optional[str] = Form(None, description="数据来源：dashcam/mobile/camera/drone"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_optional_user),
 ):
     """
     接收 1–20 张图片，返回每张的检测结果与标注图。
@@ -49,7 +49,7 @@ async def detect(
 
     effective_source = (
         source_type if source_type in VALID_SOURCE_TYPES
-        else (current_user.source_type or "manual")
+        else (current_user.source_type or "manual") if current_user else "citizen"
     )
 
     # ── 批次级 GPS 状态 ─────────────────────────────────────────────────────
@@ -177,8 +177,8 @@ async def detect(
                     feature_vector=feature,
                     cluster_id=cluster_id,
                     source_type=effective_source,
-                    device_id=current_user.device_id,
-                    creator_id=current_user.id,
+                    device_id=current_user.device_id if current_user else None,
+                    creator_id=current_user.id if current_user else None,
                     thumbnail_b64=img_b64 or None,
                     content_hash=img_hash,
                     captured_at=image_captured_at,
@@ -218,8 +218,8 @@ async def detect(
                     color_hex=None, bbox=None, feature_vector=None,
                     cluster_id=ref_cid,
                     source_type=effective_source,
-                    device_id=current_user.device_id,
-                    creator_id=current_user.id,
+                    device_id=current_user.device_id if current_user else None,
+                    creator_id=current_user.id if current_user else None,
                     thumbnail_b64=img_b64 or None,
                     content_hash=img_hash,
                     captured_at=image_captured_at,

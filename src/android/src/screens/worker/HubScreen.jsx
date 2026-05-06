@@ -150,7 +150,7 @@ const createStyles = (t) => StyleSheet.create({
   },
   iconBlue: { backgroundColor: t.blue },
   iconRed: { backgroundColor: '#b91c1c' },
-  iconGray: { backgroundColor: t.surfaceStrong },
+  iconGray: { backgroundColor: '#8e949e' },
   iconText: { color: '#ffffff', fontSize: 13, fontWeight: '500' },
   cardBody: { flex: 1, gap: 5 },
   cardTitle: { color: t.text, fontSize: 18, fontWeight: '500' },

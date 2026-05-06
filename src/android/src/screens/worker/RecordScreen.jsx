@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { View, Text, TouchableOpacity, Alert, StyleSheet, useWindowDimensions } from 'react-native'
+import { View, Text, TouchableOpacity, Alert, StyleSheet, useWindowDimensions, TextInput } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { CameraView, useCameraPermissions } from 'expo-camera'
 import * as Location from 'expo-location'
@@ -40,6 +40,7 @@ export default function RecordScreen({ navigation }) {
   const [gpsCount, setGpsCount] = useState(0)
   const [captureCount, setCaptureCount] = useState(0)
   const [intervalMeters, setIntervalMeters] = useState(DEFAULT_INTERVAL_METERS)
+  const [customInterval, setCustomInterval] = useState('')
   const [uploadMsg, setUploadMsg] = useState('')
   const [progressMsg, setProgressMsg] = useState('')
 
@@ -276,6 +277,15 @@ export default function RecordScreen({ navigation }) {
     />
   )
 
+  const applyCustomInterval = () => {
+    const n = parseInt(customInterval, 10)
+    if (!isNaN(n) && n >= 1 && n <= 500) {
+      setIntervalMeters(n)
+    } else {
+      setCustomInterval('')
+    }
+  }
+
   const renderIntervalPanel = () => (
     <View style={s.intervalPanel}>
       <Text style={s.intervalLabel}>采样距离</Text>
@@ -283,13 +293,28 @@ export default function RecordScreen({ navigation }) {
         {INTERVAL_OPTIONS.map(value => (
           <TouchableOpacity
             key={value}
-            style={[s.intervalBtn, intervalMeters === value && s.intervalBtnOn]}
-            onPress={() => setIntervalMeters(value)}
+            style={[s.intervalBtn, intervalMeters === value && !customInterval && s.intervalBtnOn]}
+            onPress={() => { setIntervalMeters(value); setCustomInterval('') }}
             activeOpacity={0.75}
           >
-            <Text style={[s.intervalBtnText, intervalMeters === value && s.intervalBtnTextOn]}>{value}m</Text>
+            <Text style={[s.intervalBtnText, intervalMeters === value && !customInterval && s.intervalBtnTextOn]}>{value}m</Text>
           </TouchableOpacity>
         ))}
+      </View>
+      <View style={s.customIntervalRow}>
+        <TextInput
+          style={[s.customIntervalInput, !!customInterval && s.customIntervalInputActive]}
+          placeholder="自定义"
+          placeholderTextColor="#9ea3b0"
+          keyboardType="number-pad"
+          returnKeyType="done"
+          maxLength={3}
+          value={customInterval}
+          onChangeText={setCustomInterval}
+          onBlur={applyCustomInterval}
+          onSubmitEditing={applyCustomInterval}
+        />
+        <Text style={s.customIntervalUnit}>m</Text>
       </View>
     </View>
   )
@@ -417,9 +442,14 @@ export default function RecordScreen({ navigation }) {
               <Text style={s.sideTitle}>巡检采样</Text>
               <Text style={s.sideSub}>按距离自动抓拍</Text>
             </View>
-            <View style={[s.netBadge, isOnline ? s.netOnline : s.netOffline]}>
-              <View style={[s.netDot, isOnline ? s.netDotOn : s.netDotOff]} />
-              <Text style={s.netText}>{isOnline ? '联网' : '离线'}</Text>
+            <View style={s.sideHeaderRight}>
+              <TouchableOpacity style={s.sideExitBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
+                <Text style={s.sideExitText}>退出</Text>
+              </TouchableOpacity>
+              <View style={[s.netBadge, isOnline ? s.netOnline : s.netOffline]}>
+                <View style={[s.netDot, isOnline ? s.netDotOn : s.netDotOff]} />
+                <Text style={s.netText}>{isOnline ? '联网' : '离线'}</Text>
+              </View>
             </View>
           </View>
 
@@ -552,6 +582,15 @@ const createStyles = (t) => StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: t.border,
   },
+  sideHeaderRight: { alignItems: 'flex-end', gap: 8 },
+  sideExitBtn: {
+    borderWidth: 1,
+    borderColor: t.borderStrong,
+    borderRadius: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+  },
+  sideExitText: { color: t.textMuted, fontSize: 12, fontWeight: '500' },
   sideTitle: { color: t.text, fontSize: 20, fontWeight: '500' },
   sideSub: { color: t.textFaint, fontSize: 12, marginTop: 4 },
   sideBody: { flex: 1, justifyContent: 'center', paddingVertical: 16 },
@@ -594,6 +633,20 @@ const createStyles = (t) => StyleSheet.create({
   intervalPanel: { gap: 10, marginTop: 4 },
   intervalLabel: { color: t.textMuted, fontSize: 13, fontWeight: '500' },
   intervalOptions: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
+  customIntervalRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 },
+  customIntervalInput: {
+    flex: 1,
+    height: 34,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: t.borderStrong,
+    backgroundColor: t.surface,
+    paddingHorizontal: 10,
+    color: t.text,
+    fontSize: 13,
+  },
+  customIntervalInputActive: { borderColor: t.blue },
+  customIntervalUnit: { color: t.textMuted, fontSize: 13, fontWeight: '500' },
   intervalBtn: {
     minWidth: 48,
     height: 34,

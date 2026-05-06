@@ -18,9 +18,8 @@ async function getValidToken() {
 export default function HomeScreen({ navigation }) {
   const s = useThemedStyles(createStyles)
 
-  const goToCitizen = async () => {
-    const token = await getValidToken()
-    navigation.navigate(token ? 'Report' : 'Login', token ? undefined : { redirect: 'Report' })
+  const goToCitizen = () => {
+    navigation.navigate('Report')
   }
 
   const goToWorker = async () => {
@@ -63,7 +62,7 @@ export default function HomeScreen({ navigation }) {
 
           <TouchableOpacity style={[s.modeCard, s.modeCardPrimary]} onPress={goToWorker} activeOpacity={0.76}>
             <View style={[s.modeNum, s.modeNumPrimary]}>
-              <Text style={s.modeNumText}>02</Text>
+              <Text style={[s.modeNumText, s.modeNumTextPrimary]}>02</Text>
             </View>
             <View style={s.modeBody}>
               <View style={s.modeTop}>
@@ -116,7 +115,8 @@ const createStyles = (t) => StyleSheet.create({
     justifyContent: 'center',
   },
   modeNumPrimary: { backgroundColor: t.blue },
-  modeNumText: { color: '#ffffff', fontSize: 13, fontWeight: '500' },
+  modeNumText: { color: t.textSoft, fontSize: 13, fontWeight: '500' },
+  modeNumTextPrimary: { color: '#ffffff' },
   modeBody: { flex: 1, gap: 5 },
   modeTop: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
   modeTitle: { color: t.text, fontSize: 18, fontWeight: '500' },
