@@ -228,7 +228,11 @@ models.Base.metadata.create_all(bind=engine)
 
 db = SessionLocal()
 existing = db.query(models.User).filter(models.User.username == 'admin').first()
-if not existing:
+if existing:
+    existing.hashed_password = get_password_hash('${ADMIN_PASS}')
+    existing.role = 'admin'
+    db.commit()
+else:
     user = models.User(
         username='admin',
         hashed_password=get_password_hash('${ADMIN_PASS}'),
