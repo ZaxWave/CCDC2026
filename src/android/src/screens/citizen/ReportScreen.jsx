@@ -201,7 +201,13 @@ export default function ReportScreen({ navigation, route }) {
 
       const { lat, lng } = await resolveLocation()
       setPhase('uploading')
-      const results = await uploadImages(photos.map(photo => photo.uri), lat, lng, capturedAt)
+      const results = await uploadImages(
+        photos.map(photo => photo.uri),
+        lat,
+        lng,
+        capturedAt,
+        isWorkerUpload ? { sourceType: 'mobile' } : { sourceType: 'citizen', skipAuth: true }
+      )
       setSummary(summarizeResults(results))
       setPhase('done')
     } catch (e) {
@@ -226,6 +232,13 @@ export default function ReportScreen({ navigation, route }) {
     : isWorkerUpload
     ? '提交检测'
     : '提交上报'
+  const busyText = phase === 'checking'
+    ? '正在读取照片时间'
+    : phase === 'locating'
+    ? '正在获取当前位置'
+    : phase === 'uploading'
+    ? `正在上传 ${photos.length} 张照片并检测`
+    : ''
 
   return (
     <SafeAreaView style={s.page}>
@@ -249,11 +262,13 @@ export default function ReportScreen({ navigation, route }) {
           { key: 'upload', label: '检测', done: stepUploadDone, active: busy || (stepInfoDone && !stepUploadDone) },
         ].map((step, index) => (
           <View key={step.key} style={s.stepWrap}>
-            <View style={[s.stepDot, step.done && s.stepDotDone, step.active && s.stepDotActive]}>
-              <Text style={[s.stepNum, (step.done || step.active) && s.stepNumOn]}>{index + 1}</Text>
+            {index > 0 && <View style={[s.stepConnector, step.done && s.stepConnectorDone]} />}
+            <View style={s.stepInner}>
+              <View style={[s.stepDot, step.done && s.stepDotDone, step.active && s.stepDotActive]}>
+                <Text style={[s.stepNum, (step.done || step.active) && s.stepNumOn]}>{index + 1}</Text>
+              </View>
+              <Text style={[s.stepText, (step.done || step.active) && s.stepTextOn]}>{step.label}</Text>
             </View>
-            <Text style={[s.stepText, (step.done || step.active) && s.stepTextOn]}>{step.label}</Text>
-            {index < 2 && <View style={[s.stepLine, step.done && s.stepLineDone]} />}
           </View>
         ))}
       </View>
@@ -365,13 +380,30 @@ export default function ReportScreen({ navigation, route }) {
           </View>
         )}
 
+        {busy && (
+          <View style={s.busyPanel}>
+            <ActivityIndicator color={s.busySpinner.color} />
+            <View style={s.busyTextWrap}>
+              <Text style={s.busyTitle}>{busyText}</Text>
+              <Text style={s.busyHint}>请保持页面打开，完成后会显示检测结果。</Text>
+            </View>
+          </View>
+        )}
+
         <TouchableOpacity
           style={[s.submitBtn, (busy || photos.length === 0) && s.submitBtnDisabled]}
           onPress={handleSubmit}
           activeOpacity={0.75}
           disabled={busy || photos.length === 0}
         >
-          {busy ? <ActivityIndicator color="#fff" /> : <Text style={s.submitText}>{submitText}</Text>}
+          {busy ? (
+            <View style={s.submitBusy}>
+              <ActivityIndicator color="#fff" />
+              <Text style={s.submitText}>{submitText}</Text>
+            </View>
+          ) : (
+            <Text style={s.submitText}>{submitText}</Text>
+          )}
         </TouchableOpacity>
 
         {phase === 'done' && (
@@ -404,7 +436,17 @@ const createStyles = (t) => StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: t.border,
   },
-  stepWrap: { flexDirection: 'row', alignItems: 'center', flex: 1 },
+  stepWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', position: 'relative' },
+  stepInner: { alignItems: 'center', gap: 6 },
+  stepConnector: {
+    position: 'absolute',
+    left: '-50%',
+    right: '50%',
+    top: 12,
+    height: 1,
+    backgroundColor: t.border,
+  },
+  stepConnectorDone: { backgroundColor: 'rgba(62,106,225,0.7)' },
   stepDot: {
     width: 24,
     height: 24,
@@ -419,10 +461,8 @@ const createStyles = (t) => StyleSheet.create({
   stepDotDone: { borderColor: t.blue, backgroundColor: t.blue },
   stepNum: { color: t.textFaint, fontSize: 11, fontWeight: '500' },
   stepNumOn: { color: '#ffffff' },
-  stepText: { color: t.textFaint, fontSize: 12, fontWeight: '500', marginLeft: 7 },
+  stepText: { color: t.textFaint, fontSize: 12, fontWeight: '500' },
   stepTextOn: { color: t.textSoft },
-  stepLine: { height: 1, backgroundColor: t.border, flex: 1, marginHorizontal: 10 },
-  stepLineDone: { backgroundColor: 'rgba(62,106,225,0.7)' },
   scroll: { flex: 1 },
   body: { padding: 18, gap: 14, paddingBottom: 48 },
   panel: {
@@ -509,11 +549,26 @@ const createStyles = (t) => StyleSheet.create({
     borderRadius: 4, padding: 12,
   },
   errorText: { color: '#ef4444', fontSize: 13, lineHeight: 19 },
+  busyPanel: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    borderRadius: 12,
+    padding: 14,
+    backgroundColor: t.blueSoft,
+    borderWidth: 1,
+    borderColor: 'rgba(62,106,225,0.28)',
+  },
+  busySpinner: { color: t.blue },
+  busyTextWrap: { flex: 1, gap: 3 },
+  busyTitle: { color: t.text, fontSize: 14, fontWeight: '500' },
+  busyHint: { color: t.textMuted, fontSize: 12, lineHeight: 17 },
   submitBtn: {
     backgroundColor: t.blue, borderRadius: 4,
     height: 54, alignItems: 'center', justifyContent: 'center', marginTop: 4,
   },
   submitBtnDisabled: { backgroundColor: 'rgba(62,106,225,0.38)' },
+  submitBusy: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   submitText: { fontSize: 17, fontWeight: '500', color: '#ffffff', letterSpacing: 0 },
   closeBtn: { height: 46, alignItems: 'center', justifyContent: 'center' },
   closeBtnText: { color: t.textMuted, fontSize: 14, fontWeight: '500' },

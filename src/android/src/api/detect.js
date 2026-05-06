@@ -1,11 +1,11 @@
 import { uploadFile, request } from './request'
 
-function buildImageFormData(lat, lng, capturedAt) {
+function buildImageFormData(lat, lng, capturedAt, sourceType = 'mobile') {
   const formData = {}
   if (lat != null) formData.lat = String(lat)
   if (lng != null) formData.lng = String(lng)
   if (capturedAt) formData.captured_at = capturedAt
-  formData.source_type = 'mobile'
+  formData.source_type = sourceType
   return formData
 }
 
@@ -13,18 +13,27 @@ export async function checkImageExif(filePath) {
   return uploadFile({ url: '/api/v1/check-exif', filePath, name: 'file' })
 }
 
-export async function uploadImages(filePaths, lat = null, lng = null, capturedAt = '') {
+export async function uploadImages(filePaths, lat = null, lng = null, capturedAt = '', options = {}) {
+  const sourceType = options.sourceType || 'mobile'
   return uploadFile({
     url: '/api/v1/detect',
     filePath: filePaths,
     name: 'files',
-    formData: buildImageFormData(lat, lng, capturedAt),
+    formData: buildImageFormData(lat, lng, capturedAt, sourceType),
+    skipAuth: options.skipAuth === true,
   })
 }
 
-export async function uploadImage(filePath, lat = null, lng = null, capturedAt = '') {
-  const formData = buildImageFormData(lat, lng, capturedAt)
-  const results = await uploadFile({ url: '/api/v1/detect', filePath, name: 'files', formData })
+export async function uploadImage(filePath, lat = null, lng = null, capturedAt = '', options = {}) {
+  const sourceType = options.sourceType || 'mobile'
+  const formData = buildImageFormData(lat, lng, capturedAt, sourceType)
+  const results = await uploadFile({
+    url: '/api/v1/detect',
+    filePath,
+    name: 'files',
+    formData,
+    skipAuth: options.skipAuth === true,
+  })
   return Array.isArray(results) ? results[0] : results
 }
 

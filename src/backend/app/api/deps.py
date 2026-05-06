@@ -50,17 +50,26 @@ def get_optional_user(
     db: Session = Depends(get_db),
     token: Optional[str] = Depends(oauth2_scheme_optional),
 ) -> Optional[User]:
-    """无 token 时返回 None，有 token 时走正常验证逻辑（供公开接口使用）。"""
+    """无 token 时返回 None；有 token 时必须验证通过，避免专业端静默匿名入库。"""
     if not token:
         return None
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="认证失败，无效的凭证",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
         if not username:
-            return None
-        return db.query(User).filter(User.username == username).first()
+            raise credentials_exception
     except JWTError:
-        return None
+        raise credentials_exception
+
+    user = db.query(User).filter(User.username == username).first()
+    if user is None:
+        raise credentials_exception
+    return user
 
 
 def get_current_admin_user(current_user: User = Depends(get_current_user)):

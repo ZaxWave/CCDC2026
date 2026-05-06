@@ -6,8 +6,8 @@ async function getToken() {
   return (await AsyncStorage.getItem('token')) || ''
 }
 
-export async function uploadFile({ url, filePath, name = 'file', formData = {} }) {
-  const token = await getToken()
+export async function uploadFile({ url, filePath, name = 'file', formData = {}, skipAuth = false }) {
+  const token = skipAuth ? '' : await getToken()
   const files = Array.isArray(filePath) ? filePath : [filePath]
 
   const data = new FormData()

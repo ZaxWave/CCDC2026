@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { View, Text, TouchableOpacity, Alert, StyleSheet, useWindowDimensions, TextInput } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { StatusBar as ExpoStatusBar } from 'expo-status-bar'
 import { CameraView, useCameraPermissions } from 'expo-camera'
 import * as Location from 'expo-location'
 import * as ScreenOrientation from 'expo-screen-orientation'
@@ -33,7 +34,7 @@ export default function RecordScreen({ navigation }) {
   const isLandscape = width > height
   const [camPerm, requestCamPerm] = useCameraPermissions()
   const [hasLocPerm, setHasLocPerm] = useState(false)
-  const [phase, setPhase] = useState('idle') // idle|sampling|done|uploading|queued
+  const [phase, setPhase] = useState('setup') // setup|ready|sampling|done|uploading|queued
   const [duration, setDuration] = useState(0)
   const [currentSpeed, setCurrentSpeed] = useState(0)
   const [totalDist, setTotalDist] = useState(0)
@@ -54,7 +55,7 @@ export default function RecordScreen({ navigation }) {
   const capturesRef = useRef([])
   const lastCaptureDistRef = useRef(0)
   const captureBusyRef = useRef(false)
-  const phaseRef = useRef('idle')
+  const phaseRef = useRef('setup')
 
   useEffect(() => {
     phaseRef.current = phase
@@ -67,7 +68,6 @@ export default function RecordScreen({ navigation }) {
       setHasLocPerm(status === 'granted')
     }
     requestAllPermissions()
-    ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE).catch(() => {})
     return () => {
       clearInterval(timerRef.current)
       locationSubRef.current?.remove()
@@ -128,6 +128,23 @@ export default function RecordScreen({ navigation }) {
     }
   }
 
+  const enterCamera = async () => {
+    applyCustomInterval()
+    await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE).catch(() => {})
+    phaseRef.current = 'ready'
+    setPhase('ready')
+  }
+
+  const leaveCamera = async () => {
+    clearInterval(timerRef.current)
+    locationSubRef.current?.remove()
+    locationSubRef.current = null
+    await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP).catch(() => {})
+    phaseRef.current = 'setup'
+    setPhase('setup')
+    setProgressMsg('')
+  }
+
   const startSampling = async () => {
     if (!cameraRef.current) {
       Alert.alert('摄像头未就绪', '请稍后再试。')
@@ -169,8 +186,8 @@ export default function RecordScreen({ navigation }) {
     } catch (e) {
       clearInterval(timerRef.current)
       locationSubRef.current?.remove()
-      phaseRef.current = 'idle'
-      setPhase('idle')
+      phaseRef.current = 'ready'
+      setPhase('ready')
       Alert.alert('启动失败', e.message || '无法开始巡检采样')
     }
   }
@@ -191,8 +208,8 @@ export default function RecordScreen({ navigation }) {
     clearInterval(timerRef.current)
     locationSubRef.current?.remove()
     locationSubRef.current = null
-    phaseRef.current = 'idle'
-    setPhase('idle')
+    phaseRef.current = 'ready'
+    setPhase('ready')
     setDuration(0)
     setCurrentSpeed(0)
     setTotalDist(0)
@@ -252,7 +269,7 @@ export default function RecordScreen({ navigation }) {
     }
   }
 
-  const showCamera = phase === 'idle' || phase === 'sampling'
+  const showCamera = phase === 'ready' || phase === 'sampling'
   const expectedCount = Math.max(captureCount, Math.floor(totalDist / intervalMeters) + (totalDist > 0 ? 1 : 0))
   const statItems = [
     { val: fmtTime(duration), lbl: '时长' },
@@ -273,6 +290,7 @@ export default function RecordScreen({ navigation }) {
       style={style}
       facing="back"
       active={true}
+      mode="picture"
       onMountError={e => Alert.alert('摄像头错误', e.message)}
     />
   )
@@ -352,7 +370,7 @@ export default function RecordScreen({ navigation }) {
 
   const renderControls = (compact = false) => (
     <View style={[s.controls, compact ? s.controlsPanel : s.controlsPortrait]}>
-      {phase === 'idle' && (
+      {phase === 'ready' && (
         <TouchableOpacity style={s.startBtn} onPress={startSampling} activeOpacity={0.8}>
           <Text style={s.startBtnText}>开始采样</Text>
         </TouchableOpacity>
@@ -412,17 +430,71 @@ export default function RecordScreen({ navigation }) {
     )
   }
 
-  if (isLandscape) {
+  if (phase === 'setup') {
     return (
-      <View style={s.landscapePage}>
+      <SafeAreaView style={s.setupPage}>
+        <ExpoStatusBar hidden={false} style="light" backgroundColor="#05080e" />
+        <View style={s.setupHeader}>
+          <TouchableOpacity style={s.setupBackBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
+            <Text style={s.setupBackIcon}>‹</Text>
+          </TouchableOpacity>
+          <View>
+            <Text style={s.setupTitle}>距离采样</Text>
+            <Text style={s.setupSub}>先设置采样参数，再进入横屏相机。</Text>
+          </View>
+        </View>
+
+        <View style={s.setupCard}>
+          <Text style={s.setupCardTitle}>采样方式</Text>
+          <Text style={s.setupText}>系统按 GPS 里程积分自动抓拍照片，每张照片携带坐标和时间上传，不保存大体积视频。</Text>
+          {renderIntervalPanel()}
+        </View>
+
+        <View style={s.setupMetaGrid}>
+          <View style={s.setupMetaCell}>
+            <Text style={s.setupMetaVal}>{intervalMeters}m</Text>
+            <Text style={s.setupMetaLbl}>当前间隔</Text>
+          </View>
+          <View style={s.setupMetaCell}>
+            <Text style={s.setupMetaVal}>{isOnline ? '在线' : '离线'}</Text>
+            <Text style={s.setupMetaLbl}>网络状态</Text>
+          </View>
+        </View>
+
+        {queueCount > 0 && (
+          <View style={s.setupQueue}>
+            <Text style={s.setupQueueText}>
+              {isOnline ? `正在处理离线队列：${queueCount}` : `离线队列：${queueCount} 个任务`}
+            </Text>
+          </View>
+        )}
+
+        <TouchableOpacity style={s.setupPrimaryBtn} onPress={enterCamera} activeOpacity={0.8}>
+          <Text style={s.setupPrimaryText}>进入横屏采集</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    )
+  }
+
+  if (isLandscape || phase === 'ready' || phase === 'sampling' || phase === 'done' || phase === 'uploading' || phase === 'queued') {
+    return (
+      <View style={s.capturePage}>
+        <ExpoStatusBar hidden />
         <View style={s.previewPane}>
           {renderCamera(StyleSheet.absoluteFill)}
           {!showCamera && <View style={s.previewBlank} />}
           <View style={s.previewTopBar}>
-            <TouchableOpacity style={s.previewBackBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
+            <TouchableOpacity style={s.previewBackBtn} onPress={leaveCamera} activeOpacity={0.7}>
               <Text style={s.backIcon}>‹</Text>
             </TouchableOpacity>
-            <Text style={s.previewTitle}>距离采样</Text>
+            <View style={s.previewTitleWrap}>
+              <Text style={s.previewTitle}>距离采样</Text>
+              <Text style={s.previewSubTitle}>{intervalMeters}m 间隔</Text>
+            </View>
+            <View style={[s.netBadge, isOnline ? s.netOnline : s.netOffline]}>
+              <View style={[s.netDot, isOnline ? s.netDotOn : s.netDotOff]} />
+              <Text style={s.netText}>{isOnline ? '在线' : '离线'}</Text>
+            </View>
             {phase === 'sampling' && (
               <View style={s.recBadge}><View style={s.recDot} /><Text style={s.recText}>RUN</Text></View>
             )}
@@ -434,39 +506,41 @@ export default function RecordScreen({ navigation }) {
               </Text>
             </View>
           )}
-        </View>
 
-        <SafeAreaView style={s.sidePanel}>
-          <View style={s.sideHeader}>
-            <View>
-              <Text style={s.sideTitle}>巡检采样</Text>
-              <Text style={s.sideSub}>按距离自动抓拍</Text>
+          <View style={s.liveHud}>
+            {statItems.map(item => (
+              <View key={item.lbl} style={s.liveStat}>
+                <Text style={s.liveVal}>{item.val}</Text>
+                <Text style={s.liveLbl}>{item.lbl}</Text>
+              </View>
+            ))}
+          </View>
+
+          {phase === 'ready' && (
+            <View style={s.readyPanel}>
+              <View style={s.readyCopy}>
+                <Text style={s.readyTitle}>准备采集</Text>
+                <Text style={s.readyText}>按 {intervalMeters}m 自动抓拍</Text>
+              </View>
+              {renderControls(true)}
             </View>
-            <View style={s.sideHeaderRight}>
-              <TouchableOpacity style={s.sideExitBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
-                <Text style={s.sideExitText}>退出</Text>
+          )}
+          {phase === 'sampling' && (
+            <View style={s.captureControls}>
+              <Text style={s.progressText}>GPS {gpsCount} 点 · 预计 {expectedCount} 张 · {progressMsg || '自动抓拍中'}</Text>
+              <TouchableOpacity style={s.stopBtn} onPress={stopSampling} activeOpacity={0.7}>
+                <View style={s.stopIcon} />
+                <Text style={s.stopBtnText}>停止采样</Text>
               </TouchableOpacity>
-              <View style={[s.netBadge, isOnline ? s.netOnline : s.netOffline]}>
-                <View style={[s.netDot, isOnline ? s.netDotOn : s.netDotOff]} />
-                <Text style={s.netText}>{isOnline ? '联网' : '离线'}</Text>
-              </View>
             </View>
-          </View>
-
-          <View style={s.sideBody}>
-            {phase === 'idle' && (
-              <View style={s.sideSection}>
-                <Text style={s.idleTitle}>测速积分拍照</Text>
-                <Text style={s.idleText}>横屏采样，按设定距离自动抓拍，不上传大体积视频。</Text>
-                {renderIntervalPanel()}
-              </View>
-            )}
-            {phase === 'sampling' && renderStats(true)}
-            {(phase === 'done' || phase === 'uploading' || phase === 'queued') && renderSummary(true)}
-          </View>
-
-          {renderControls(true)}
-        </SafeAreaView>
+          )}
+          {(phase === 'done' || phase === 'uploading' || phase === 'queued') && (
+            <View style={s.resultOverlay}>
+              {renderSummary(true)}
+              {renderControls(true)}
+            </View>
+          )}
+        </View>
       </View>
     )
   }
@@ -522,20 +596,62 @@ export default function RecordScreen({ navigation }) {
 
 const createStyles = (t) => StyleSheet.create({
   page: { flex: 1, backgroundColor: t.bg },
-  landscapePage: {
+  setupPage: { flex: 1, backgroundColor: '#05080e', padding: 22, gap: 18 },
+  setupHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 6 },
+  setupBackBtn: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
+  setupBackIcon: { fontSize: 32, color: 'rgba(255,255,255,0.82)', lineHeight: 36 },
+  setupTitle: { color: '#ffffff', fontSize: 24, fontWeight: '500' },
+  setupSub: { color: 'rgba(255,255,255,0.56)', fontSize: 13, marginTop: 4 },
+  setupCard: {
+    backgroundColor: 'rgba(255,255,255,0.07)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    borderRadius: 12,
+    padding: 18,
+    gap: 14,
+  },
+  setupCardTitle: { color: '#ffffff', fontSize: 18, fontWeight: '500' },
+  setupText: { color: 'rgba(255,255,255,0.62)', fontSize: 13, lineHeight: 20 },
+  setupMetaGrid: { flexDirection: 'row', gap: 12 },
+  setupMetaCell: {
     flex: 1,
-    flexDirection: 'row',
-    backgroundColor: t.bg,
+    backgroundColor: 'rgba(255,255,255,0.055)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.11)',
+    borderRadius: 12,
+    padding: 16,
+    gap: 5,
+  },
+  setupMetaVal: { color: '#ffffff', fontSize: 24, fontWeight: '500' },
+  setupMetaLbl: { color: 'rgba(255,255,255,0.52)', fontSize: 12 },
+  setupQueue: {
+    borderRadius: 4,
+    backgroundColor: 'rgba(62,106,225,0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(62,106,225,0.34)',
+    padding: 12,
+  },
+  setupQueueText: { color: '#b8c9ff', fontSize: 13, lineHeight: 18 },
+  setupPrimaryBtn: {
+    marginTop: 'auto',
+    height: 56,
+    borderRadius: 10,
+    backgroundColor: t.blue,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  setupPrimaryText: { color: '#ffffff', fontSize: 17, fontWeight: '500' },
+  capturePage: {
+    flex: 1,
+    backgroundColor: '#050505',
   },
   previewPane: {
     flex: 1,
-    margin: 12,
-    marginRight: 0,
-    borderRadius: 12,
+    margin: 0,
+    borderRadius: 0,
     overflow: 'hidden',
     backgroundColor: '#050505',
-    borderWidth: 1,
-    borderColor: t.borderStrong,
   },
   previewBlank: {
     ...StyleSheet.absoluteFillObject,
@@ -543,18 +659,24 @@ const createStyles = (t) => StyleSheet.create({
   },
   previewTopBar: {
     position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
-    height: 56,
+    left: 12,
+    right: undefined,
+    top: 12,
+    height: 42,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    paddingHorizontal: 14,
-    backgroundColor: 'rgba(0,0,0,0.42)',
+    gap: 8,
+    borderRadius: 21,
+    paddingLeft: 8,
+    paddingRight: 12,
+    backgroundColor: 'rgba(5,8,14,0.48)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
   },
-  previewBackBtn: { width: 38, alignItems: 'center', justifyContent: 'center' },
-  previewTitle: { flex: 1, color: '#ffffff', fontSize: 16, fontWeight: '500' },
+  previewBackBtn: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.12)' },
+  previewTitleWrap: { minWidth: 88 },
+  previewTitle: { color: '#ffffff', fontSize: 14, fontWeight: '500' },
+  previewSubTitle: { color: 'rgba(255,255,255,0.58)', fontSize: 10, marginTop: 1 },
   previewQueue: {
     position: 'absolute',
     left: 14,
@@ -563,6 +685,68 @@ const createStyles = (t) => StyleSheet.create({
     backgroundColor: 'rgba(62,106,225,0.78)',
     paddingHorizontal: 12,
     paddingVertical: 6,
+  },
+  liveHud: {
+    position: 'absolute',
+    top: 66,
+    left: 14,
+    width: 118,
+    zIndex: 20,
+    gap: 7,
+  },
+  liveStat: {
+    minHeight: 46,
+    borderRadius: 10,
+    backgroundColor: 'rgba(5,8,14,0.42)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.10)',
+    paddingHorizontal: 12,
+    justifyContent: 'center',
+  },
+  liveVal: { color: '#ffffff', fontSize: 18, fontWeight: '500' },
+  liveLbl: { color: 'rgba(255,255,255,0.58)', fontSize: 10, marginTop: 1 },
+  readyPanel: {
+    position: 'absolute',
+    left: undefined,
+    right: 18,
+    bottom: 18,
+    width: 330,
+    zIndex: 25,
+    borderRadius: 14,
+    padding: 14,
+    gap: 12,
+    backgroundColor: 'rgba(5,8,14,0.48)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+  },
+  readyCopy: { gap: 3 },
+  readyTitle: { color: '#ffffff', fontSize: 17, fontWeight: '500' },
+  readyText: { color: 'rgba(255,255,255,0.58)', fontSize: 12, lineHeight: 17 },
+  captureControls: {
+    position: 'absolute',
+    left: undefined,
+    right: 18,
+    bottom: 18,
+    width: 330,
+    zIndex: 25,
+    borderRadius: 14,
+    padding: 12,
+    backgroundColor: 'rgba(5,8,14,0.48)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+  },
+  resultOverlay: {
+    position: 'absolute',
+    left: 18,
+    right: 18,
+    bottom: 18,
+    zIndex: 25,
+    borderRadius: 12,
+    padding: 16,
+    gap: 14,
+    backgroundColor: t.isDark ? 'rgba(23,26,32,0.88)' : 'rgba(255,255,255,0.88)',
+    borderWidth: 1,
+    borderColor: t.borderStrong,
   },
   sidePanel: {
     width: 330,
@@ -602,17 +786,17 @@ const createStyles = (t) => StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 10,
   },
   backBtn: { width: 44 },
-  backIcon: { fontSize: 32, color: 'rgba(255,255,255,0.7)', lineHeight: 36 },
+  backIcon: { fontSize: 26, color: 'rgba(255,255,255,0.78)', lineHeight: 28 },
   title: { fontSize: 17, fontWeight: '500', color: '#ffffff', letterSpacing: 0 },
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  netBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 4, paddingHorizontal: 8, paddingVertical: 3, borderWidth: 1 },
+  netBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4, borderWidth: 1 },
   netOnline: { backgroundColor: 'rgba(22,163,74,0.15)', borderColor: 'rgba(22,163,74,0.4)' },
   netOffline: { backgroundColor: 'rgba(239,68,68,0.15)', borderColor: 'rgba(239,68,68,0.4)' },
   netDot: { width: 6, height: 6, borderRadius: 3 },
   netDotOn: { backgroundColor: '#22c55e' },
   netDotOff: { backgroundColor: '#ef4444' },
   netText: { fontSize: 11, color: '#ffffff', fontWeight: '500' },
-  recBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(62,106,225,0.18)', borderWidth: 1, borderColor: 'rgba(62,106,225,0.5)', borderRadius: 4, paddingHorizontal: 10, paddingVertical: 4 },
+  recBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(62,106,225,0.22)', borderWidth: 1, borderColor: 'rgba(62,106,225,0.55)', borderRadius: 12, paddingHorizontal: 9, paddingVertical: 4 },
   recDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: t.blue },
   recText: { fontSize: 12, fontWeight: '500', color: t.blueText, letterSpacing: 0 },
   queueBanner: { position: 'absolute', top: 80, left: 0, right: 0, backgroundColor: 'rgba(62,106,225,0.85)', paddingVertical: 6, alignItems: 'center', zIndex: 15 },
@@ -710,12 +894,12 @@ const createStyles = (t) => StyleSheet.create({
     borderWidth: 0,
     backgroundColor: 'transparent',
   },
-  startBtn: { backgroundColor: t.blue, borderRadius: 4, height: 56, alignItems: 'center', justifyContent: 'center' },
-  startBtnText: { fontSize: 18, fontWeight: '500', color: '#ffffff', letterSpacing: 0 },
-  progressText: { color: t.textMuted, textAlign: 'center', fontSize: 12, marginBottom: 10 },
-  stopBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, backgroundColor: 'rgba(255,255,255,0.1)', borderWidth: 2, borderColor: 'rgba(255,255,255,0.2)', borderRadius: 4, height: 56 },
-  stopIcon: { width: 18, height: 18, borderRadius: 4, backgroundColor: '#ffffff' },
-  stopBtnText: { fontSize: 17, fontWeight: '500', color: '#ffffff', letterSpacing: 0 },
+  startBtn: { backgroundColor: t.blue, borderRadius: 8, height: 48, alignItems: 'center', justifyContent: 'center' },
+  startBtnText: { fontSize: 16, fontWeight: '500', color: '#ffffff', letterSpacing: 0 },
+  progressText: { color: 'rgba(255,255,255,0.64)', textAlign: 'center', fontSize: 12, marginBottom: 9 },
+  stopBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: 'rgba(239,68,68,0.78)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.16)', borderRadius: 8, height: 48 },
+  stopIcon: { width: 14, height: 14, borderRadius: 3, backgroundColor: '#ffffff' },
+  stopBtnText: { fontSize: 15, fontWeight: '500', color: '#ffffff', letterSpacing: 0 },
   actionRow: { flexDirection: 'row', gap: 16 },
   resetBtn: { flex: 1, height: 56, borderRadius: 4, borderWidth: 1, borderColor: t.borderStrong, alignItems: 'center', justifyContent: 'center' },
   resetBtnText: { fontSize: 16, color: t.textMuted, letterSpacing: 0 },
