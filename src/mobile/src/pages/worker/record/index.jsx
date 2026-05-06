@@ -191,7 +191,7 @@ export default function WorkerRecord() {
   }
 
   const estimatedFrames = Math.max(0, Math.floor(totalDist / INTERVAL_METERS))
-  const showCamera = phase === 'idle' || phase === 'recording'
+  const showCamera = phase === 'recording'
 
   return (
     <View className={styles.page}>
@@ -200,7 +200,7 @@ export default function WorkerRecord() {
         <View className={styles.backBtn} onClick={goBack}>
           <Text className={styles.backIcon}>‹</Text>
         </View>
-        <Text className={styles.title}>巡检录像</Text>
+        <Text className={styles.title}>距离采样</Text>
         {phase === 'recording'
           ? <View className={styles.recBadge}>
               <View className={styles.recDot} />
@@ -212,6 +212,23 @@ export default function WorkerRecord() {
 
       {/* Camera 仅在权限已授予时挂载 */}
       {showCamera && camAuth && <CameraRecorder ref={recorderRef} />}
+
+      {phase === 'idle' && (
+        <View className={styles.setupPanel}>
+          <Text className={styles.setupTitle}>测速积分拍照</Text>
+          <Text className={styles.setupText}>按 GPS 里程积分自动采样，建议横屏保持设备稳定。</Text>
+          <View className={styles.setupMetaGrid}>
+            <View className={styles.setupMetaCell}>
+              <Text className={styles.setupMetaVal}>{INTERVAL_METERS}m</Text>
+              <Text className={styles.setupMetaLbl}>采样间隔</Text>
+            </View>
+            <View className={styles.setupMetaCell}>
+              <Text className={styles.setupMetaVal}>{IS_WEAPP ? '可用' : 'H5'}</Text>
+              <Text className={styles.setupMetaLbl}>运行环境</Text>
+            </View>
+          </View>
+        </View>
+      )}
 
       {/* 录制中实时数据叠加 */}
       {phase === 'recording' && (
@@ -238,10 +255,10 @@ export default function WorkerRecord() {
         </View>
       )}
 
-      {/* 录像完成摘要 */}
+      {/* 采样完成摘要 */}
       {(phase === 'done' || phase === 'uploading') && (
         <View className={styles.summaryWrap}>
-          <Text className={styles.summaryTitle}>录像完成</Text>
+          <Text className={styles.summaryTitle}>采样完成</Text>
           <View className={styles.summaryGrid}>
             <View className={styles.summaryCell}>
               <Text className={styles.summaryVal}>{fmtTime(duration)}</Text>
@@ -261,7 +278,7 @@ export default function WorkerRecord() {
             </View>
           </View>
           <Text className={styles.summaryNote}>
-            间隔 {INTERVAL_METERS}m 抽帧 · GPS 精确定位
+            间隔 {INTERVAL_METERS}m 采样 · GPS 精确定位
           </Text>
           {phase === 'uploading' && uploadMsg && (
             <Text className={styles.uploadStatus}>{uploadMsg}</Text>
@@ -272,25 +289,23 @@ export default function WorkerRecord() {
       <View className={styles.controls}>
         {phase === 'idle' && (
           <>
-            <Text className={styles.landscapeTip}>建议横屏录制，效果更佳</Text>
             <View className={styles.startBtn} onClick={startRecording}>
-              <Text className={styles.startBtnText}>开始录像</Text>
+              <Text className={styles.startBtnText}>进入横屏采集</Text>
             </View>
-            <Text className={styles.hint}>间隔 {INTERVAL_METERS}m 抽帧 · 录制时自动记录 GPS 轨迹</Text>
           </>
         )}
 
         {phase === 'recording' && (
           <View className={styles.stopBtn} onClick={stopRecording}>
             <View className={styles.stopIcon} />
-            <Text className={styles.stopBtnText}>停止录像</Text>
+            <Text className={styles.stopBtnText}>停止采样</Text>
           </View>
         )}
 
         {phase === 'done' && (
           <View className={styles.actionRow}>
             <View className={styles.resetBtn} onClick={resetRecording}>
-              <Text className={styles.resetBtnText}>重新录制</Text>
+              <Text className={styles.resetBtnText}>重新采样</Text>
             </View>
             <View className={styles.uploadBtn} onClick={handleUpload}>
               <Text className={styles.uploadBtnText}>上传检测</Text>

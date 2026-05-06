@@ -1,6 +1,6 @@
 .page {
   min-height: 100vh;
-  background: #111111;
+  background: #f5f6f8;
   display: flex;
   flex-direction: column;
   padding: 0 56px 80px;
@@ -21,14 +21,14 @@
 
 .backIcon {
   font-size: 52px;
-  color: rgba(255, 255, 255, 0.6);
+  color: #60646c;
   line-height: 1;
   margin-top: -4px;
 }
 
 .backText {
   font-size: 28px;
-  color: rgba(255, 255, 255, 0.6);
+  color: #60646c;
 }
 
 // ── 标题 ──────────────────────────────────────────────
@@ -40,23 +40,23 @@
   font-size: 22px;
   font-weight: 700;
   letter-spacing: 4px;
-  color: rgba(255, 255, 255, 0.3);
+  color: #8b9098;
   margin-bottom: 24px;
   display: block;
 }
 
 .title {
   display: block;
-  font-size: 72px;
-  font-weight: 700;
-  color: #ffffff;
+  font-size: 64px;
+  font-weight: 500;
+  color: #171a20;
   margin-bottom: 14px;
   letter-spacing: -1px;
 }
 
 .subtitle {
   font-size: 28px;
-  color: rgba(255, 255, 255, 0.4);
+  color: #8b9098;
 }
 
 // ── 表单 ──────────────────────────────────────────────
@@ -71,14 +71,14 @@
   flex-direction: column;
   gap: 16px;
   padding: 40px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid #c7cdd7;
 }
 
 .fieldLabel {
   font-size: 22px;
   font-weight: 700;
   letter-spacing: 3px;
-  color: rgba(255, 255, 255, 0.5);
+  color: #60646c;
 }
 
 .inputRow {
@@ -90,20 +90,20 @@
 .inputIcon {
   font-size: 32px;
   line-height: 1;
-  color: rgba(255, 255, 255, 0.2);
+  color: #9aa3b2;
   flex-shrink: 0;
 }
 
 .input {
   flex: 1;
   font-size: 32px;
-  color: #ffffff;
-  background: transparent;
+  color: #171a20;
+  background: #ffffff;
   border: none;
   height: 64px;
 }
 
-.ph { color: rgba(255, 255, 255, 0.25); }
+.ph { color: #9aa3b2; }
 
 // ── 错误 ──────────────────────────────────────────────
 .errorBox {
@@ -123,7 +123,7 @@
 .submitBtn {
   margin-top: 64px;
   height: 108px;
-  border-radius: 16px;
+  border-radius: 8px;
   background: #3e6ae1;
   display: flex;
   align-items: center;
@@ -135,14 +135,14 @@
 
 .submitText {
   font-size: 34px;
-  font-weight: 700;
+  font-weight: 500;
   color: #fff;
-  letter-spacing: 6px;
+  letter-spacing: 0;
 }
 
 .demoHint {
   font-size: 24px;
-  color: rgba(255, 255, 255, 0.25);
+  color: #9aa3b2;
   text-align: center;
   margin-top: 32px;
 }

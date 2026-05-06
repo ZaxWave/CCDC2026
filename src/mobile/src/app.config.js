@@ -1,4 +1,5 @@
 export default {
+  lazyCodeLoading: 'requiredComponents',
   pages: [
     'pages/index/index',
     'pages/login/index',
@@ -9,9 +10,9 @@ export default {
   ],
   window: {
     backgroundTextStyle: 'light',
-    navigationBarBackgroundColor: '#111111',
+    navigationBarBackgroundColor: '#f5f6f8',
     navigationBarTitleText: 'LightScan',
-    navigationBarTextStyle: 'white'
+    navigationBarTextStyle: 'black'
   },
   networkTimeout: {
     request:      60000,

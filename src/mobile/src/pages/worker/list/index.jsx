@@ -38,27 +38,42 @@ export default function WorkerHub() {
       </View>
 
       <View className={styles.tiles}>
+        <Text className={styles.sectionLabel}>采集</Text>
         <View
           className={styles.tile}
-          onClick={() => Taro.navigateTo({ url: '/pages/worker/issues/index' })}
+          onClick={() => Taro.navigateTo({ url: '/pages/citizen/report/index?source=worker' })}
         >
+          <Text className={`${styles.tileNumber} ${styles.tileNumberBlue}`}>01</Text>
           <View className={styles.tileBody}>
-            <Text className={styles.tileTitle}>已有问题</Text>
-            <Text className={styles.tileDesc}>查看工单 · 处理记录</Text>
+            <Text className={styles.tileTitle}>拍照巡检</Text>
+            <Text className={styles.tileDesc}>多角度取证 · 自动写入时间位置</Text>
           </View>
           <Text className={styles.tileArrow}>›</Text>
         </View>
 
         <View
-          className={`${styles.tile} ${styles.tileDark}`}
+          className={styles.tile}
           onClick={() => Taro.navigateTo({ url: '/pages/worker/record/index' })}
         >
-          <View className={styles.recDot} />
+          <Text className={`${styles.tileNumber} ${styles.tileNumberRed}`}>02</Text>
           <View className={styles.tileBody}>
-            <Text className={`${styles.tileTitle} ${styles.tileTitleLight}`}>开始巡检</Text>
-            <Text className={`${styles.tileDesc} ${styles.tileDescLight}`}>GPS 轨迹 · 5m 间隔抽帧</Text>
+            <Text className={styles.tileTitle}>距离采样</Text>
+            <Text className={styles.tileDesc}>横屏采样 · 自定义距离间隔</Text>
           </View>
-          <Text className={`${styles.tileArrow} ${styles.tileArrowLight}`}>›</Text>
+          <Text className={styles.tileArrow}>›</Text>
+        </View>
+
+        <Text className={styles.sectionLabel}>处置</Text>
+        <View
+          className={styles.tile}
+          onClick={() => Taro.navigateTo({ url: '/pages/worker/issues/index' })}
+        >
+          <Text className={`${styles.tileNumber} ${styles.tileNumberGray}`}>03</Text>
+          <View className={styles.tileBody}>
+            <Text className={styles.tileTitle}>养护工单</Text>
+            <Text className={styles.tileDesc}>查看工单 · 接单处理闭环</Text>
+          </View>
+          <Text className={styles.tileArrow}>›</Text>
         </View>
       </View>
     </View>

@@ -1,141 +1,156 @@
-// px 值 = 目标dp × 2（Taro 750设计规范）
-
 .page {
   min-height: 100vh;
-  background: #111111;
+  background: #f5f6f8;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  padding: 0 56px;
+  padding: 56px 40px 56px;
 }
 
-// ── 品牌 ──────────────────────────────────────────────
 .brand {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  margin-bottom: 96px;
+  justify-content: space-between;
+  margin-bottom: 126px;
 }
 
 .wordmark {
   display: flex;
   align-items: baseline;
-  gap: 4px;
-  margin-bottom: 20px;
+}
+
+.wordLight,
+.wordScan {
+  font-style: italic;
+  letter-spacing: -4px;
+  line-height: 1;
 }
 
 .wordLight {
-  font-size: 80px;
+  font-size: 56px;
   font-weight: 650;
-  font-style: italic;
-  color: #ffffff;
-  letter-spacing: -5px;
+  color: #171a20;
 }
 
 .wordScan {
-  font-size: 80px;
+  font-size: 56px;
   font-weight: 850;
-  font-style: italic;
   color: #3e6ae1;
-  letter-spacing: -5px;
 }
 
 .tagline {
   font-size: 24px;
-  color: rgba(255, 255, 255, 0.4);
-  letter-spacing: 5px;
-  margin-top: 8px;
-  display: block;
+  color: #8b9098;
+  letter-spacing: 0;
 }
 
-// ── 分隔线 ─────────────────────────────────────────────
-.divider {
-  height: 1px;
-  background: rgba(255, 255, 255, 0.08);
-  margin-bottom: 64px;
-}
+.divider { display: none; }
 
-// ── 入口列表 ───────────────────────────────────────────
 .entries {
-  background: rgba(255, 255, 255, 0.04);
-  border-radius: 32px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #ffffff;
+  border-radius: 24px;
+  border: 1px solid #dce0e7;
   overflow: hidden;
+}
+
+.entries::before {
+  content: '工作模式';
+  display: block;
+  padding: 34px 34px 8px;
+  color: #60646c;
+  font-size: 24px;
+  font-weight: 500;
 }
 
 .entryRow {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 48px 44px;
-  &:active { opacity: 0.55; }
+  padding: 34px;
+  gap: 24px;
+  &:active { opacity: 0.72; }
+}
+
+.entryRow::before {
+  width: 84px;
+  height: 84px;
+  border-radius: 8px;
+  background: #eef1f6;
+  color: #393c41;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.entryRow:nth-of-type(1)::before { content: '01'; }
+.entryRow:nth-of-type(3)::before {
+  content: '02';
+  background: #3e6ae1;
+  color: #ffffff;
 }
 
 .entryLeft {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding-right: 24px;
+  gap: 10px;
+  min-width: 0;
 }
 
 .entryTitle {
   font-size: 36px;
-  font-weight: 600;
-  color: #ffffff;
+  font-weight: 500;
+  color: #171a20;
 }
 
 .entryDesc {
-  font-size: 26px;
-  color: rgba(255, 255, 255, 0.4);
-  line-height: 1.55;
+  font-size: 24px;
+  color: #8b9098;
+  line-height: 1.45;
 }
 
 .entryRight {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
   flex-shrink: 0;
 }
 
 .entryTag {
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  padding: 8px 20px;
+  background: #eef1f6;
+  border-radius: 8px;
+  padding: 7px 14px;
 }
 
-.entryTagBlue {
-  background: rgba(62, 106, 225, 0.15);
-}
+.entryTagBlue { background: rgba(62, 106, 225, 0.1); }
 
 .entryTagText {
   font-size: 22px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.6);
+  font-weight: 500;
+  color: #60646c;
 }
 
-.entryTagTextBlue {
-  color: #3e6ae1;
-}
+.entryTagTextBlue { color: #3156bd; }
 
 .entryChevron {
   font-size: 52px;
-  color: rgba(255, 255, 255, 0.3);
+  color: #8b9098;
   font-weight: 300;
   line-height: 1;
 }
 
 .rowDivider {
   height: 1px;
-  background: rgba(255, 255, 255, 0.06);
-  margin: 0 44px;
+  background: #dce0e7;
+  margin: 0 34px 0 142px;
 }
 
-// ── 底部 ──────────────────────────────────────────────
 .footer {
-  font-size: 22px;
-  color: rgba(255, 255, 255, 0.2);
-  padding: 64px 0 80px;
+  font-size: 24px;
+  color: #9aa3b2;
+  padding: 48px 0 0;
   text-align: center;
-  letter-spacing: 2px;
+  letter-spacing: 0;
 }

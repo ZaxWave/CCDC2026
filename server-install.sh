@@ -221,7 +221,7 @@ from dotenv import load_dotenv
 load_dotenv('${ENV_FILE}')
 from app.db.database import SessionLocal, engine
 from app.db import models
-from app.services.security import get_password_hash
+from app.core.security import get_password_hash
 
 # 确保表已创建，不依赖服务启动时序
 models.Base.metadata.create_all(bind=engine)

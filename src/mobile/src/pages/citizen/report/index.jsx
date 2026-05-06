@@ -20,6 +20,8 @@ function getLocalDateTime(date = new Date()) {
 }
 
 export default function CitizenReport() {
+  const params = Taro.getCurrentInstance()?.router?.params || {}
+  const isWorkerUpload = params.source === 'worker'
   const [detectMode, setDetectMode] = useState('ai')
   const [selectedType, setSelectedType] = useState(null)
   const [photos, setPhotos] = useState([])
@@ -61,10 +63,14 @@ export default function CitizenReport() {
     }
   }
 
-  const handleAddPhoto = async () => {
+  const handleAddPhoto = async (sourceType = ['album', 'camera']) => {
     let res
     try {
-      res = await Taro.chooseMedia({ count: 9 - photos.length, mediaType: ['image'] })
+      res = await Taro.chooseMedia({
+        count: 9 - photos.length,
+        mediaType: ['image'],
+        sourceType,
+      })
     } catch {
       return
     }
@@ -72,6 +78,9 @@ export default function CitizenReport() {
     setPhotos(prev => [...prev, ...newPaths])
     setAiDetected(false)
   }
+
+  const takePhoto = () => handleAddPhoto(['camera'])
+  const pickPhotos = () => handleAddPhoto(['album'])
 
   const removePhoto = (index) => {
     setPhotos(prev => {
@@ -170,8 +179,10 @@ export default function CitizenReport() {
       }
       Taro.hideLoading()
       setLoading(false)
-      Taro.showToast({ title: '提交成功', icon: 'success' })
-      setTimeout(() => Taro.navigateBack(), 1500)
+      Taro.showToast({ title: isWorkerUpload ? '检测完成' : '提交成功', icon: 'success' })
+      if (!isWorkerUpload) {
+        setTimeout(() => Taro.navigateBack(), 1500)
+      }
     } catch (e) {
       Taro.hideLoading()
       setLoading(false)
@@ -186,9 +197,9 @@ export default function CitizenReport() {
           <View className={styles.backBtn} onClick={goBack}>
             <Text className={styles.backIcon}>‹</Text>
           </View>
-          <Text className={styles.headerTitle}>问题上报</Text>
+          <Text className={styles.headerTitle}>{isWorkerUpload ? '拍照巡检' : '问题上报'}</Text>
         </View>
-        <Text className={styles.headerSub}>随手拍</Text>
+        <Text className={styles.headerSub}>{isWorkerUpload ? '专业版' : '随手拍'}</Text>
       </View>
 
       <ScrollView scrollY className={styles.bodyScroll}>
@@ -221,6 +232,8 @@ export default function CitizenReport() {
                     ? '识别中...'
                     : aiDetected
                     ? `已识别：${selectedType}`
+                    : isWorkerUpload
+                    ? '提交检测后写入平台记录'
                     : '提交后自动识别类型'}
                 </Text>
               </View>
@@ -245,6 +258,21 @@ export default function CitizenReport() {
               <Text className={styles.secLabel}>现场照片</Text>
               <Text className={styles.secNote}>{photos.length}/9</Text>
             </View>
+            {isWorkerUpload && (
+              <>
+                <Text className={styles.workerPhotoHint}>
+                  建议同一病害拍 2-4 张不同角度照片，系统会自动保存位置、时间和识别结果。
+                </Text>
+                <View className={styles.workerActionRow}>
+                  <View className={styles.workerPrimaryAction} onClick={takePhoto}>
+                    <Text className={styles.workerPrimaryText}>拍照</Text>
+                  </View>
+                  <View className={styles.workerSecondaryAction} onClick={pickPhotos}>
+                    <Text className={styles.workerSecondaryText}>从相册选择</Text>
+                  </View>
+                </View>
+              </>
+            )}
             <View className={styles.photoGrid}>
               {photos.map((p, i) => (
                 <View key={p} className={styles.photoCell}>
@@ -255,7 +283,7 @@ export default function CitizenReport() {
                 </View>
               ))}
               {photos.length < 9 && (
-                <View className={styles.photoAdd} onClick={handleAddPhoto}>
+                <View className={styles.photoAdd} onClick={() => handleAddPhoto()}>
                   <Text className={styles.addPlus}>+</Text>
                   <Text className={styles.addLabel}>添加照片</Text>
                 </View>
@@ -300,11 +328,19 @@ export default function CitizenReport() {
             className={`${styles.submitBtn} ${loading ? styles.submitBtnLoading : ''}`}
             onClick={handleSubmit}
           >
-            <Text className={styles.submitText}>提交</Text>
+            <Text className={styles.submitText}>
+              {loading ? '上传检测中' : isWorkerUpload ? '提交检测' : '提交'}
+            </Text>
           </View>
 
+          {isWorkerUpload && aiDetected && (
+            <View className={styles.finishBtn} onClick={goBack}>
+              <Text className={styles.finishText}>完成并返回</Text>
+            </View>
+          )}
+
           <Text className={styles.privacy}>
-            提交即代表您同意《LightScan 众包协议》{"\n"}
+            {isWorkerUpload ? '上传后将写入平台病害记录' : '提交即代表您同意《LightScan 众包协议》'}{"\n"}
             {gpsStatus === 'ok'
               ? `已定位：${gpsCoords.lat.toFixed(5)}, ${gpsCoords.lng.toFixed(5)}`
               : gpsStatus === 'failed'

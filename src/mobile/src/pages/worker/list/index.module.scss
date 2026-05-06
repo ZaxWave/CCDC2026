@@ -1,105 +1,119 @@
 .page {
   min-height: 100vh;
-  background: #111111;
+  background: #f5f6f8;
   display: flex;
   flex-direction: column;
 }
 
-// ── 顶部 ───────────────────────────────────────────────
 .header {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   justify-content: space-between;
-  padding: 96px 48px 48px;
-  background: #111111;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 74px 40px 30px;
 }
 
 .greeting {
   display: block;
-  font-size: 52px;
-  font-weight: 700;
-  color: #ffffff;
-  letter-spacing: -1px;
-  margin-bottom: 8px;
+  font-size: 48px;
+  font-weight: 500;
+  color: #171a20;
+  letter-spacing: 0;
+  margin-bottom: 10px;
 }
 
 .greetingSub {
-  font-size: 26px;
-  color: rgba(255, 255, 255, 0.4);
+  font-size: 24px;
+  color: #8b9098;
 }
 
 .logoutBtn {
-  padding: 14px 28px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
-  &:active { opacity: 0.5; }
+  padding: 14px 24px;
+  border: 1px solid #c7cdd7;
+  border-radius: 8px;
+  &:active { opacity: 0.62; }
 }
 
 .logoutText {
   font-size: 24px;
-  color: rgba(255, 255, 255, 0.4);
+  color: #60646c;
 }
 
-// ── 功能卡片 ─────────────────────────────────────────────
 .tiles {
-  padding: 48px 40px;
+  padding: 18px 40px 56px;
   display: flex;
   flex-direction: column;
   gap: 24px;
 }
 
+.sectionLabel {
+  font-size: 26px;
+  color: #60646c;
+  font-weight: 500;
+  margin: 8px 0 -4px;
+}
+
 .tile {
   display: flex;
   align-items: center;
-  gap: 32px;
-  padding: 48px 44px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 32px;
-  &:active { opacity: 0.65; }
+  gap: 26px;
+  min-height: 132px;
+  padding: 32px 32px;
+  background: #ffffff;
+  border: 1px solid #dce0e7;
+  border-radius: 20px;
+  &:active { opacity: 0.72; }
 }
 
-.tileDark {
-  background: rgba(62, 106, 225, 0.12);
-  border-color: rgba(62, 106, 225, 0.25);
-}
-
-.recDot {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: #ef4444;
+.tileNumber {
+  width: 78px;
+  height: 78px;
+  border-radius: 8px;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 500;
   flex-shrink: 0;
 }
+
+.tileNumberBlue { background: #3e6ae1; }
+.tileNumberRed { background: #c91d1d; }
+.tileNumberGray { background: #393c41; }
+
+.tileDark {
+  background: #ffffff;
+  border-color: #dce0e7;
+}
+
+.recDot { display: none; }
 
 .tileBody {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
+  min-width: 0;
 }
 
-.tileTitle {
-  font-size: 40px;
-  font-weight: 700;
-  color: #ffffff;
-  letter-spacing: -0.5px;
+.tileTitle,
+.tileTitleLight {
+  font-size: 36px;
+  font-weight: 500;
+  color: #171a20;
+  letter-spacing: 0;
 }
 
-.tileTitleLight { color: #ffffff; }
-
-.tileDesc {
-  font-size: 26px;
-  color: rgba(255, 255, 255, 0.4);
+.tileDesc,
+.tileDescLight {
+  font-size: 24px;
+  color: #8b9098;
+  line-height: 1.45;
 }
 
-.tileDescLight { color: rgba(255, 255, 255, 0.4); }
-
-.tileArrow {
-  font-size: 56px;
-  color: rgba(255, 255, 255, 0.25);
+.tileArrow,
+.tileArrowLight {
+  font-size: 52px;
+  color: #8b9098;
   line-height: 1;
 }
-
-.tileArrowLight { color: rgba(255, 255, 255, 0.35); }
